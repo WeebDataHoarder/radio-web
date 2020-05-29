@@ -65,6 +65,7 @@
           </ul>
         </li>
         <a href="#privacy">Privacy considerations</a>
+        <a href="#source">Source code</a>
       </ul>
 
     </div>
@@ -270,6 +271,7 @@
         </ul>
       </p>
       <h2 id="">In progress...</h2>
+
       <h1 id="privacy">Privacy considerations</h1>
       <p>Although this is an user run site, we take privacy as a main concern. We offer different ways to use the radio, and different methods to prevent drive-by extraction of user data.</p>
       <p>By default, any unauthenticated API call or client has all the identifiable information removed from the response. A list of some of these actions, not complete:
@@ -290,6 +292,19 @@
       <p>When you use the favorite features you are letting other users see your chosen nick in the songs you favorite, and allow searching for other songs you like. If you do not want this but still want to use this feature, we recommend you use a random made-up nick.</p>
       <p>If you want to delete all data stored for your account (nick, favorite list, API keys) you can contact us on the #radio channel. If you want to rename your nick, we can also help you there.</p>
       <p><b>TL;DR: Use a VPN, we don't want to know what your IP is. Do not authenticate on Web UI / stream and use just IRC control features if you don't trust us. Use a made-up nick if you don't want other users seeing what you like.</b></p>
+
+      <h1 id="source">Source code</h1>
+      <p>Most of the parts used to build this site were source code originally, but some were patched. Listed below are the distinct parts that compose the radio, and if able, a location with the currently available source code.</p>
+      <p>
+      <ul>
+        <li>Radio Website: Though mainly static, Out of Band player has some extra PHP code to run the backend search and matching. Source is available at <a href="https://github.com/WeebDataHoarder/radio-web" target="_blank">github.com/WeebDataHoarder/radio-web</a>, synchronized at regular intervals.</li>
+        <li>Metadata matcher and grabber: Finds and collects metadata from other sources, and creates tags. All this is then pushed to main music database for normal use. Mainly a collection of PHP scripts and produced database. Source code is not available at this moment :(</li>
+        <li>stewdio-api: Main music database, and API interaction system written in Python. Forked from original <a href="https://git.sr.ht/~minus/stewdio-api" target="_blank">stewdio-api</a>. Adds extra features (covers, database indexes, extra search, and others) and mainly removes user management. Source code is available at <a href="https://github.com/WeebDataHoarder/stewdio-api" target="_blank">github.com/WeebDataHoarder/stewdio-api</a>, synchronized at regular intervals.</li>
+        <li>kawa: Radio live streamer and queue management written in Rust. Fork with few changes from original. Source code is available at <a href="https://github.com/WeebDataHoarder/kawa" target="_blank">github.com/WeebDataHoarder/kawa</a>, synchronized at regular intervals.</li>
+        <li>IRC bot: Handles user management, provides rich search and other more useful features. Mainly PHP. Source code is not available at this moment :(</li>
+        <li>nginx glue: Merges all stuff together in a single site. Source code is not available at this moment :(</li>
+      </ul>
+      </p>
     </div>
   </div>
 </body>
