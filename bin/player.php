@@ -573,7 +573,7 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
 
     var playing = false;
     var uplayer = new UPlayer({
-        "volume": 1.0,
+        "volume": window.localStorage.getItem("radio-volume") !== null ? window.localStorage.getItem("radio-volume") / 100 : 1.0,
         "preload": true,
         //"streaming": true,
         "muted": false,
@@ -627,6 +627,11 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
             }
             //$(".play-pause").removeClass("hidden");
         }
+    });
+
+
+    $(".volume-slider").on("change", function () {
+        window.localStorage.setItem("radio-volume", $(this).val());
     });
 
 
