@@ -297,12 +297,12 @@
       <p>Most of the parts used to build this site were source code originally, but some were patched. Listed below are the distinct parts that compose the radio, and if able, a location with the currently available source code.</p>
       <p>
       <ul>
-        <li>Radio Website: Though mainly static, Out of Band player has some extra PHP code to run the backend search and matching. Source is available at <a href="https://github.com/WeebDataHoarder/radio-web" target="_blank">github.com/WeebDataHoarder/radio-web</a>, synchronized at regular intervals.</li>
-        <li>Metadata matcher and grabber: Finds and collects metadata from other sources, and creates tags. All this is then pushed to main music database for normal use. Mainly a collection of PHP scripts and produced database. Source code is not available at this moment :(</li>
-        <li>stewdio-api: Main music database, and API interaction system written in Python. Forked from original <a href="https://git.sr.ht/~minus/stewdio-api" target="_blank">stewdio-api</a>. Adds extra features (covers, database indexes, extra search, and others) and mainly removes user management. Source code is available at <a href="https://github.com/WeebDataHoarder/stewdio-api" target="_blank">github.com/WeebDataHoarder/stewdio-api</a>, synchronized at regular intervals.</li>
-        <li>kawa: Radio live streamer and queue management written in Rust. Fork with few changes from original. Source code is available at <a href="https://github.com/WeebDataHoarder/kawa" target="_blank">github.com/WeebDataHoarder/kawa</a>, synchronized at regular intervals.</li>
-        <li>IRC bot: Handles user management, provides rich search and other more useful features. Mainly PHP. Source code is not available at this moment :(</li>
-        <li>nginx glue: Merges all stuff together in a single site. Source code is not available at this moment :(</li>
+        <li><b>radio-web</b>: Radio website. Though mainly static, Out of Band player has some extra PHP code to run the backend search and matching. Source is available at <a href="https://github.com/WeebDataHoarder/radio-web" target="_blank">github.com/WeebDataHoarder/radio-web</a>, synchronized at regular intervals.</li>
+        <li><b>stewdio-api</b>: Main music database, and API interaction system written in Python. Forked from original <a href="https://git.sr.ht/~minus/stewdio-api" target="_blank">stewdio-api</a>. Adds extra features (covers, database indexes, extra search, and others) and mainly removes user management. Source code is available at <a href="https://github.com/WeebDataHoarder/stewdio-api" target="_blank">github.com/WeebDataHoarder/stewdio-api</a>, synchronized at regular intervals.</li>
+        <li><b>kawa</b>: Radio live streamer and queue management written in Rust. Fork with few changes from original. Source code is available at <a href="https://github.com/WeebDataHoarder/kawa" target="_blank">github.com/WeebDataHoarder/kawa</a>, synchronized at regular intervals.</li>
+        <li><b>radio-matcher</b>: Metadata matcher and finder. Finds and collects metadata from other sources, and creates tags. All this is then pushed to main music database for normal use. Mainly a collection of PHP scripts and produced database. Source code is not available at this moment :(</li>
+        <li><b>miku</b>: IRC bot. Handles user management, provides rich search and other more useful features. Mainly PHP. Source code is not available at this moment :(</li>
+        <li><b>nginx glue</b>: Merges all stuff together in a single site. Source code is not available at this moment :(</li>
       </ul>
       </p>
     </div>
