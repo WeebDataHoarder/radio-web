@@ -476,7 +476,7 @@ div#progress-container progress#song-played-progress::-moz-progress-bar {
     border-radius: 5px;
     background-color: #ed106a;
     height: 5px;
-    margin-top: -2px;
+    margin-top: 1px;
 }
 
 div#progress-container progress#song-buffered-progress {
@@ -512,7 +512,6 @@ div#progress-container progress#song-buffered-progress::-moz-progress-bar {
     border-radius: 5px;
     background-color: #78909C;
     height: 5px;
-    margin-top: -2px;
 }
 
 div#progress-container progress::-ms-fill {
