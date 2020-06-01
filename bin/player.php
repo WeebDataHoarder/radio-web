@@ -868,7 +868,7 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
             if (catalog !== null) {
                 var targetSearch = "https://musicbrainz.org/search?advanced=1&type=release&query=" + encodeURIComponent("catno:" + catalog);
                 if (song.tags.includes('touhou')) {
-                    targetSearch = "https://thwiki.cc/%E7%89%B9%E6%AE%8A:%E6%90%9C%E7%B4%A2?search=" + encodeURIComponent(catalog);
+                    targetSearch = "https://thwiki.cc/index.php?setlang=en&search=" + encodeURIComponent("incategory:同人专辑 (" + catalog + ")");
                 } else if (song.tags.includes('soundtrack') || song.tags.includes('doujin') || song.tags.includes('remix') || song.tags.includes('ed') || song.tags.includes('op')) {
                     targetSearch = "https://vgmdb.net/search?q=" + encodeURIComponent(catalog);
                 } else if (song.tags.includes('vocaloid')) {

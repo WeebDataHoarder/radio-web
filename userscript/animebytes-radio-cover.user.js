@@ -3,7 +3,7 @@
 // @namespace   animebits.radio.cover.animebytes
 // @author      anime(bits)
 // @description Allows finding new covers directly from torrent group, and other utilities to find further data
-// @version     1.0.0
+// @version     1.0.1
 // @homepage    https://radio.animebits.moe
 // @icon        https://radio.animebits.moe/img/icon-128.png
 // @updateURL   https://radio.animebits.moe/userscript/animebytes-radio-cover.user.js
@@ -149,13 +149,13 @@ let pageURL = new URL(document.location);
                             searchQuery += q[i];
                         }
 
-                        let searchUrl = "https://thwiki.cc/%E7%89%B9%E6%AE%8A:%E6%90%9C%E7%B4%A2?search=" + encodeURIComponent(searchQuery);
+                        let searchUrl = "https://thwiki.cc/index.php?setlang=en&search=" + encodeURIComponent("incategory:同人专辑 (" + searchQuery + ")");
 
                         let e = document.createElement("a");
                         e.setAttribute("href", searchUrl);
                         e.setAttribute("target", "_blank");
-                        e.setAttribute("title", "Open THWiki search");
-                        e.textContent = "[THw]";
+                        e.setAttribute("title", "Open THBWiki search");
+                        e.textContent = "[THB]";
                         addExtraLinkToHeader(e, imageBox.getElementsByClassName("head")[0]);
                     }
                 }
