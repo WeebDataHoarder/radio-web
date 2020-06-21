@@ -104,7 +104,7 @@ if (preg_match("#^/player/hash/(([a-fA-F0-9]{8,32},?)+)(\\?.*|)$#", $actualPath,
 } elseif (preg_match("#^/player/search/(.+)(\\?.*|)$#", $actualPath, $matches) > 0) {
     foreach (explode("/", $matches[1]) as $bq) {
         $q = urldecode($bq);
-        foreach (@json_decode(file_get_contents(DEFAULT_API_URL . "/api/search?limit=1500&q=" . urlencode($q) . "&apikey=" . DEFAULT_API_KEY), true) as $data) {
+        foreach (@json_decode(file_get_contents(DEFAULT_API_URL . "/search?limit=1500&q=" . urlencode($q) . "&apikey=" . DEFAULT_API_KEY), true) as $data) {
             $songs[] = $data;
         }
         $title = $q;
