@@ -144,6 +144,9 @@ if (preg_match("#^/player/hash/(([a-fA-F0-9]{8,32},?)+)(\\?.*|)$#", $actualPath,
         $duration += $data["duration"];
         $songs[] = $data;
     }
+    usort($songs, function($a, $b){
+       return strcasecmp($a["album"] . "/" . $a["title"], $b["album"] . "/" . $b["title"]);
+    });
     $title = $album . "" . (($artist !== false and $artist !== null) ? " by " . $artist : "") . " :: " . count($songs) . " tracks" . ($discNumber > 1 ? ", $discNumber discs" : "") . ", " . floor($duration / 60) . "m";
 } elseif (preg_match("#^/player/catalog/(.+?)(\\?.*|)$#iu", $actualPath, $matches) > 0) {
     $q = strtolower(urldecode($matches[1]));
@@ -181,6 +184,9 @@ if (preg_match("#^/player/hash/(([a-fA-F0-9]{8,32},?)+)(\\?.*|)$#", $actualPath,
         $duration += $data["duration"];
         $songs[] = $data;
     }
+    usort($songs, function($a, $b){
+        return strcasecmp($a["album"] . "/" . $a["title"], $b["album"] . "/" . $b["title"]);
+    });
     $title = $album . "" . (($artist !== false and $artist !== null) ? " by " . $artist : "") . " [" . strtoupper($q) . "] :: " . count($songs) . " tracks" . ($discNumber > 1 ? ", $discNumber discs" : "") . ", " . floor($duration / 60) . "m";
 } elseif (preg_match("#^/player((/(ab|jps|red|bbt)[gt]/[0-9]+)+)(\\?.*|)$#iu", $actualPath, $matches) > 0) {
     if (preg_match_all("#/(ab|jps|red|bbt)(g|t)/([0-9]+)#i", $matches[1], $m) > 0) {
@@ -222,6 +228,9 @@ if (preg_match("#^/player/hash/(([a-fA-F0-9]{8,32},?)+)(\\?.*|)$#", $actualPath,
                 $duration += $data["duration"];
                 $songs[] = $data;
             }
+            usort($songs, function($a, $b){
+                return strcasecmp($a["album"] . "/" . $a["title"], $b["album"] . "/" . $b["title"]);
+            });
             $title = $album . "" . (($artist !== false and $artist !== null) ? " by " . $artist : "") . " [" . strtoupper($tag) . strtolower($type) . "#$q] :: " . count($songs) . " tracks" . ($discNumber > 1 ? ", $discNumber discs" : "") . ", " . floor($duration / 60) . "m";
             if (count($songs) > 0) {
                 break;
