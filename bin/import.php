@@ -452,16 +452,16 @@ It also supports JSON favorite extracts from listen.moe.
             });
             asset.get("metadata", function (metadata) {
                 if (metadata.album) {
-                    trackEntry.album = metadata.album;
+                    trackEntry.album = metadata.album.replace(/\u0000/g, '');
                 }
                 if (metadata.albumartist) {
-                    trackEntry.album_artist = metadata.albumartist;
+                    trackEntry.album_artist = metadata.albumartist.replace(/\u0000/g, '');
                 }
                 if (metadata.artist) {
-                    trackEntry.artist = metadata.artist;
+                    trackEntry.artist = metadata.artist.replace(/\u0000/g, '');
                 }
                 if (metadata.title) {
-                    trackEntry.title = metadata.title;
+                    trackEntry.title = metadata.title.replace(/\u0000/g, '');
                 }
                 if (metadata.coverArt) {
                     var blob = new Blob([metadata.coverArt.data], {type: 'image/jpeg'});

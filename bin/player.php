@@ -7,6 +7,69 @@ if ($dbconn === null) {
     exit();
 }
 
+
+function processAlbumResults($result){
+    $songs = [];
+
+    $album = null;
+    $artist = null;
+    $discNumber = 1;
+    $duration = 0;
+    $image = null;
+
+    foreach ($result as $data){
+        $artist = $artist === null ? $data["artist"] : ($data["artist"] === $artist ? $artist : false);
+        if (preg_match("#/([0-9]+)[\\- \\.]+[\\(\\[]?([0-9]+)[\\)\\\]?[ \t]*[\\.\\-_\\# ][^/]+\\.[a-z0-9]{2,6}$#ui", $data["path"], $matches) > 0) {
+            $data["album"] = ($album = trim(str_ireplace(["part " . $matches[2], "cd " . $matches[2], "disc " . $matches[2],  "disk " . $matches[2], "box " . $matches[2]], "", $data["album"]), " \t:-"));
+            $num = ltrim($matches[1], "0");
+            $data["parentIndex"] = (int) $num;
+            $data["index"] = (int) ltrim($matches[2], "0");
+            if ($num > $discNumber) {
+                $discNumber = (int)$num;
+            }
+            $data["sortTitle"] = str_pad($data["parentIndex"], 2, "0", STR_PAD_LEFT) . "-" . str_pad($data["index"], 2, "0", STR_PAD_LEFT) . ". " . $data["title"];
+        } else if (preg_match("#/(part|cd|disc|disk|box)[ _\\-\\#]{0,2}([0-9]+)[^/]*/[\\(\\[]?([0-9]+)[\\)\\\]?[ \t]*[\\.\\-_\\# ][^/]+\\.[a-z0-9]{2,6}$#ui", $data["path"], $matches) > 0) {
+            $data["album"] = ($album = trim(str_ireplace(["part " . $matches[2], "cd " . $matches[2], "disc " . $matches[2], "disk " . $matches[2], "box " . $matches[2]], "", $data["album"]), " \t:-"));
+            $num = ltrim($matches[2], "0");
+            $data["parentIndex"] = (int) $num;
+            $data["index"] = (int) ltrim($matches[3], "0");
+            if ($num > $discNumber) {
+                $discNumber = (int)$num;
+            }
+            $data["sortTitle"] = str_pad($data["parentIndex"], 2, "0", STR_PAD_LEFT) . "-" . str_pad($data["index"], 2, "0", STR_PAD_LEFT) . ". " . $data["title"];
+        } else if (preg_match("#/[\\(\\[]?([0-9]+)[\\)\\\]?[ \t]*[\\.\\-_ ][^/]+\\.[a-z0-9]{2,6}$#ui", $data["path"], $matches) > 0) {
+            $data["index"] = (int) ltrim($matches[1], "0");
+            $data["sortTitle"] = str_pad(1, 2, "0", STR_PAD_LEFT) . "-" . str_pad($data["index"], 2, "0", STR_PAD_LEFT) . ". " . $data["title"];
+        }else {
+            $data["sortTitle"] = str_pad(1, 2, "0", STR_PAD_LEFT) . "-" . basename($data["path"]);
+        }
+
+        $album = $data["album"];
+
+        if(isset($data["index"])){
+            $data["title"] = str_pad($data["index"], 2, "0", STR_PAD_LEFT) . ". " . $data["title"];
+        }
+        if(isset($data["parentIndex"])){
+            $data["album"] = $data["album"] . " - Disc " . str_pad($data["parentIndex"], 2, "0", STR_PAD_LEFT);
+        }
+        
+        $duration += $data["duration"];
+        $songs[] = $data;
+    }
+
+    usort($songs, function($a, $b){
+        return strcasecmp($a["album"] . "/" . $a["sortTitle"], $b["album"] . "/" . $b["sortTitle"]);
+    });
+
+    return (object) [
+        "songs" => $songs,
+        "title" => $album,
+        "artist" => $artist === false ? null : $artist,
+        "duration" => $duration,
+        "discs" => $discNumber
+    ];
+}
+
 $hashSql = <<<SQL
 SELECT
 songs.id AS id,
@@ -116,77 +179,41 @@ if (preg_match("#^/player/hash/(([a-fA-F0-9]{8,32},?)+)(\\?.*|)$#", $actualPath,
 } elseif (preg_match("#^/player/(album)/([^\\?]+)(\\?.*|)$#", $actualPath, $matches) > 0) {
     $q = urldecode($matches[2]);
     $type = $matches[1];
-    $artist = null;
     $albumView = true;
-    $discNumber = 1;
     $q = "$type:\"$q\"";
-    $duration = 0;
-    foreach (@json_decode(file_get_contents(DEFAULT_API_URL . "/search?limit=1500&q=" . urlencode($q) . "&apikey=" . DEFAULT_API_KEY), true) as $data) {
-        $album = $data["album"];
-        $artist = $artist === null ? $data["artist"] : ($data["artist"] === $artist ? $artist : false);
-        if (preg_match("#/([0-9]+)\\-[\\(\\[]?([0-9]+)[\\)\\\]?[ \t]*[\\.\\-_\\# ][^/]+\\.[a-z0-9]{2,6}$#ui", $data["path"], $matches) > 0) {
-            $data["title"] = str_pad($matches[2], 2, "0", STR_PAD_LEFT) . ". " . $data["title"];
-            $data["album"] = ($album = trim(str_ireplace(["part " . $matches[2], "cd " . $matches[2], "disc " . $matches[2], "box " . $matches[2]], "", $data["album"]), " \t:-")) . " - Disc " . $matches[1];
-            $num = ltrim($matches[1], "0");
-            if ($num > $discNumber) {
-                $discNumber = (int)$num;
-            }
-        } else if (preg_match("#/(part|cd|disc|box)[ _\\-\\#]{0,2}([0-9]+)/[\\(\\[]?([0-9]+)[\\)\\\]?[ \t]*[\\.\\-_\\# ][^/]+\\.[a-z0-9]{2,6}$#ui", $data["path"], $matches) > 0) {
-            $data["title"] = str_pad($matches[3], 2, "0", STR_PAD_LEFT) . ". " . $data["title"];
-            $data["album"] = ($album = trim(str_ireplace(["part " . $matches[2], "cd " . $matches[2], "disc " . $matches[2], "box " . $matches[2]], "", $data["album"]), " \t:-")) . " - Disc " . $matches[2];
-            $num = ltrim($matches[2], "0");
-            if ($num > $discNumber) {
-                $discNumber = (int)$num;
-            }
-        } else if (preg_match("#/[\\(\\[]?([0-9]+)[\\)\\\]?[ \t]*[\\.\\-_ ][^/]+\\.[a-z0-9]{2,6}$#ui", $data["path"], $matches) > 0) {
-            $data["title"] = str_pad($matches[1], 2, "0", STR_PAD_LEFT) . ". " . $data["title"];
-        }
-        $duration += $data["duration"];
-        $songs[] = $data;
-    }
-    usort($songs, function($a, $b){
-       return strcasecmp($a["album"] . "/" . $a["title"], $b["album"] . "/" . $b["title"]);
-    });
+
+    $result = processAlbumResults(@json_decode(file_get_contents(DEFAULT_API_URL . "/search?limit=1500&q=" . urlencode($q) . "&apikey=" . DEFAULT_API_KEY), true));
+    $duration = $result->duration;
+    $discNumber = $result->discs;
+    $album = $result->title;
+    $artist = $result->artist;
+    $songs = array_merge($songs, $result->songs);
+
     $title = $album . "" . (($artist !== false and $artist !== null) ? " by " . $artist : "") . " :: " . count($songs) . " tracks" . ($discNumber > 1 ? ", $discNumber discs" : "") . ", " . floor($duration / 60) . "m";
 } elseif (preg_match("#^/player/catalog/(.+?)(\\?.*|)$#iu", $actualPath, $matches) > 0) {
     $q = strtolower(urldecode($matches[1]));
     $result = pg_query_params($dbconn, $tagSql, ["catalog-$q"]);
-    $album = "\u{1F4BF}" . strtoupper($q);
-    $artist = null;
     $albumView = true;
-    $discNumber = 1;
-    $duration = 0;
+
+    $results = [];
     while ($data = pg_fetch_row($result, null, PGSQL_ASSOC)) {
         foreach ($data as $k => &$v) {
             if ($k === "tags" or $k === "favored_by") {
                 $v = json_decode($v, true);
             }
         }
-        $album = $data["album"];
-        $artist = $artist === null ? $data["artist"] : ($data["artist"] === $artist ? $artist : false);
-        if (preg_match("#/([0-9]+)\\-[\\(\\[]?([0-9]+)[\\)\\\]?[ \t]*[\\.\\-_\\# ][^/]+\\.[a-z0-9]{2,6}$#ui", $data["path"], $matches) > 0) {
-            $data["title"] = str_pad($matches[2], 2, "0", STR_PAD_LEFT) . ". " . $data["title"];
-            $data["album"] = ($album = trim(str_ireplace(["part " . $matches[2], "cd " . $matches[2], "disc " . $matches[2], "box " . $matches[2]], "", $data["album"]), " \t:-")) . " - Disc " . $matches[1];
-            $num = ltrim($matches[1], "0");
-            if ($num > $discNumber) {
-                $discNumber = (int)$num;
-            }
-        } else if (preg_match("#/(part|cd|disc|box)[ _\\-\\#]{0,2}([0-9]+)/[\\(\\[]?([0-9]+)[\\)\\\]?[ \t]*[\\.\\-_\\# ][^/]+\\.[a-z0-9]{2,6}$#ui", $data["path"], $matches) > 0) {
-            $data["title"] = str_pad($matches[3], 2, "0", STR_PAD_LEFT) . ". " . $data["title"];
-            $data["album"] = ($album = trim(str_ireplace(["part " . $matches[2], "cd " . $matches[2], "disc " . $matches[2], "box " . $matches[2]], "", $data["album"]), " \t:-")) . " - Disc " . $matches[2];
-            $num = ltrim($matches[2], "0");
-            if ($num > $discNumber) {
-                $discNumber = (int)$num;
-            }
-        } else if (preg_match("#/[\\(\\[]?([0-9]+)[\\)\\\]?[ \t]*[\\.\\-_ ][^/]+\\.[a-z0-9]{2,6}$#ui", $data["path"], $matches) > 0) {
-            $data["title"] = str_pad($matches[1], 2, "0", STR_PAD_LEFT) . ". " . $data["title"];
-        }
-        $duration += $data["duration"];
-        $songs[] = $data;
+
+        $results[] = $data;
     }
-    usort($songs, function($a, $b){
-        return strcasecmp($a["album"] . "/" . $a["title"], $b["album"] . "/" . $b["title"]);
-    });
+
+    $result = processAlbumResults($results);
+    $duration = $result->duration;
+    $discNumber = $result->discs;
+    $album = $result->title;
+    $artist = $result->artist;
+    $songs = array_merge($songs, $result->songs);
+
+
     $title = $album . "" . (($artist !== false and $artist !== null) ? " by " . $artist : "") . " [" . strtoupper($q) . "] :: " . count($songs) . " tracks" . ($discNumber > 1 ? ", $discNumber discs" : "") . ", " . floor($duration / 60) . "m";
 } elseif (preg_match("#^/player((/(ab|jps|red|bbt)[gt]/[0-9]+)+)(\\?.*|)$#iu", $actualPath, $matches) > 0) {
     if (preg_match_all("#/(ab|jps|red|bbt)(g|t)/([0-9]+)#i", $matches[1], $m) > 0) {
@@ -195,42 +222,25 @@ if (preg_match("#^/player/hash/(([a-fA-F0-9]{8,32},?)+)(\\?.*|)$#", $actualPath,
             $q = urldecode($m[3][$matchIndex]);
 
             $result = pg_query_params($dbconn, $tagSql, ["$tag$type-$q"]);
-            $album = strtoupper($tag) . strtolower($type) . "#$q";
-            $artist = null;
             $albumView = true;
-            $discNumber = 1;
-            $duration = 0;
+
+            $results = [];
             while ($data = pg_fetch_row($result, null, PGSQL_ASSOC)) {
                 foreach ($data as $k => &$v) {
                     if ($k === "tags" or $k === "favored_by") {
                         $v = json_decode($v, true);
                     }
                 }
-                $album = $data["album"];
-                $artist = $artist === null ? $data["artist"] : ($data["artist"] === $artist ? $artist : false);
-                if (preg_match("#/([0-9]+)\\-[\\(\\[]?([0-9]+)[\\)\\\]?[ \t]*[\\.\\-_\\# ][^/]+\\.[a-z0-9]{2,6}$#ui", $data["path"], $matches) > 0) {
-                    $data["title"] = str_pad($matches[2], 2, "0", STR_PAD_LEFT) . ". " . $data["title"];
-                    $data["album"] = ($album = trim(str_ireplace(["part " . $matches[2], "cd " . $matches[2], "disc " . $matches[2], "box " . $matches[2]], "", $data["album"]), " \t:-")) . " - Disc " . $matches[1];
-                    $num = ltrim($matches[1], "0");
-                    if ($num > $discNumber) {
-                        $discNumber = (int)$num;
-                    }
-                } else if (preg_match("#/(part|cd|disc|box)[ _\\-\\#]{0,2}([0-9]+)/[\\(\\[]?([0-9]+)[\\)\\\]?[ \t]*[\\.\\-_\\# ][^/]+\\.[a-z0-9]{2,6}$#ui", $data["path"], $matches) > 0) {
-                    $data["title"] = str_pad($matches[3], 2, "0", STR_PAD_LEFT) . ". " . $data["title"];
-                    $data["album"] = ($album = trim(str_ireplace(["part " . $matches[2], "cd " . $matches[2], "disc " . $matches[2], "box " . $matches[2]], "", $data["album"]), " \t:-")) . " - Disc " . $matches[2];
-                    $num = ltrim($matches[2], "0");
-                    if ($num > $discNumber) {
-                        $discNumber = (int)$num;
-                    }
-                } else if (preg_match("#/[\\(\\[]?([0-9]+)[\\)\\\]?[ \t]*[\\.\\-_ ][^/]+\\.[a-z0-9]{2,6}$#ui", $data["path"], $matches) > 0) {
-                    $data["title"] = str_pad($matches[1], 2, "0", STR_PAD_LEFT) . ". " . $data["title"];
-                }
-                $duration += $data["duration"];
-                $songs[] = $data;
+                $results[] = $data;
             }
-            usort($songs, function($a, $b){
-                return strcasecmp($a["album"] . "/" . $a["title"], $b["album"] . "/" . $b["title"]);
-            });
+
+            $result = processAlbumResults($results);
+            $duration = $result->duration;
+            $discNumber = $result->discs;
+            $album = $result->title;
+            $artist = $result->artist;
+            $songs = array_merge($songs, $result->songs);
+
             $title = $album . "" . (($artist !== false and $artist !== null) ? " by " . $artist : "") . " [" . strtoupper($tag) . strtolower($type) . "#$q] :: " . count($songs) . " tracks" . ($discNumber > 1 ? ", $discNumber discs" : "") . ", " . floor($duration / 60) . "m";
             if (count($songs) > 0) {
                 break;
@@ -243,28 +253,25 @@ if (preg_match("#^/player/hash/(([a-fA-F0-9]{8,32},?)+)(\\?.*|)$#", $actualPath,
     $type = $matches[2];
     $result = pg_query_params($dbconn, $tagSql, ["$tag$type-$q"]);
     $album = strtoupper($tag) . strtolower($type) . "#$q";
-    $artist = null;
     $albumView = true;
-    $duration = 0;
+
+
+    $results = [];
     while ($data = pg_fetch_row($result, null, PGSQL_ASSOC)) {
         foreach ($data as $k => &$v) {
             if ($k === "tags" or $k === "favored_by") {
                 $v = json_decode($v, true);
             }
         }
-        $artist = $artist === null ? $data["artist"] : ($data["artist"] === $artist ? $artist : false);
-        if (preg_match("#/([0-9]+)\\-[\\(\\[]?([0-9]+)[\\)\\\]?[ \t]*[\\.\\-_\\# ][^/]+\\.[a-z0-9]{2,6}$#ui", $data["path"], $matches) > 0) {
-            $data["title"] = str_pad($matches[2], 2, "0", STR_PAD_LEFT) . ". " . $data["title"];
-            $data["album"] = ($album = trim(str_ireplace(["part " . $matches[2], "cd " . $matches[2], "disc " . $matches[2], "box " . $matches[2]], "", $data["album"]), " \t:-")) . " - Disc " . $matches[1];
-        } else if (preg_match("#/(part|cd|disc|box)[ _\\-\\#]{0,2}([0-9]+)/[\\(\\[]?([0-9]+)[\\)\\\]?[ \t]*[\\.\\-_\\# ][^/]+\\.[a-z0-9]{2,6}$#ui", $data["path"], $matches) > 0) {
-            $data["title"] = str_pad($matches[3], 2, "0", STR_PAD_LEFT) . ". " . $data["title"];
-            $data["album"] = ($album = trim(str_ireplace(["part " . $matches[2], "cd " . $matches[2], "disc " . $matches[2], "box " . $matches[2]], "", $data["album"]), " \t:-")) . " - Disc " . $matches[2];
-        } else if (preg_match("#/[\\(\\[]?([0-9]+)[\\)\\\]?[ \t]*[\\.\\-_ ][^/]+\\.[a-z0-9]{2,6}$#ui", $data["path"], $matches) > 0) {
-            $data["title"] = str_pad($matches[1], 2, "0", STR_PAD_LEFT) . ". " . $data["title"];
-        }
-        $duration += $data["duration"];
-        $songs[] = $data;
+        $results[] = $data;
     }
+
+    $result = processAlbumResults($results);
+    $duration = $result->duration;
+    $discNumber = $result->discs;
+    $artist = $result->artist;
+    $songs = array_merge($songs, $result->songs);
+
     $title = $album . "" . (($artist !== false and $artist !== null) ? " by " . $artist : "") . " [" . strtoupper($tag) . strtolower($type) . "#$q] :: " . count($songs) . " tracks, " . floor($duration / 60) . "m";
 } else {
     exit();
