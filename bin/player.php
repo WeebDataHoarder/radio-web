@@ -476,6 +476,72 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
             div.song img.queue-cover {
                 display: none !important;
             }
+
+            div#radio-right div.song div.song-meta-data{
+                max-width: calc(100% - 10px - 20px - 10px - 60px);
+            }
+        </style>
+        <?php
+    }
+
+    if($albumView){
+        ?>
+        <style type="text/css">
+            div#radio-right div.song div.song-meta-data span.song-album {
+                display: none;
+            }
+
+            div#radio-right div.song {
+                height: 42px;
+            }
+
+            div#radio-right div.song span.song-duration {
+                line-height: 39px;
+            }
+
+            div#radio-right div.song div.song-meta-data span.song-artist {
+                padding-left: 4ch;
+            }
+
+            div#radio-right div.album-header {
+                display: flex;
+                align-items: center;
+                text-align: center;
+
+                width: 100%;
+                padding: 5px;
+                margin-top: 20px;
+                font-weight: bold;
+                text-transform: uppercase;
+                color: #999999;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            div#radio-right div.album-header::before, div#radio-right div.album-header::after {
+                content: '';
+                flex: 1;
+                border-bottom: 2px solid #999999;
+            }
+            div#radio-right div.album-header::before {
+                margin-right: .25em;
+            }
+            div#radio-right div.album-header::after {
+                margin-left: .25em;
+            }
+            div#radio-right hr {
+                display: none;
+            }
+
+        </style>
+        <?php
+    }else{
+        ?>
+        <style type="text/css">
+            div#radio-right div.album-header {
+                display: none;
+            }
         </style>
         <?php
     }
@@ -654,8 +720,12 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
     var songElement = $("div#radio-right");
     for (var index = 0; index < songPlaylist.length; ++index) {
         var data = songPlaylist[index];
-        if (index > 0 && songPlaylist[index - 1]["album"] !== data["album"]) {
-            songElement.append("<hr/>");
+        if (index === 0 || songPlaylist[index - 1]["album"] !== data["album"]) {
+            if(index > 0){
+                songElement.append("<hr/>");
+            }
+
+            songElement.append('<div class="album-header">' + data["album"] + '</div>');
         }
         songElement.append('<div class="song radio-song-container" song-index="' + index + '" song-hash="' + data["hash"] + '">' +
             '<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII=" style="background-image: url(' + (data["cover"] !== null ? "/api/cover/" + data["cover"] + "/small" : "/img/no-cover.jpg") + ')" class="queue-cover" loading="lazy"/>' +
