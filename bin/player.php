@@ -128,7 +128,35 @@ songs.status
 ORDER BY album ASC, path ASC
 ;
 SQL;
-
+$pathSql = <<<SQL
+SELECT
+songs.id AS id,
+songs.hash AS hash,
+songs.title AS title,
+artists.name AS artist,
+albums.name AS album,
+songs.path AS path,
+songs.duration AS duration,
+songs.cover AS cover,
+songs.status AS status,
+array_to_json(ARRAY(SELECT tags.name FROM taggings JOIN tags ON (taggings.tag = tags.id) WHERE taggings.song = songs.id)) AS tags,
+array_to_json(ARRAY(SELECT users.name FROM users JOIN favorites ON (favorites.user_id = users.id) WHERE favorites.song = songs.id)) AS favored_by
+FROM songs
+JOIN artists ON songs.artist = artists.id
+JOIN albums ON songs.album = albums.id
+WHERE songs.path LIKE $1
+GROUP BY
+songs.id,
+songs.hash,
+songs.title,
+artists.name,
+albums.name,
+songs.path,
+songs.duration,
+songs.status
+ORDER BY album ASC, path ASC
+;
+SQL;
 $queue = [];
 $songs = [];
 
@@ -217,11 +245,31 @@ if (preg_match("#^/player/hash/(([a-fA-F0-9]{8,32},?)+)(\\?.*|)$#", $actualPath,
     $title = $album . "" . (($artist !== false and $artist !== null) ? " by " . $artist : "") . " [" . strtoupper($q) . "] :: " . count($songs) . " tracks" . ($discNumber > 1 ? ", $discNumber discs" : "") . ", " . floor($duration / 60) . "m";
 } elseif (preg_match("#^/player((/(ab|jps|red|bbt)[gt]/[0-9]+)+)(\\?.*|)$#iu", $actualPath, $matches) > 0) {
     if (preg_match_all("#/(ab|jps|red|bbt)(g|t)/([0-9]+)#i", $matches[1], $m) > 0) {
+        $entries = [];
+
         foreach ($m[1] as $matchIndex => $tag) {
             $type = $m[2][$matchIndex];
             $q = urldecode($m[3][$matchIndex]);
+            $entries[] = [
+                "tag" => $tag,
+                "type" => $type,
+                "q" => $q,
+                "params" => [$tagSql, ["$tag$type-$q"]]
+            ];
+            $entries[] = [
+                "tag" => $tag,
+                "type" => $type,
+                "q" => $q,
+                "params" => [$pathSql, ["%/[$tag$type-$q]/%"]]
+            ];
+        }
 
-            $result = pg_query_params($dbconn, $tagSql, ["$tag$type-$q"]);
+        foreach ($entries as $entry){
+            $tag = $entry["tag"];
+            $type = $entry["type"];
+            $q = $entry["q"];
+
+            $result = pg_query_params($dbconn, ...($entry["params"]));
             $albumView = true;
 
             $results = [];
