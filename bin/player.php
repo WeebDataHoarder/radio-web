@@ -503,6 +503,8 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
           content="<?php echo str_replace("\r\n", "&#10;&#13;", htmlspecialchars($desc, ENT_QUOTES | ENT_HTML5, "UTF-8")); ?>">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="referrer" content="no-referrer">
+
+    <link rel="icon" type="image/svg+xml" href="/img/icon.svg">
     <link rel="icon" sizes="128x128" href="/img/icon-128.png">
     <link rel="icon" sizes="192x192" href="/img/icon-192.png">
     <link rel="icon" sizes="256x256" href="/img/icon-256.png">
