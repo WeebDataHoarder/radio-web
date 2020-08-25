@@ -7,6 +7,12 @@ if ($dbconn === null) {
     exit();
 }
 
+$authenticationKey = getAuthenticationKey();
+
+if($authenticationKey !== null and checkAuthenticationKey($dbconn, $authenticationKey) === null) {
+    $authenticationKey = null;
+}
+
 
 function processAlbumResults($result){
     $songs = [];
@@ -80,6 +86,7 @@ albums.name AS album,
 songs.path AS path,
 songs.duration AS duration,
 songs.cover AS cover,
+array_to_json(ARRAY(SELECT jsonb_object_keys(songs.lyrics))) AS lyrics,
 songs.status AS status,
 array_to_json(ARRAY(SELECT tags.name FROM taggings JOIN tags ON (taggings.tag = tags.id) WHERE taggings.song = songs.id)) AS tags,
 array_to_json(ARRAY(SELECT users.name FROM users JOIN favorites ON (favorites.user_id = users.id) WHERE favorites.song = songs.id)) AS favored_by
@@ -109,6 +116,7 @@ albums.name AS album,
 songs.path AS path,
 songs.duration AS duration,
 songs.cover AS cover,
+array_to_json(ARRAY(SELECT jsonb_object_keys(songs.lyrics))) AS lyrics,
 songs.status AS status,
 array_to_json(ARRAY(SELECT tags.name FROM taggings JOIN tags ON (taggings.tag = tags.id) WHERE taggings.song = songs.id)) AS tags,
 array_to_json(ARRAY(SELECT users.name FROM users JOIN favorites ON (favorites.user_id = users.id) WHERE favorites.song = songs.id)) AS favored_by
@@ -138,6 +146,7 @@ albums.name AS album,
 songs.path AS path,
 songs.duration AS duration,
 songs.cover AS cover,
+array_to_json(ARRAY(SELECT jsonb_object_keys(songs.lyrics))) AS lyrics,
 songs.status AS status,
 array_to_json(ARRAY(SELECT tags.name FROM taggings JOIN tags ON (taggings.tag = tags.id) WHERE taggings.song = songs.id)) AS tags,
 array_to_json(ARRAY(SELECT users.name FROM users JOIN favorites ON (favorites.user_id = users.id) WHERE favorites.song = songs.id)) AS favored_by
@@ -226,7 +235,7 @@ if (preg_match("#^/player/hash/(([a-fA-F0-9]{8,32},?)+)(\\?.*|)$#", $actualPath,
     $results = [];
     while ($data = pg_fetch_row($result, null, PGSQL_ASSOC)) {
         foreach ($data as $k => &$v) {
-            if ($k === "tags" or $k === "favored_by") {
+            if ($k === "tags" or $k === "favored_by" or $k === "lyrics") {
                 $v = json_decode($v, true);
             }
         }
@@ -275,7 +284,7 @@ if (preg_match("#^/player/hash/(([a-fA-F0-9]{8,32},?)+)(\\?.*|)$#", $actualPath,
             $results = [];
             while ($data = pg_fetch_row($result, null, PGSQL_ASSOC)) {
                 foreach ($data as $k => &$v) {
-                    if ($k === "tags" or $k === "favored_by") {
+                    if ($k === "tags" or $k === "favored_by" or $k === "lyrics") {
                         $v = json_decode($v, true);
                     }
                 }
@@ -307,7 +316,7 @@ if (preg_match("#^/player/hash/(([a-fA-F0-9]{8,32},?)+)(\\?.*|)$#", $actualPath,
     $results = [];
     while ($data = pg_fetch_row($result, null, PGSQL_ASSOC)) {
         foreach ($data as $k => &$v) {
-            if ($k === "tags" or $k === "favored_by") {
+            if ($k === "tags" or $k === "favored_by" or $k === "lyrics") {
                 $v = json_decode($v, true);
             }
         }
@@ -334,7 +343,7 @@ if (count($queue) > 0) {
         $result = pg_query_params($dbconn, $hashSql, [$hash . "%"]);
         while ($data = pg_fetch_row($result, null, PGSQL_ASSOC)) {
             foreach ($data as $k => &$v) {
-                if ($k === "tags" or $k === "favored_by") {
+                if ($k === "tags" or $k === "favored_by" or $k === "lyrics") {
                     $v = json_decode($v, true);
                 }
             }
@@ -504,7 +513,6 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="referrer" content="no-referrer">
 
-    <link rel="icon" type="image/svg+xml" href="/img/icon.svg">
     <link rel="icon" sizes="128x128" href="/img/icon-128.png">
     <link rel="icon" sizes="192x192" href="/img/icon-192.png">
     <link rel="icon" sizes="256x256" href="/img/icon-256.png">
@@ -616,6 +624,11 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
                 <img class="main-cover"
                      src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII="/>
                 <div id="player-left-bottom">
+                    <div class="lyrics-area">
+                        <div class="lyric-entry prev"></div>
+                        <div class="lyric-entry current"></div>
+                        <div class="lyric-entry next"></div>
+                    </div>
                     <div id="time-container">
 							<span class="current-time">
 								<span class="radio-current-minutes"></span>:<span class="radio-current-seconds"></span>
@@ -681,7 +694,14 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
         nonce="<?php echo SCRIPT_NONCE; ?>"></script>
 <script type="text/javascript" src="/js/player/player.js?<?php echo VERSION_HASH; ?>"
         nonce="<?php echo SCRIPT_NONCE; ?>"></script>
+<script type="text/javascript" src="/js/kuroshiro.min.js?<?php echo VERSION_HASH; ?>"
+        nonce="<?php echo SCRIPT_NONCE; ?>"></script>
+<script type="text/javascript" src="/js/kuroshiro-analyzer-kuromoji.min.js?<?php echo VERSION_HASH; ?>"
+        nonce="<?php echo SCRIPT_NONCE; ?>"></script>
 <script type="text/javascript" nonce="<?php echo SCRIPT_NONCE; ?>">
+
+    var kuroshiro = null;
+    var kuroshiroInit = null;
 
     var shuffledPlaylist = [];
     <?php
@@ -697,11 +717,17 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
             }
         }
 
-        $songPlaylist[] = ["title" => $data["title"], "artist" => $data["artist"], "album" => $data["album"], "url" => "/api/download/" . $data["hash"], "hash" => $data["hash"], "duration" => $data["duration"], "mime_type" => $data["mimeType"], "cover" => $data["cover"], "tags" => $tags,];
+        $songPlaylist[] = ["title" => $data["title"], "artist" => $data["artist"], "album" => $data["album"], "url" => "/api/download/" . $data["hash"], "hash" => $data["hash"], "duration" => $data["duration"], "mime_type" => $data["mimeType"], "cover" => $data["cover"], "tags" => $tags, "lyrics" => $authenticationKey !== null ? $data["lyrics"] : []];
     }
     ?>
 
     var songPlaylist = <?php echo json_encode($songPlaylist, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>;
+
+    var authenticationKey = <?php echo json_encode($authenticationKey); ?>;
+    var baseApiUrl = window.localStorage.getItem("radio-api-url") != null ? window.localStorage.getItem("radio-api-url") : location.protocol + '//' + document.domain + ':' + location.port;
+    var currentLyrics = [];
+
+    var showOriginalLyrics = false;
 
     var playing = false;
     var uplayer = new UPlayer({
@@ -758,12 +784,50 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
                 uplayer.play(true);
             }
             //$(".play-pause").removeClass("hidden");
+        },
+        "on-progress": function () {
+            if(currentLyrics.length > 0){
+                var currentTime = uplayer.currentProgress * uplayer.totalDuration;
+                var prevElementInBounds = null;
+                var currentElementInBounds = null;
+                var nextElementInBounds = null;
+
+                var pickText = (ob) => {
+                    return (showOriginalLyrics && ob.originalText) ? ob.originalText : ob.text;
+                }
+
+                for(var i = 0; i < currentLyrics.length; ++i){
+                    var e = currentLyrics[i];
+                    if(e.start <= currentTime && (!e.end || e.end > currentTime)){
+                        currentElementInBounds = e;
+                        continue;
+                    }
+                    if(currentElementInBounds === null && (!e.end || e.end > currentTime)){
+                        prevElementInBounds = e;
+                    }
+                    if(nextElementInBounds === null && e.start >= currentTime){
+                        nextElementInBounds = e;
+                    }
+
+                    if(currentElementInBounds !== null){
+                        break;
+                    }
+                }
+
+                $(".lyrics-area .lyric-entry.prev").text(prevElementInBounds !== null ? pickText(prevElementInBounds) : "​");
+                $(".lyrics-area .lyric-entry.current").text(currentElementInBounds !== null ? pickText(currentElementInBounds) : "​");
+                $(".lyrics-area .lyric-entry.next").text(nextElementInBounds !== null ? pickText(nextElementInBounds) : "​");
+            }
         }
     });
 
 
     $(".volume-slider").on("change", function () {
         window.localStorage.setItem("radio-volume", $(this).val());
+    });
+
+    $(".lyrics-area").on("click", () => {
+       showOriginalLyrics = !showOriginalLyrics;
     });
 
 
@@ -890,6 +954,88 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
         });
     }
 
+    function loadKuroshiro(){
+        if(kuroshiro === null){
+            kuroshiro = new Kuroshiro();
+            return kuroshiroInit = kuroshiro.init(new KuromojiAnalyzer({
+                dictPath: "/dict/"
+            }));
+        }else{
+            return kuroshiroInit;
+        }
+    }
+
+    function tryLoadLyrics(song){
+        currentLyrics = [];
+
+
+        if(song.lyrics.includes("timed")){
+            $(".lyrics-area .lyric-entry").text("");
+
+            jQuery.ajax(baseApiUrl + "/api/info/" + song.hash + "/lyrics/timed?apikey" + authenticationKey, {
+                method: "GET",
+                async: true
+            }).done(function (data, status, xhr) {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    if(typeof data === "string"){
+                        let lines = data.split("\n");
+
+
+                        loadKuroshiro().then(() => {
+                            currentLyrics = [];
+                            var previousEntry = null;
+                            for(var i = 0; i < lines.length; ++i){
+                                var matches = lines[i].match(/\[([^\]]+)\](.*)/);
+                                if(matches !== null){
+                                    var text = matches[2].trim();
+                                    var timeUnits = matches[1].split(":");
+                                    var time = parseFloat(timeUnits.pop()) || 0;
+                                    time += (parseFloat(timeUnits.pop()) * 60) || 0;
+                                    time += (parseFloat(timeUnits.pop()) * 3600) || 0;
+
+                                    if(previousEntry === null && text === ""){
+                                        continue;
+                                    }else if(previousEntry !== null){
+                                        previousEntry.end = time;
+                                    }
+
+                                    currentLyrics.push(previousEntry = {
+                                        text: text === "" ? "​" : text,
+                                        start: time
+                                    });
+                                }
+                            }
+
+                            if(currentLyrics.length > 0){
+                                $(".lyrics-area").css("display", "inline-block");
+                            }else{
+                                $(".lyrics-area").css("display", "none");
+                            }
+
+                            for(var i = 0; i < currentLyrics.length; ++i){
+                                if(Kuroshiro.Util.hasJapanese(currentLyrics[i].text)){
+                                    const currentObject = currentLyrics[i];
+                                    kuroshiro.convert(currentObject.text, {
+                                        to: "romaji",
+                                        mode: "spaced",
+                                        romajiSystem: "hepburn"
+                                    }).then((result) => {
+                                        currentObject.originalText = currentObject.text;
+                                        currentObject.text = result;
+                                    }).catch((e) => {
+                                        console.log(e);
+                                    })
+                                }
+                            }
+                        });
+                    }
+                }
+            });
+        }else{
+            $(".lyrics-area").css("display", "none");
+        }
+    }
+
     function playThisSong(song, isPlaying = null) {
         if (isPlaying === null) {
             playing = uplayer.isPlaying();
@@ -922,6 +1068,8 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
         $(".np-hash").text(song["hash"]);
 
         jQuery("#np-tags.tag-area").html("");
+
+        tryLoadLyrics(song);
 
         if ("tags" in song) {
             var catalog = null;

@@ -39,7 +39,6 @@ header("Link: </js/functions.js".VERSION_HASH."; rel=preload; as=script", false)
 	<meta name="mobile-web-app-title" content="anime(bits)" />
 	<meta name="google" content="notranslate" />
 
-    <link rel="icon" type="image/svg+xml" href="/img/icon.svg">
 	<link rel="icon" sizes="128x128" href="/img/icon-128.png">
 	<link rel="icon" sizes="192x192" href="/img/icon-192.png">
 	<link rel="icon" sizes="256x256" href="/img/icon-256.png">

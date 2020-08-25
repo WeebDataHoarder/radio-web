@@ -774,6 +774,11 @@ function runQuery(force) {
         return;
     }
 
+    var orderType = 'orderBy=score&orderDirection=desc&';
+    if(type == 'album'){
+        orderType = 'orderBy=albumPath&orderDirection=asc&'
+    }
+
     if (type != "raw" && type != "history" && type != "favorites") {
         query = type + "~\"" + query.replace(/[\\"']/g, '\\$&').replace(/\u0000/g, '\\0') + "\"";
     }
@@ -789,13 +794,13 @@ function runQuery(force) {
 
     var requestUrl = null;
     if (type == "favorites" && query != "") {
-        requestUrl = "/api/search?q=" + encodeURIComponent("fav:\"" + username + "\" AND (" + query + ")");
+        requestUrl = "/api/search?orderBy=score&orderDirection=desc&q=" + encodeURIComponent("fav:\"" + username + "\" AND (" + query + ")");
     } else if (type == "favorites") {
         requestUrl = "/api/favorites/" + username;
     } else if (type == "history") {
         requestUrl = "/api/history?limit=20";
     } else {
-        requestUrl = "/api/search?q=" + encodeURIComponent(query) + "&limit=100";
+        requestUrl = "/api/search?"+ orderType + "q=" + encodeURIComponent(query) + "&limit=100";
     }
 
 

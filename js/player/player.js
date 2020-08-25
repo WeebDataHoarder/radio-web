@@ -719,6 +719,10 @@ class UPlayer {
                     if (this.currentProgress >= 0.0 && this.currentProgress <= 1.0 && "seek-element" in this.options) {
                         this.options["seek-element"].val(this.currentProgress * 100);
                     }
+
+                    if ("on-progress" in this.options) {
+                        this.options["on-progress"]();
+                    }
                     this.checkSendPreEnd();
                 }.bind(this));
             }
@@ -837,6 +841,10 @@ class UPlayer {
                 if ("play-pause-element" in this.options) {
                     this.options["play-pause-element"].removeClass("paused");
                     this.options["play-pause-element"].addClass("playing");
+                }
+
+                if ("on-progress" in this.options) {
+                    this.options["on-progress"]();
                 }
                 this.checkSendPreEnd();
             }.bind(this));
