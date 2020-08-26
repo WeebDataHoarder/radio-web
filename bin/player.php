@@ -7,12 +7,6 @@ if ($dbconn === null) {
     exit();
 }
 
-$authenticationKey = getAuthenticationKey();
-
-if($authenticationKey !== null and checkAuthenticationKey($dbconn, $authenticationKey) === null) {
-    $authenticationKey = null;
-}
-
 
 function processAlbumResults($result){
     $songs = [];
@@ -624,11 +618,7 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
                 <img class="main-cover"
                      src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII="/>
                 <div id="player-left-bottom">
-                    <div class="lyrics-area">
-                        <div class="lyric-entry prev"></div>
-                        <div class="lyric-entry current"></div>
-                        <div class="lyric-entry next"></div>
-                    </div>
+                    <canvas id="lyrics-area"></canvas>
                     <div id="time-container">
 							<span class="current-time">
 								<span class="radio-current-minutes"></span>:<span class="radio-current-seconds"></span>
@@ -698,10 +688,54 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
         nonce="<?php echo SCRIPT_NONCE; ?>"></script>
 <script type="text/javascript" src="/js/kuroshiro-analyzer-kuromoji.min.js?<?php echo VERSION_HASH; ?>"
         nonce="<?php echo SCRIPT_NONCE; ?>"></script>
+<script type="text/javascript" src="/js/subtitles/subtitles-octopus.js?<?php echo VERSION_HASH; ?>"
+        nonce="<?php echo SCRIPT_NONCE; ?>"></script>
 <script type="text/javascript" nonce="<?php echo SCRIPT_NONCE; ?>">
 
     var kuroshiro = null;
     var kuroshiroInit = null;
+
+    var subtitles = new SubtitlesOctopus({
+       canvas: document.getElementById("lyrics-area"),
+       lossyRender: true,
+       workerUrl: "/js/subtitles/subtitles-octopus-worker.js",
+       availableFonts: {
+           "open sans": "/fonts/OpenSans-Regular.ttf",
+           "gnuolane free": "/fonts/gnuolane_free.ttf"
+       },
+       subContent: '[Script Info]\n' +
+            'ScriptType: v4.00+\n' +
+            'Collisions: Normal\n' +
+            'PlayDepth: 0\n' +
+            'PlayResX: 512\n' +
+            'PlayResY: 48\n' +
+            'Timer: 100.0000\n' +
+            ' \n' +
+            '[V4+ Styles]\n' +
+            'Format:    Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour,  BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding\n' +
+            'Style:  Current,    Open Sans,       28,    &H00FFFFFF,      &H00B4FCFC,    &H00000000,  &H80000000,   -1,      0,         0,         0,    100,    100,    0.00,  0.00,           1,    1.00,   2.00,         2,      30,      30,      30,        0\n' +
+            ' \n' +
+            '[Events]\n' +
+            'Format: Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n'
+    });
+
+    function resizeSubtitlesToMatchCanvas(timeout = true){
+        /*if(timeout){
+            setTimeout(() => {
+                var canvasStyles = window.getComputedStyle(document.getElementById("lyrics-area"));
+                subtitles.resize(canvasStyles.width.replace(/px$/, ""), canvasStyles.height.replace(/px$/, ""), 0, 0);
+            }, 100);
+        }else{*/
+            var canvasStyles = window.getComputedStyle(document.getElementById("lyrics-area"));
+            subtitles.resize(canvasStyles.width.replace(/px$/, ""), canvasStyles.height.replace(/px$/, ""), 0, 0);
+        //}
+    }
+
+    document.addEventListener("fullscreenchange", resizeSubtitlesToMatchCanvas, false);
+    document.addEventListener("mozfullscreenchange", resizeSubtitlesToMatchCanvas, false);
+    document.addEventListener("webkitfullscreenchange", resizeSubtitlesToMatchCanvas, false);
+    document.addEventListener("msfullscreenchange", resizeSubtitlesToMatchCanvas, false);
+    window.addEventListener("resize", resizeSubtitlesToMatchCanvas, false);
 
     var shuffledPlaylist = [];
     <?php
@@ -717,17 +751,18 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
             }
         }
 
-        $songPlaylist[] = ["title" => $data["title"], "artist" => $data["artist"], "album" => $data["album"], "url" => "/api/download/" . $data["hash"], "hash" => $data["hash"], "duration" => $data["duration"], "mime_type" => $data["mimeType"], "cover" => $data["cover"], "tags" => $tags, "lyrics" => $authenticationKey !== null ? $data["lyrics"] : []];
+        $songPlaylist[] = ["title" => $data["title"], "artist" => $data["artist"], "album" => $data["album"], "url" => "/api/download/" . $data["hash"], "hash" => $data["hash"], "duration" => $data["duration"], "mime_type" => $data["mimeType"], "cover" => $data["cover"], "tags" => $tags, "lyrics" => $data["lyrics"]];
     }
     ?>
 
     var songPlaylist = <?php echo json_encode($songPlaylist, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>;
 
-    var authenticationKey = <?php echo json_encode($authenticationKey); ?>;
     var baseApiUrl = window.localStorage.getItem("radio-api-url") != null ? window.localStorage.getItem("radio-api-url") : location.protocol + '//' + document.domain + ':' + location.port;
-    var currentLyrics = [];
+    var currentLyrics = null;
 
     var showOriginalLyrics = false;
+
+    var lastTime = null;
 
     var playing = false;
     var uplayer = new UPlayer({
@@ -786,38 +821,12 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
             //$(".play-pause").removeClass("hidden");
         },
         "on-progress": function () {
-            if(currentLyrics.length > 0){
-                var currentTime = uplayer.currentProgress * uplayer.totalDuration;
-                var prevElementInBounds = null;
-                var currentElementInBounds = null;
-                var nextElementInBounds = null;
-
-                var pickText = (ob) => {
-                    return (showOriginalLyrics && ob.originalText) ? ob.originalText : ob.text;
-                }
-
-                for(var i = 0; i < currentLyrics.length; ++i){
-                    var e = currentLyrics[i];
-                    if(e.start <= currentTime && (!e.end || e.end > currentTime)){
-                        currentElementInBounds = e;
-                        continue;
-                    }
-                    if(currentElementInBounds === null && (!e.end || e.end > currentTime)){
-                        prevElementInBounds = e;
-                    }
-                    if(nextElementInBounds === null && e.start >= currentTime){
-                        nextElementInBounds = e;
-                    }
-
-                    if(currentElementInBounds !== null){
-                        break;
-                    }
-                }
-
-                $(".lyrics-area .lyric-entry.prev").text(prevElementInBounds !== null ? pickText(prevElementInBounds) : "​");
-                $(".lyrics-area .lyric-entry.current").text(currentElementInBounds !== null ? pickText(currentElementInBounds) : "​");
-                $(".lyrics-area .lyric-entry.next").text(nextElementInBounds !== null ? pickText(nextElementInBounds) : "​");
-            }
+            //var fps = 29;
+            var currentTime = uplayer.currentProgress * uplayer.totalDuration;
+            //if(lastTime === null || Math.abs(currentTime - lastTime) >= (1 / fps)){
+                subtitles.setCurrentTime(currentTime);
+                //lastTime = currentTime;
+            //}
         }
     });
 
@@ -826,8 +835,17 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
         window.localStorage.setItem("radio-volume", $(this).val());
     });
 
-    $(".lyrics-area").on("click", () => {
+    $("#lyrics-area").on("click", () => {
        showOriginalLyrics = !showOriginalLyrics;
+       if(currentLyrics !== null){
+           if(currentLyrics.type === "timed"){
+               createSubtitleFromEntries(currentLyrics.entries);
+           }else if(currentLyrics.type === "ass"){
+               //subtitles.freeTrack();
+               //resizeSubtitlesToMatchCanvas(false);
+               //subtitles.setTrack(currentLyrics.entries);
+           }
+       }
     });
 
 
@@ -965,75 +983,233 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
         }
     }
 
-    function tryLoadLyrics(song){
-        currentLyrics = [];
+    function loadLRCLyrics(data){
+        resizeSubtitlesToMatchCanvas();
 
+        currentLyrics = null;
 
-        if(song.lyrics.includes("timed")){
-            $(".lyrics-area .lyric-entry").text("");
+        var lyricEntries = [];
 
-            jQuery.ajax(baseApiUrl + "/api/info/" + song.hash + "/lyrics/timed?apikey" + authenticationKey, {
-                method: "GET",
-                async: true
-            }).done(function (data, status, xhr) {
-                if (xhr.status >= 200 && xhr.status < 300) {
-                    if(typeof data === "string"){
-                        let lines = data.split("\n");
+        let lines = data.split("\n");
+        var currentOffset = 0;
+        var previousEntry = null;
+        for(var i = 0; i < lines.length; ++i){
+            var matches = lines[i].match(/\[(offset):([^\]]+)\]/);
+            if(matches !== null){
+                var type = matches[1].toLowerCase();
+                var content = matches[2].trim();
+                if(type === "offset"){
+                    currentOffset = parseFloat(content) / 1000;
+                }
+            }else{
+                matches = lines[i].match(/\[([^\]]+)\](.*)/);
+                if(matches !== null){
+                    var text = matches[2].trim();
+                    var timeUnits = matches[1].split(":");
+                    var time = parseFloat(timeUnits.pop()) || 0;
+                    time += (parseFloat(timeUnits.pop()) * 60) || 0;
+                    time += (parseFloat(timeUnits.pop()) * 3600) || 0;
+                    time += currentOffset;
 
+                    /*if(previousEntry === null && text === ""){
+                        continue;
+                    }else */if(previousEntry !== null && !previousEntry.end){
+                        if(previousEntry.text === "" && text === ""){
+                            continue;
+                        }
+                        previousEntry.end = time;
+                    }
 
-                        loadKuroshiro().then(() => {
-                            currentLyrics = [];
-                            var previousEntry = null;
-                            for(var i = 0; i < lines.length; ++i){
-                                var matches = lines[i].match(/\[([^\]]+)\](.*)/);
-                                if(matches !== null){
-                                    var text = matches[2].trim();
-                                    var timeUnits = matches[1].split(":");
-                                    var time = parseFloat(timeUnits.pop()) || 0;
-                                    time += (parseFloat(timeUnits.pop()) * 60) || 0;
-                                    time += (parseFloat(timeUnits.pop()) * 3600) || 0;
+                    var subEntries = [];
 
-                                    if(previousEntry === null && text === ""){
-                                        continue;
-                                    }else if(previousEntry !== null){
-                                        previousEntry.end = time;
-                                    }
+                    text = text === "" ? "​" : text;
 
-                                    currentLyrics.push(previousEntry = {
-                                        text: text === "" ? "​" : text,
-                                        start: time
-                                    });
-                                }
-                            }
+                    var regex = /<([0-9:. ]+)>([^<]*)/g;
+                    var result;
+                    var prevSubEntry = null;
+                    while((result = regex.exec(text)) !== null){
+                        var subText = result[2];
+                        var subTimeUnits = result[1].split(":");
+                        var subTime = parseFloat(String(subTimeUnits.pop()).trim()) || 0;
+                        subTime += (parseFloat(String(subTimeUnits.pop()).trim()) * 60) || 0;
+                        subTime += (parseFloat(String(subTimeUnits.pop()).trim()) * 3600) || 0;
+                        subTime += currentOffset;
 
-                            if(currentLyrics.length > 0){
-                                $(".lyrics-area").css("display", "inline-block");
-                            }else{
-                                $(".lyrics-area").css("display", "none");
-                            }
+                        if(prevSubEntry !== null && !prevSubEntry.end){
+                            prevSubEntry.end = subTime;
+                        }
 
-                            for(var i = 0; i < currentLyrics.length; ++i){
-                                if(Kuroshiro.Util.hasJapanese(currentLyrics[i].text)){
-                                    const currentObject = currentLyrics[i];
-                                    kuroshiro.convert(currentObject.text, {
-                                        to: "romaji",
-                                        mode: "spaced",
-                                        romajiSystem: "hepburn"
-                                    }).then((result) => {
-                                        currentObject.originalText = currentObject.text;
-                                        currentObject.text = result;
-                                    }).catch((e) => {
-                                        console.log(e);
-                                    })
-                                }
-                            }
+                        subEntries.push(prevSubEntry = {
+                            text: subText === "" ? "​" : subText,
+                            start: subTime
                         });
+
+                    }
+
+                    lyricEntries.push(previousEntry = {
+                        text: text.replace(/<[^>]+>/g, ""),
+                        start: time
+                    });
+                    if(subEntries.length > 0){
+                        previousEntry.entries = subEntries;
                     }
                 }
-            });
-        }else{
-            $(".lyrics-area").css("display", "none");
+            }
         }
+
+        var promises = [];
+
+        for(var i = 0; i < lyricEntries.length; ++i){
+            if(Kuroshiro.Util.hasJapanese(lyricEntries[i].text)){
+                const currentObject = lyricEntries[i];
+                if(currentObject.entries){
+                    for(var k = 0; k < currentObject.entries.length; ++k){
+                        const currentObjectIndex = k;
+                        promises.push(kuroshiro.convert(currentObject.entries[currentObjectIndex].text, {
+                            to: "romaji",
+                            mode: "spaced",
+                            romajiSystem: "hepburn"
+                        }).then((result) => {
+                            currentObject.entries[currentObjectIndex].originalText = currentObject.entries[currentObjectIndex].text;
+                            currentObject.entries[currentObjectIndex].text = result + " ";
+                        }).catch((e) => {
+                            console.log(e);
+                        }))
+                    }
+                }
+                promises.push(kuroshiro.convert(currentObject.text, {
+                    to: "romaji",
+                    mode: "spaced",
+                    romajiSystem: "hepburn"
+                }).then((result) => {
+                    currentObject.originalText = currentObject.text;
+                    currentObject.text = result;
+                }).catch((e) => {
+                    console.log(e);
+                }))
+            }
+        }
+
+        Promise.all(promises).then(() => {
+            currentLyrics = {
+                type: "timed",
+                entries: lyricEntries
+            }
+
+            createSubtitleFromEntries(lyricEntries);
+        });
+    }
+
+    function createSubtitleFromEntries(lyricEntries){
+        var subtitleFile = '[Script Info]\n' +
+            'Title: Lyrics\n' +
+            'ScriptType: v4.00+\n' +
+            'Collisions: Normal\n' +
+            'WrapStyle: 0\n' +
+            'ScaledBorderAndShadow: yes\n' +
+            'YCbCr Matrix: None\n' +
+            'PlayResX: 512\n' +
+            'PlayResY: 48\n' +
+            'Timer: 100.0000\n' +
+            'PlayDepth: 0\n' +
+            '\n' +
+            '[Aegisub Project Garbage]\n' +
+            'Last Style Storage: Default\n' +
+            'Video File: ?dummy:23.976000:40000:512:48:47:163:254:\n' +
+            'Video AR Value: 5.000000\n' +
+            '\n' +
+            '[V4+ Styles]\n' +
+            'Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding\n' +
+            'Style: Current,Note Sans,23,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,1,0,0,0,100,100,0,0,1,1.5,0,5,2,2,0,1\n' +
+            '\n' +
+            '[Events]\n' +
+            'Format: Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n';
+        var previousEntry = {
+            text: "",
+            start: 0,
+            end: lyricEntries[0] ? lyricEntries[0].start : 0
+        }
+
+        var timeToStamp = (time) => {
+            time = Math.max(time, 0);
+            var hours = Math.floor(time / 3600);
+            time = time - hours * 3600;
+            var minutes = Math.floor(time / 60);
+            var seconds = time - minutes * 60;
+            function str_pad_left(string,pad,length) {
+                return (new Array(length+1).join(pad)+string).slice(-length);
+            }
+
+            return hours + ":" + str_pad_left(minutes,'0',2)+':'+str_pad_left(Math.floor(seconds),'0',2) + "." + str_pad_left(Math.round((seconds - Math.floor(seconds)) * 100), '0', 2);
+        }
+
+        var pickText = (ob) => {
+            return ((showOriginalLyrics && ob.originalText) ? ob.originalText : ob.text).replace(/[ ]+/g, ' ');
+        }
+
+        for(var i = 0; i < lyricEntries.length; ++i){
+            const line = lyricEntries[i];
+            //TODO: secondary line
+
+            var entryLine = 'Dialogue: ' + timeToStamp(line.start) + ', ' + timeToStamp(line.end ? line.end : line.start + 60) + ',Current,,0,0,0,,';
+            if(line.entries && line.entries.length > 0){
+                for(var k = 0; k < line.entries.length; ++k){
+                    var entry = line.entries[k];
+                    entryLine += '{\\t('+Math.round((entry.start - line.start) * 1000)+', '+Math.round(((entry.end ? entry.end : line.end) - line.start) * 1000)+', \\1c&6B6BFF&)}' + pickText(entry) + '{\\1c&FFFFFF&}';
+                }
+            }else{
+                entryLine += '{\\t(0, '+Math.round(Math.min(60, line.end - line.start) * 1000)+', \\1c&6B6BFF&)}' + pickText(line) + '{\\1c&FFFFFF&}';
+            }
+
+            subtitleFile += entryLine + '\n';
+        }
+
+        subtitles.freeTrack();
+        resizeSubtitlesToMatchCanvas(false);
+        subtitles.setTrack(subtitleFile);
+
+        return subtitleFile;
+    }
+
+    function tryLoadLyrics(song){
+        loadKuroshiro().then(() => {
+
+            var preferredLyrics = ["ass", "timed"];
+            var subtitleEntry = null;
+
+            for(var index = 0; index < preferredLyrics.length; ++index){
+                if(song.lyrics.includes(preferredLyrics[index])){
+                    $("#lyrics-area").css("display", "inline-block");
+                    subtitleEntry = preferredLyrics[index];
+
+                    jQuery.ajax(baseApiUrl + "/api/info/" + song.hash + "/lyrics/" + subtitleEntry, {
+                        method: "GET",
+                        async: true
+                    }).done(function (data, status, xhr) {
+                        if (xhr.status >= 200 && xhr.status < 300) {
+                            if(typeof data === "string"){
+                                if(subtitleEntry === "timed"){
+                                    loadLRCLyrics(data);
+                                }else if(subtitleEntry === "ass"){
+                                    currentLyrics = {
+                                        type: "ass",
+                                        entries: data
+                                    }
+                                    subtitles.freeTrack();
+                                    resizeSubtitlesToMatchCanvas(false);
+                                    subtitles.setTrack(data);
+                                }
+                            }
+                        }
+                    });
+
+                    return;
+                }
+            }
+        });
+
+        $("#lyrics-area").css("display", "none");
+
     }
 
     function playThisSong(song, isPlaying = null) {
@@ -1042,6 +1218,7 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
         } else {
             playing = isPlaying;
         }
+
         uplayer.init(song["url"], [song["mime_type"]]);
         var oldActiveElement = $(".active-song-container");
         var newActiveElement = $(".song[song-hash=\"" + song["hash"] + "\"]");
