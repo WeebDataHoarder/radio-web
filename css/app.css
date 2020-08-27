@@ -216,13 +216,13 @@ div#radio-player div#radio-left canvas#lyrics-area {
     display: inline-block;
     padding: 0px;
     position: absolute;
-    top: -3em;
+    top: -48px;
     left: 0px;
     width: 100%;
     overflow: hidden;
-    height: 3em;
+    height: 48px;
     margin: 0px;
-    background: rgba(0, 0, 0, 0.6);
+    background: rgba(0, 0, 0, 0.4);
     text-align: center;
 }
 
@@ -697,8 +697,7 @@ div#progress-container input[type=range]:focus::-ms-fill-upper {
 }
 
 div#control-container {
-    margin-top: 25px;
-    margin-top: 20px;
+    margin-top: 10px;
 }
 
 div#control-container div#repeat-container {
@@ -957,6 +956,10 @@ div#control-container:after {
         display: none;
     }
 
+    div#radio-player div#volume-container {
+        display: none;
+    }
+
     div#control-container div#central-control-container {
         width: 100%;
     }
@@ -971,6 +974,10 @@ div#control-container:after {
     }
 
     div#radio-player div#volume-container div.volume-controls {
+        display: none;
+    }
+
+    div#radio-player div#volume-container {
         display: none;
     }
 }

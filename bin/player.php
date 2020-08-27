@@ -361,8 +361,8 @@ if (count($songs) === 1) {
         }
     }
     $tagStr = implode(", ", $tags);
-    $title = $data["title"] . " by " . $data["artist"] . " [$duration]" . " :: " . $tagStr;
-    $desc = $data["artist"] . " - " . $data["title"] . " (" . $data["album"] . ")" . " [$duration]" . " :: " . $tagStr;
+    $title = $data["title"] . " by " . $data["artist"] . " [$duration]" . " :: " . ((isset($data["lyrics"]) and (in_array("timed", $data["lyrics"], true) or in_array("ass", $data["lyrics"], true))) ? "🎤 :: " : "") . $tagStr;
+    $desc = $data["artist"] . " - " . $data["title"] . " (" . $data["album"] . ")" . " [$duration]" . " :: " . ((isset($data["lyrics"]) and (in_array("timed", $data["lyrics"], true) or in_array("ass", $data["lyrics"], true))) ? "🎤 :: " : "") . $tagStr;
 } elseif (count($songs) < 10 and $title === "") {
     $title = [];
     $desc = [];
@@ -691,35 +691,15 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
 <script type="text/javascript" src="/js/subtitles/subtitles-octopus.js?<?php echo VERSION_HASH; ?>"
         nonce="<?php echo SCRIPT_NONCE; ?>"></script>
 <script type="text/javascript" nonce="<?php echo SCRIPT_NONCE; ?>">
-
     var kuroshiro = null;
     var kuroshiroInit = null;
 
-    var subtitles = new SubtitlesOctopus({
-       canvas: document.getElementById("lyrics-area"),
-       lossyRender: true,
-       workerUrl: "/js/subtitles/subtitles-octopus-worker.js",
-       availableFonts: {
-           "open sans": "/fonts/OpenSans-Regular.ttf",
-           "gnuolane free": "/fonts/gnuolane_free.ttf"
-       },
-       subContent: '[Script Info]\n' +
-            'ScriptType: v4.00+\n' +
-            'Collisions: Normal\n' +
-            'PlayDepth: 0\n' +
-            'PlayResX: 512\n' +
-            'PlayResY: 48\n' +
-            'Timer: 100.0000\n' +
-            ' \n' +
-            '[V4+ Styles]\n' +
-            'Format:    Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour,  BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding\n' +
-            'Style:  Current,    Open Sans,       28,    &H00FFFFFF,      &H00B4FCFC,    &H00000000,  &H80000000,   -1,      0,         0,         0,    100,    100,    0.00,  0.00,           1,    1.00,   2.00,         2,      30,      30,      30,        0\n' +
-            ' \n' +
-            '[Events]\n' +
-            'Format: Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n'
-    });
+    var subtitles = null;
 
     function resizeSubtitlesToMatchCanvas(timeout = true){
+        if(subtitles === null){
+            return;
+        }
         /*if(timeout){
             setTimeout(() => {
                 var canvasStyles = window.getComputedStyle(document.getElementById("lyrics-area"));
@@ -760,9 +740,9 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
     var baseApiUrl = window.localStorage.getItem("radio-api-url") != null ? window.localStorage.getItem("radio-api-url") : location.protocol + '//' + document.domain + ':' + location.port;
     var currentLyrics = null;
 
-    var showOriginalLyrics = false;
-
-    var lastTime = null;
+    var showOriginalLyrics = !!(window.localStorage.getItem("lyrics-original") !== null ? parseInt(window.localStorage.getItem("lyrics-original")) : 0);
+    var loadLyrics = !!(window.localStorage.getItem("lyrics-show") !== null ? parseInt(window.localStorage.getItem("lyrics-show")) : 1);
+    var lyricsAnimationLevel = (window.localStorage.getItem("lyrics-animations") !== null ? parseInt(window.localStorage.getItem("lyrics-animations")) : 1); // 0 = no, 1 = all, 2 = only fade in/out
 
     var playing = false;
     var uplayer = new UPlayer({
@@ -821,14 +801,22 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
             //$(".play-pause").removeClass("hidden");
         },
         "on-progress": function () {
-            //var fps = 29;
             var currentTime = uplayer.currentProgress * uplayer.totalDuration;
-            //if(lastTime === null || Math.abs(currentTime - lastTime) >= (1 / fps)){
+            if(subtitles !== null) {
                 subtitles.setCurrentTime(currentTime);
-                //lastTime = currentTime;
-            //}
+            }
         }
     });
+
+    setInterval(() => {
+        if(subtitles !== null && currentLyrics !== null && uplayer.isPlaying()){
+            if(uplayer.nativePlayback){
+                subtitles.setCurrentTime(uplayer.playerObject.currentTime);
+            }else{
+                subtitles.setCurrentTime(uplayer.playerObject.currentTime / 1000);
+            }
+        }
+    }, 50);
 
 
     $(".volume-slider").on("change", function () {
@@ -837,6 +825,7 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
 
     $("#lyrics-area").on("click", () => {
        showOriginalLyrics = !showOriginalLyrics;
+       window.localStorage.setItem("lyrics-original", showOriginalLyrics ? 1 : 0);
        if(currentLyrics !== null){
            if(currentLyrics.type === "timed"){
                createSubtitleFromEntries(currentLyrics.entries);
@@ -1011,6 +1000,10 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
                     time += (parseFloat(timeUnits.pop()) * 3600) || 0;
                     time += currentOffset;
 
+                    if(text.match(/^(作词|作曲|编曲|曲|歌|词)[ \t]*[：∶:]/)){
+                        continue;
+                    }
+
                     /*if(previousEntry === null && text === ""){
                         continue;
                     }else */if(previousEntry !== null && !previousEntry.end){
@@ -1022,7 +1015,7 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
 
                     var subEntries = [];
 
-                    text = text === "" ? "​" : text;
+                    text = text;
 
                     var regex = /<([0-9:. ]+)>([^<]*)/g;
                     var result;
@@ -1040,7 +1033,7 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
                         }
 
                         subEntries.push(prevSubEntry = {
-                            text: subText === "" ? "​" : subText,
+                            text: subText,
                             start: subTime
                         });
 
@@ -1100,6 +1093,35 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
         });
     }
 
+    function createSubtitlesInstance(subsContent){
+        var fonts = {
+            "open sans": "/fonts/OpenSans-Regular.ttf"
+        };
+
+        var regex = /^fontnamev2:[ \t]*([^_]+)_([^,]*)\.([a-z0-9]{3,4}),[ \t]*(.+)$/mg;
+        var result;
+        while((result = regex.exec(subsContent)) !== null){
+            var fontName = result[1];
+            var fontProperties = result[2];
+            var fontExtension = result[3];
+            var fontURI = result[4];
+
+            fonts[fontName.toLowerCase()] = fontURI;
+        }
+        if(subtitles !== null){
+            subtitles.dispose();
+        }
+        subtitles = new SubtitlesOctopus({
+            canvas: document.getElementById("lyrics-area"),
+            lossyRender: !('createImageBitmap' in window) ? false : true,
+            workerUrl: "/js/subtitles/subtitles-octopus-worker.js",
+            legacyWorkerUrl: "/js/subtitles/subtitles-octopus-worker-legacy.js",
+            availableFonts: fonts,
+            subContent: subsContent
+        });
+        resizeSubtitlesToMatchCanvas(false);
+    }
+
     function createSubtitleFromEntries(lyricEntries){
         var subtitleFile = '[Script Info]\n' +
             'Title: Lyrics\n' +
@@ -1120,10 +1142,10 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
             '\n' +
             '[V4+ Styles]\n' +
             'Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding\n' +
-            'Style: Current,Note Sans,23,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,1,0,0,0,100,100,0,0,1,1.5,0,5,2,2,0,1\n' +
+            'Style: Current,Note Sans,23,&H00FFFFFF,&H00FFBAB9,&H00000000,&H00000000,1,0,0,0,100,100,0,0,1,1.5,0,5,2,2,0,1\n' +
             '\n' +
             '[Events]\n' +
-            'Format: Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n';
+            'Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n';
         var previousEntry = {
             text: "",
             start: 0,
@@ -1147,66 +1169,72 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
             return ((showOriginalLyrics && ob.originalText) ? ob.originalText : ob.text).replace(/[ ]+/g, ' ');
         }
 
+        subtitleFile += 'Dialogue: 0,0:00:00.00, 0:00:00.10,Current,,0,0,0,,{\\pos(1000,1000)}Warmup text\n'; //Do this to "pre-render"
+
         for(var i = 0; i < lyricEntries.length; ++i){
             const line = lyricEntries[i];
             //TODO: secondary line
 
-            var entryLine = 'Dialogue: ' + timeToStamp(line.start) + ', ' + timeToStamp(line.end ? line.end : line.start + 60) + ',Current,,0,0,0,,';
+            var entryLine = 'Dialogue: 0,' + timeToStamp(line.start) + ', ' + timeToStamp(line.end !== undefined ? line.end : line.start + 5) + ',Current,,0,0,0,,';
+            var lineDuration = Math.max(1, Math.floor(((line.end !== undefined ? line.end : line.start + 5) - line.start) * 100));
             if(line.entries && line.entries.length > 0){
+                entryLine += ((lyricsAnimationLevel > 0 && lineDuration > 50) ? '{\\fade(50,250)}' : '');
                 for(var k = 0; k < line.entries.length; ++k){
                     var entry = line.entries[k];
-                    entryLine += '{\\t('+Math.round((entry.start - line.start) * 1000)+', '+Math.round(((entry.end ? entry.end : line.end) - line.start) * 1000)+', \\1c&6B6BFF&)}' + pickText(entry) + '{\\1c&FFFFFF&}';
+                    var entryDuration = Math.max(1, Math.floor(((entry.end !== undefined  ? Math.min(line.end !== undefined  ? line.end : entry.end, entry.end) : (line.end !== undefined ? line.end : line.start + 5)) - entry.start) * 100));
+                    entryLine += (lyricsAnimationLevel > 0 ? (lyricsAnimationLevel == 1 ? '{\\kf'+entryDuration+'}' : '{\\k'+entryDuration+'}') : '') + pickText(entry);
                 }
             }else{
-                entryLine += '{\\t(0, '+Math.round(Math.min(60, line.end - line.start) * 1000)+', \\1c&6B6BFF&)}' + pickText(line) + '{\\1c&FFFFFF&}';
+                var txt = pickText(line);
+                if(txt.trim() === ""){
+                    continue;
+                }
+                entryLine += '{'+(lineDuration > 50 ? '\\fade(50,250)' : '')+  (lyricsAnimationLevel > 0 ? (lyricsAnimationLevel == 1 ? '\\kf' + lineDuration : '\\k' + lineDuration) : '') + '}' + txt;
             }
 
             subtitleFile += entryLine + '\n';
         }
-
-        subtitles.freeTrack();
-        resizeSubtitlesToMatchCanvas(false);
-        subtitles.setTrack(subtitleFile);
+        createSubtitlesInstance(subtitleFile);
 
         return subtitleFile;
     }
 
     function tryLoadLyrics(song){
-        loadKuroshiro().then(() => {
+        if(loadLyrics){
+            loadKuroshiro().then(() => {
 
-            var preferredLyrics = ["ass", "timed"];
-            var subtitleEntry = null;
+                var preferredLyrics = ["ass", "timed"];
+                var subtitleEntry = null;
 
-            for(var index = 0; index < preferredLyrics.length; ++index){
-                if(song.lyrics.includes(preferredLyrics[index])){
-                    $("#lyrics-area").css("display", "inline-block");
-                    subtitleEntry = preferredLyrics[index];
+                for(var index = 0; index < preferredLyrics.length; ++index){
+                    if(song.lyrics.includes(preferredLyrics[index])){
+                        $("#lyrics-area").css("display", "inline-block");
+                        subtitleEntry = preferredLyrics[index];
 
-                    jQuery.ajax(baseApiUrl + "/api/info/" + song.hash + "/lyrics/" + subtitleEntry, {
-                        method: "GET",
-                        async: true
-                    }).done(function (data, status, xhr) {
-                        if (xhr.status >= 200 && xhr.status < 300) {
-                            if(typeof data === "string"){
-                                if(subtitleEntry === "timed"){
-                                    loadLRCLyrics(data);
-                                }else if(subtitleEntry === "ass"){
-                                    currentLyrics = {
-                                        type: "ass",
-                                        entries: data
+                        jQuery.ajax(baseApiUrl + "/api/info/" + song.hash + "/lyrics/" + subtitleEntry, {
+                            method: "GET",
+                            async: true
+                        }).done(function (data, status, xhr) {
+                            if (xhr.status >= 200 && xhr.status < 300) {
+                                if(typeof data === "string"){
+                                    if(subtitleEntry === "timed"){
+                                        loadLRCLyrics(data);
+                                    }else if(subtitleEntry === "ass"){
+                                        currentLyrics = {
+                                            type: "ass",
+                                            entries: data
+                                        }
+                                        createSubtitlesInstance(data);
                                     }
-                                    subtitles.freeTrack();
-                                    resizeSubtitlesToMatchCanvas(false);
-                                    subtitles.setTrack(data);
                                 }
                             }
-                        }
-                    });
+                        });
 
-                    return;
+                        return;
+                    }
                 }
-            }
-        });
+            });
+        }
 
         $("#lyrics-area").css("display", "none");
 

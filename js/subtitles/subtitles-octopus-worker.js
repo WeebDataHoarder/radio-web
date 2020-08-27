@@ -9574,6 +9574,18 @@ libass.prototype["oct_step_sub"] = libass.prototype.oct_step_sub = function(trac
  if (runtimeInitialized) setupEnums(); else addOnPreMain(setupEnums);
 })();
 
+if (!createImageBitmap) {
+ createImageBitmap = async function(blob) {
+  return new Promise((resolve,reject) => {
+   let img = document.createElement('img');
+   img.addEventListener('load', function() {
+    resolve(this);
+   });
+   img.src = URL.createObjectURL(blob);
+  });
+ }
+}
+
 Module["FS"] = FS;
 
 self.delay = 0;
