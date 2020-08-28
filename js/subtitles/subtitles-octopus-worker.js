@@ -1544,11 +1544,27 @@ function locateFile(path) {
  return scriptDirectory + path;
 }
 
-var read_, readAsync, readBinary, setWindowTitle;
+var read_, readAsync, readBinary, readDataUri, setWindowTitle;
 
 var nodeFS;
 
 var nodePath;
+
+readDataUri = function readDataUri(dataURI) {
+ if(typeof dataURI !== 'string'){
+  throw new Error('Invalid argument: dataURI must be a string');
+ }
+ dataURI = dataURI.split(',');
+ var type = dataURI[0].split(':')[1].split(';')[0],
+     byteString = atob(dataURI[1]),
+     byteStringLength = byteString.length,
+     arrayBuffer = new ArrayBuffer(byteStringLength),
+     intArray = new Uint8Array(arrayBuffer);
+ for (var i = 0; i < byteStringLength; i++) {
+  intArray[i] = byteString.charCodeAt(i);
+ }
+ return intArray;
+}
 
 if (ENVIRONMENT_IS_NODE) {
  if (ENVIRONMENT_IS_WORKER) {
@@ -9574,18 +9590,6 @@ libass.prototype["oct_step_sub"] = libass.prototype.oct_step_sub = function(trac
  if (runtimeInitialized) setupEnums(); else addOnPreMain(setupEnums);
 })();
 
-if (!createImageBitmap) {
- createImageBitmap = async function(blob) {
-  return new Promise((resolve,reject) => {
-   let img = document.createElement('img');
-   img.addEventListener('load', function() {
-    resolve(this);
-   });
-   img.src = URL.createObjectURL(blob);
-  });
- }
-}
-
 Module["FS"] = FS;
 
 self.delay = 0;
@@ -9618,7 +9622,7 @@ self.writeFontToFS = function(font) {
  if (self.fontMap_.hasOwnProperty(font)) return;
  self.fontMap_[font] = true;
  if (!self.availableFonts.hasOwnProperty(font)) return;
- var content = readBinary(self.availableFonts[font]);
+ var content = self.availableFonts[font].match(/^data:/) !== null ? readDataUri(self.availableFonts[font]): readBinary(self.availableFonts[font]);
  Module["FS"].writeFile("/fonts/font" + self.fontId++ + "-" + self.availableFonts[font].split("/").pop(), content, {
   encoding: "binary"
  });
@@ -10048,7 +10052,7 @@ function onMessageFromMainEmscriptenThread(message) {
    self.subUrl = message.data.subUrl;
    self.subContent = message.data.subContent;
    self.fontFiles = message.data.fonts;
-   self.fastRenderMode = message.data.fastRender;
+   self.fastRenderMode = message.data.fastRender && typeof createImageBitmap !== 'undefined';
    self.availableFonts = message.data.availableFonts;
    self.debug = message.data.debug;
    if (!hasNativeConsole && self.debug) {

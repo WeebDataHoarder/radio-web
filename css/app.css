@@ -216,14 +216,15 @@ div#radio-player div#radio-left canvas#lyrics-area {
     display: inline-block;
     padding: 0px;
     position: absolute;
-    top: -48px;
+    top: 0px;
     left: 0px;
     width: 100%;
     overflow: hidden;
-    height: 48px;
+    height: 0px;
     margin: 0px;
     background: rgba(0, 0, 0, 0.4);
     text-align: center;
+    transition: height 0.25s ease-in-out, top 0.25s ease-in-out;
 }
 
 div#radio-player div#radio-left div#np-tags.tag-area {
