@@ -688,13 +688,14 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
         nonce="<?php echo SCRIPT_NONCE; ?>"></script>
 <script type="text/javascript" src="/js/kuroshiro-analyzer-kuromoji.min.js?<?php echo VERSION_HASH; ?>"
         nonce="<?php echo SCRIPT_NONCE; ?>"></script>
-<script type="text/javascript" src="/js/subtitles/subtitles-octopus.js?<?php echo VERSION_HASH; ?>"
+<script type="text/javascript" src="/js/subtitles/dist/js/subtitles-octopus.js?<?php echo VERSION_HASH; ?>"
         nonce="<?php echo SCRIPT_NONCE; ?>"></script>
 <script type="text/javascript" nonce="<?php echo SCRIPT_NONCE; ?>">
     var kuroshiro = null;
     var kuroshiroInit = null;
 
     var subtitles = null;
+    var subtitlesTimer = null;
 
     function resizeSubtitlesToMatchCanvas(timeout = true){
         if(subtitles === null){
@@ -757,6 +758,7 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
         "volume": window.localStorage.getItem("radio-volume") !== null ? window.localStorage.getItem("radio-volume") / 100 : 1.0,
         "preload": true,
         //"streaming": true,
+        "forceCodec": navigator.userAgent.match(/(Macintosh|iOS|iPad|iPhone)((?!Chrom(ium|e)\/).)*$/) !== null,
         "muted": false,
         "retry": false,
         "limitCodecs": <?php echo json_encode(array_values($neededMimeTypes)); ?>,
@@ -815,16 +817,6 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
             }
         }
     });
-
-    setInterval(() => {
-        if(subtitles !== null && currentLyrics !== null && uplayer.isPlaying()){
-            if(uplayer.nativePlayback){
-                subtitles.setCurrentTime(uplayer.playerObject.currentTime);
-            }else{
-                subtitles.setCurrentTime(uplayer.playerObject.currentTime / 1000);
-            }
-        }
-    }, 50);
 
 
     $(".volume-slider").on("change", function () {
@@ -1062,28 +1054,17 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
                 if(currentObject.entries){
                     for(var k = 0; k < currentObject.entries.length; ++k){
                         const currentObjectIndex = k;
-                        promises.push(kuroshiro.convert(currentObject.entries[currentObjectIndex].text, {
-                            to: "romaji",
-                            mode: "spaced",
-                            romajiSystem: "hepburn"
-                        }).then((result) => {
+                        promises.push(convertJapaneseToRomaji(currentObject.entries[currentObjectIndex].text).then((result) => {
                             currentObject.entries[currentObjectIndex].originalText = currentObject.entries[currentObjectIndex].text;
                             currentObject.entries[currentObjectIndex].text = result + " ";
-                        }).catch((e) => {
-                            console.log(e);
-                        }))
+                        }));
                     }
                 }
-                promises.push(kuroshiro.convert(currentObject.text, {
-                    to: "romaji",
-                    mode: "spaced",
-                    romajiSystem: "hepburn"
-                }).then((result) => {
+
+                promises.push(convertJapaneseToRomaji(currentObject.text).then((result) => {
                     currentObject.originalText = currentObject.text;
                     currentObject.text = result;
-                }).catch((e) => {
-                    console.log(e);
-                }))
+                }));
             }
         }
 
@@ -1095,6 +1076,23 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
 
             createSubtitleFromEntries(lyricEntries);
         });
+    }
+
+    function convertJapaneseToRomaji(text){
+        return new Promise((resolve, reject) => {
+            loadKuroshiro().then(() => {
+                kuroshiro.convert(text, {
+                    to: "romaji",
+                    mode: "spaced",
+                    romajiSystem: "hepburn"
+                }).then((result) => {
+                    resolve(result)
+                }).catch((e) => {
+                    console.log(e);
+                    resolve(text)
+                });
+            });
+        })
     }
 
     function createSubtitlesInstance(subsContent){
@@ -1162,8 +1160,8 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
         subtitles = new SubtitlesOctopus({
             canvas: canvas,
             lossyRender: typeof createImageBitmap !== 'undefined',
-            workerUrl: "/js/subtitles/subtitles-octopus-worker.js",
-            legacyWorkerUrl: "/js/subtitles/subtitles-octopus-worker-legacy.js",
+            workerUrl: "/js/subtitles/dist/js/subtitles-octopus-worker.js",
+            legacyWorkerUrl: "/js/subtitles/dist/js/subtitles-octopus-worker-legacy.js",
             availableFonts: fonts,
             subContent: subsContent,
             onReady: () => {
@@ -1179,6 +1177,22 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
         }else{
             subtitles.setCurrentTime(0);
         }
+
+
+        var updateFps = 30;
+
+        if(subtitlesTimer !== null){
+            clearInterval(subtitlesTimer);
+        }
+        subtitlesTimer = setInterval(() => {
+            if(subtitles !== null && currentLyrics !== null && uplayer.isPlaying()){
+                if(uplayer.nativePlayback){
+                    subtitles.setCurrentTime(uplayer.playerObject.currentTime);
+                }else{
+                    subtitles.setCurrentTime(uplayer.playerObject.currentTime / 1000);
+                }
+            }
+        }, Math.floor(1 / updateFps * 1000));
     }
 
     function createSubtitleFromEntries(lyricEntries){
@@ -1190,7 +1204,7 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
             'ScaledBorderAndShadow: yes\n' +
             'YCbCr Matrix: None\n' +
             'PlayResX: 512\n' +
-            'PlayResY: 48\n' +
+            'PlayResY: 52\n' +
             'Timer: 100.0000\n' +
             'PlayDepth: 0\n' +
             '\n' +
@@ -1201,7 +1215,7 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
             '\n' +
             '[V4+ Styles]\n' +
             'Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding\n' +
-            'Style: Current,Open Sans,23,&H00FFFFFF,&H00FFBAB9,&H00000000,&H00000000,1,0,0,0,100,100,0,0,1,1.5,0,5,2,2,0,1\n' +
+            'Style: Current,Open Sans,24,&H00FFFFFF,&H00B1B1B1,&H00000000,&H00000000,1,0,0,0,100,100,0,0,1,1,0,5,5,5,0,1\n' +
             '\n' +
             '[Events]\n' +
             'Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n';
@@ -1228,7 +1242,8 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
             return ((showOriginalLyrics && ob.originalText) ? ob.originalText : ob.text).replace(/[ ]+/g, ' ');
         }
 
-        subtitleFile += 'Dialogue: 0,0:00:00.00,0:00:01.00,Current,,0,0,0,,{\\pos(1,1)\\alpha&FF}WARMUP\n'; //Do this to "pre-render"
+        subtitleFile += 'Dialogue: 0,0:00:00.00,0:00:05.00,Current,,0,0,0,,{\\pos(1,1)\\alpha&FF}WARMUP\n'; //Do this to "pre-render"
+        subtitleFile += 'Dialogue: 0,0:00:05.00,0:00:15.00,Current,,0,0,0,,{\\pos(1,1)\\alpha&FF}WARMUP\n'; //Do this to "pre-render"
 
         for(var i = 0; i < lyricEntries.length; ++i){
             const line = lyricEntries[i];
@@ -1260,38 +1275,41 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
 
     function tryLoadLyrics(song){
         if(loadLyrics){
-            loadKuroshiro().then(() => {
+            var preferredLyrics = ["ass", "timed"];
+            var subtitleEntry = null;
 
-                var preferredLyrics = ["ass", "timed"];
-                var subtitleEntry = null;
+            for(var index = 0; index < preferredLyrics.length; ++index){
+                if(song.lyrics.includes(preferredLyrics[index])){
+                    subtitleEntry = preferredLyrics[index];
 
-                for(var index = 0; index < preferredLyrics.length; ++index){
-                    if(song.lyrics.includes(preferredLyrics[index])){
-                        subtitleEntry = preferredLyrics[index];
-
-                        jQuery.ajax(baseApiUrl + "/api/info/" + song.hash + "/lyrics/" + subtitleEntry, {
-                            method: "GET",
-                            async: true
-                        }).done(function (data, status, xhr) {
-                            if (xhr.status >= 200 && xhr.status < 300) {
-                                if(typeof data === "string"){
-                                    if(subtitleEntry === "timed"){
-                                        loadLRCLyrics(data);
-                                    }else if(subtitleEntry === "ass"){
-                                        currentLyrics = {
-                                            type: "ass",
-                                            entries: data
-                                        }
-                                        createSubtitlesInstance(data);
+                    jQuery.ajax(baseApiUrl + "/api/info/" + song.hash + "/lyrics/" + subtitleEntry, {
+                        method: "GET",
+                        async: true
+                    }).done(function (data, status, xhr) {
+                        if (xhr.status >= 200 && xhr.status < 300) {
+                            if(typeof data === "string"){
+                                if(subtitleEntry === "timed"){
+                                    loadLRCLyrics(data);
+                                }else if(subtitleEntry === "ass"){
+                                    currentLyrics = {
+                                        type: "ass",
+                                        entries: data
                                     }
+                                    createSubtitlesInstance(data);
                                 }
                             }
-                        });
+                        }
+                    });
 
-                        return;
-                    }
+                    return;
                 }
-            });
+            }
+        }
+
+
+        if(subtitlesTimer !== null){
+            clearInterval(subtitlesTimer);
+            subtitlesTimer = null;
         }
 
         $("#lyrics-area").css("height", "0px");

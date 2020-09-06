@@ -106,21 +106,7 @@ class UPlayer {
 
 
         this.codecSupport = {
-            "iPhone": function () {
-                if ("streaming" in this.options && this.options.streaming) {
-                    //return false;
-                }
-                this.options.preload = true;
-                return true;
-            }.bind(this),
-            "iPad": function () {
-                if ("streaming" in this.options && this.options.streaming) {
-                    //return false;
-                }
-                this.options.preload = true;
-                return true;
-            }.bind(this),
-            "Safari": function () {
+            "(Macintosh|iOS|iPad|iPhone)((?!Chrom(ium|e)/).)*$": function () {
                 this.options.preload = true;
                 return true;
             }.bind(this),
@@ -261,7 +247,7 @@ class UPlayer {
     checkBrowserCompatibility() {
         for (var check in this.codecSupport) {
             if (this.codecSupport.hasOwnProperty(check)) {
-                if (check == '*' || navigator.userAgent.indexOf(check) > -1) {
+                if (check == '*' || navigator.userAgent.match(new RegExp(check)) > -1) {
 
                     if (typeof this.codecSupport[check] === "function") {
                         this.supportsCodecs = this.codecSupport[check]();

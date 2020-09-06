@@ -1,0 +1,3 @@
+[submodule "js/subtitles"]
+	path = js/subtitles
+	url = https://github.com/WeebDataHoarder/JavascriptSubtitlesOctopus
