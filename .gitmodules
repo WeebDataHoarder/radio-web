@@ -1,3 +1,33 @@
-[submodule "js/subtitles"]
-	path = js/subtitles
-	url = https://github.com/WeebDataHoarder/JavascriptSubtitlesOctopus
+[submodule "deps/JavascriptSubtitlesOctopus"]
+	path = deps/JavascriptSubtitlesOctopus
+	url = https://github.com/WeebDataHoarder/JavascriptSubtitlesOctopus.git
+[submodule "deps/aurora.js"]
+	path = deps/aurora.js
+	url = https://github.com/WeebDataHoarder/aurora.js
+[submodule "deps/flac.js"]
+	path = deps/flac.js
+	url = https://github.com/audiocogs/flac.js
+[submodule "deps/alac.js"]
+	path = deps/alac.js
+	url = https://github.com/audiocogs/alac.js
+[submodule "deps/mp3.js"]
+	path = deps/mp3.js
+	url = https://github.com/audiocogs/mp3.js
+[submodule "deps/aac.js"]
+	path = deps/aac.js
+	url = https://github.com/WeebDataHoarder/aac.js
+[submodule "deps/ogg.js"]
+	path = deps/ogg.js
+	url = https://github.com/WeebDataHoarder/ogg.js
+[submodule "deps/vorbis.js"]
+	path = deps/vorbis.js
+	url = https://github.com/WeebDataHoarder/vorbis.js
+[submodule "deps/opus.js"]
+	path = deps/opus.js
+	url = https://github.com/WeebDataHoarder/opus.js
+[submodule "deps/ogg.js"]
+	path = deps/ogg.js
+	url = https://github.com/WeebDataHoarder/ogg.js
+[submodule "deps/trueaudio.js"]
+	path = deps/trueaudio.js
+	url = https://github.com/WeebDataHoarder/trueaudio.js

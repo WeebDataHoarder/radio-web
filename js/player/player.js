@@ -89,7 +89,7 @@ class UPlayer {
                     if (this.nativePlayback) {
                         this.playerObject.currentTime = this.totalDuration * ($(this.options["seek-element"]).val() / 100);
                     } else {
-                        this.playerObject.currentTime = this.totalDuration * ($(this.options["seek-element"]).val() / 100) * 1000;
+                        this.playerObject.seek(this.totalDuration * ($(this.options["seek-element"]).val() / 100) * 1000);
                     }
                 }
             }.bind(this));
@@ -98,7 +98,7 @@ class UPlayer {
                     if (this.nativePlayback) {
                         this.playerObject.currentTime = this.totalDuration * ($(this.options["seek-element"]).val() / 100);
                     } else {
-                        this.playerObject.currentTime = this.totalDuration * ($(this.options["seek-element"]).val() / 100) * 1000;
+                        this.playerObject.seek(this.totalDuration * ($(this.options["seek-element"]).val() / 100) * 1000);
                     }
                 }
             }.bind(this));
@@ -355,7 +355,7 @@ class UPlayer {
     }
 
     init(url, formats) {
-        this.clearCurrentPlayback(false);
+        this.clearCurrentPlayback(true);
         this.currentFormat = formats.length > 0 ? 0 : null;
         this.currentUrl = url;
         this.guessedFormats = formats;
@@ -501,7 +501,7 @@ class UPlayer {
                     reject(e);
                 }.bind(this));
 
-                this.preloadObject.on("ready", function () {
+                this.preloadObject.on("ready", function (e) {
                     resolve(e)
                 }.bind(this));
                 this.preloadObject.preload();

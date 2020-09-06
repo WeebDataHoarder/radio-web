@@ -543,6 +543,11 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
                 display: none;
             }
 
+            div#radio-right div.song img.queue-cover {
+                height: 42px;
+                width: 42px;
+            }
+
             div#radio-right div.song {
                 height: 42px;
             }
@@ -688,7 +693,7 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
         nonce="<?php echo SCRIPT_NONCE; ?>"></script>
 <script type="text/javascript" src="/js/kuroshiro-analyzer-kuromoji.min.js?<?php echo VERSION_HASH; ?>"
         nonce="<?php echo SCRIPT_NONCE; ?>"></script>
-<script type="text/javascript" src="/js/subtitles/dist/js/subtitles-octopus.js?<?php echo VERSION_HASH; ?>"
+<script type="text/javascript" src="/js/subtitles/subtitles-octopus.js?<?php echo VERSION_HASH; ?>"
         nonce="<?php echo SCRIPT_NONCE; ?>"></script>
 <script type="text/javascript" nonce="<?php echo SCRIPT_NONCE; ?>">
     var kuroshiro = null;
@@ -754,11 +759,13 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
     var lyricsAnimationLevel = (window.localStorage.getItem("lyrics-animations") !== null ? parseInt(window.localStorage.getItem("lyrics-animations")) : 1); // 0 = no, 1 = all, 2 = only fade in/out
 
     var playing = false;
+    const urlParams = new URLSearchParams(window.location.search);
+
     var uplayer = new UPlayer({
         "volume": window.localStorage.getItem("radio-volume") !== null ? window.localStorage.getItem("radio-volume") / 100 : 1.0,
         "preload": true,
         //"streaming": true,
-        "forceCodec": navigator.userAgent.match(/(Macintosh|iOS|iPad|iPhone)((?!Chrom(ium|e)\/).)*$/) !== null,
+        "forceCodec": urlParams.get("forceCodec") !== null ? true : navigator.userAgent.match(/(Macintosh|iOS|iPad|iPhone)((?!Chrom(ium|e)\/).)*$/) !== null,
         "muted": false,
         "retry": false,
         "limitCodecs": <?php echo json_encode(array_values($neededMimeTypes)); ?>,
@@ -1160,8 +1167,8 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
         subtitles = new SubtitlesOctopus({
             canvas: canvas,
             lossyRender: typeof createImageBitmap !== 'undefined',
-            workerUrl: "/js/subtitles/dist/js/subtitles-octopus-worker.js",
-            legacyWorkerUrl: "/js/subtitles/dist/js/subtitles-octopus-worker-legacy.js",
+            workerUrl: "/js/subtitles/subtitles-octopus-worker.js",
+            legacyWorkerUrl: "/js/subtitles/subtitles-octopus-worker-legacy.js",
             availableFonts: fonts,
             subContent: subsContent,
             onReady: () => {
