@@ -47,9 +47,11 @@ function processAlbumResults($result){
         $album = $data["album"];
 
         if(isset($data["index"])){
+            $data["originalTitle"] = $data["title"];
             $data["title"] = str_pad($data["index"], 2, "0", STR_PAD_LEFT) . ". " . $data["title"];
         }
         if(isset($data["parentIndex"])){
+            $data["originalAlbum"] = $data["album"];
             $data["album"] = $data["album"] . " - Disc " . str_pad($data["parentIndex"], 2, "0", STR_PAD_LEFT);
         }
         
@@ -79,6 +81,8 @@ artists.name AS artist,
 albums.name AS album,
 songs.path AS path,
 songs.duration AS duration,
+songs.favorite_count AS favorite_count,
+songs.play_count AS play_count,
 songs.cover AS cover,
 array_to_json(ARRAY(SELECT jsonb_object_keys(songs.lyrics))) AS lyrics,
 songs.status AS status,
@@ -97,8 +101,6 @@ albums.name,
 songs.path,
 songs.duration,
 songs.status
-ORDER BY album ASC, path ASC
-;
 SQL;
 $tagSql = <<<SQL
 SELECT
@@ -109,6 +111,8 @@ artists.name AS artist,
 albums.name AS album,
 songs.path AS path,
 songs.duration AS duration,
+songs.favorite_count AS favorite_count,
+songs.play_count AS play_count,
 songs.cover AS cover,
 array_to_json(ARRAY(SELECT jsonb_object_keys(songs.lyrics))) AS lyrics,
 songs.status AS status,
@@ -127,8 +131,6 @@ albums.name,
 songs.path,
 songs.duration,
 songs.status
-ORDER BY album ASC, path ASC
-;
 SQL;
 $pathSql = <<<SQL
 SELECT
@@ -139,6 +141,8 @@ artists.name AS artist,
 albums.name AS album,
 songs.path AS path,
 songs.duration AS duration,
+songs.favorite_count AS favorite_count,
+songs.play_count AS play_count,
 songs.cover AS cover,
 array_to_json(ARRAY(SELECT jsonb_object_keys(songs.lyrics))) AS lyrics,
 songs.status AS status,
@@ -157,8 +161,6 @@ albums.name,
 songs.path,
 songs.duration,
 songs.status
-ORDER BY album ASC, path ASC
-;
 SQL;
 $queue = [];
 $songs = [];
@@ -171,10 +173,55 @@ $desc = "";
 
 $playlistFormat = null;
 
+$orderBy = [
+    "albumPath" => [
+        "ORDER BY album ASC, path ASC",
+        "ORDER BY album DESC, path DESC"
+    ],
+    "score" => [
+        "ORDER BY (favorite_count * 5 + play_count + (CASE WHEN path ILIKE '%.flac' THEN 5 ELSE 0 END)) ASC, path ASC",
+        "ORDER BY (favorite_count * 5 + play_count + (CASE WHEN path ILIKE '%.flac' THEN 5 ELSE 0 END)) DESC, path DESC",
+    ],
+    "title" => [
+        "ORDER BY title ASC, path ASC",
+        "ORDER BY title DESC, path DESC"
+    ],
+    "favorites" => [
+        "ORDER BY favorite_count ASC, path ASC",
+        "ORDER BY favorite_count DESC, path DESC"
+    ],
+    "plays" => [
+        "ORDER BY play_count ASC, path ASC",
+        "ORDER BY play_count DESC, path DESC"
+    ]
+];
+
+$defaultOrderBy = "albumPath";
+$extraParams = "";
+
+$doSplit = true;
+
+if(isset($_GET["orderBy"]) and isset($orderBy[$_GET["orderBy"]])){
+    $extraParams .= "&orderBy=" . $_GET["orderBy"];
+    if($_GET["orderBy"] !== "albumPath" and $_GET["orderBy"] !== "default"){
+        $doSplit = false;
+    }
+}
+if(isset($_GET["orderDirection"]) and strtolower($_GET["orderDirection"]) === "desc"){
+    $extraParams .= "&orderDirection=" . $_GET["orderDirection"];
+}
+
+$orderBySel = (isset($_GET["orderBy"]) and isset($orderBy[$_GET["orderBy"]])) ? $orderBy[$_GET["orderBy"]] : $orderBy[$defaultOrderBy];
+$orderByString = (isset($_GET["orderDirection"]) and strtolower($_GET["orderDirection"]) === "desc") ? $orderBySel[1] : $orderBySel[0];
+
+
 $actualPath = parse_url($_SERVER["REQUEST_URI"], PHP_URL_PATH);
 
 if (preg_match("#(.*)[/\\.]m3u(\\?.*|)$#iu", $actualPath, $matches) > 0) {
     $playlistFormat = "m3u";
+    $_SERVER["REQUEST_URI"] = $matches[1] . $matches[2];
+} else if (preg_match("#(.*)[/\\.]m3u8(\\?.*|)$#iu", $actualPath, $matches) > 0) {
+    $playlistFormat = "m3u8";
     $_SERVER["REQUEST_URI"] = $matches[1] . $matches[2];
 } else if (preg_match("#(.*)[/\\.]pls(\\?.*|)$#iu", $actualPath, $matches) > 0) {
     $playlistFormat = "pls";
@@ -190,7 +237,7 @@ if (preg_match("#^/player/hash/(([a-fA-F0-9]{8,32},?)+)(\\?.*|)$#", $actualPath,
     }
     $desc = "Playlist (" . count($queue) . ")";
 } elseif (preg_match("#^/player/favorites/([^/ ]+)(\\?.*|)$#", $actualPath, $matches) > 0) {
-    foreach (@json_decode(file_get_contents(DEFAULT_API_URL . "/favorites/" . strtolower($matches[1]) . "?apikey=" . DEFAULT_API_KEY), true) as $data) {
+    foreach (@json_decode(file_get_contents(DEFAULT_API_URL . "/favorites/" . strtolower($matches[1]) . "?apikey=" . DEFAULT_API_KEY . $extraParams), true) as $data) {
         $songs[] = $data;
     }
     $title = strtolower($matches[1]) . "'s favorites";
@@ -198,7 +245,7 @@ if (preg_match("#^/player/hash/(([a-fA-F0-9]{8,32},?)+)(\\?.*|)$#", $actualPath,
 } elseif (preg_match("#^/player/search/(.+)(\\?.*|)$#", $actualPath, $matches) > 0) {
     foreach (explode("/", $matches[1]) as $bq) {
         $q = urldecode($bq);
-        foreach (@json_decode(file_get_contents(DEFAULT_API_URL . "/search?limit=1500&q=" . urlencode($q) . "&apikey=" . DEFAULT_API_KEY), true) as $data) {
+        foreach (@json_decode(file_get_contents(DEFAULT_API_URL . "/search?limit=1500&q=" . urlencode($q) . "&apikey=" . DEFAULT_API_KEY . $extraParams), true) as $data) {
             $songs[] = $data;
         }
         $title = $q;
@@ -213,7 +260,7 @@ if (preg_match("#^/player/hash/(([a-fA-F0-9]{8,32},?)+)(\\?.*|)$#", $actualPath,
     $albumView = true;
     $q = "$type:\"$q\"";
 
-    $result = processAlbumResults(@json_decode(file_get_contents(DEFAULT_API_URL . "/search?limit=1500&q=" . urlencode($q) . "&apikey=" . DEFAULT_API_KEY), true));
+    $result = processAlbumResults(@json_decode(file_get_contents(DEFAULT_API_URL . "/search?limit=1500&q=" . urlencode($q) . "&apikey=" . DEFAULT_API_KEY . $extraParams), true));
     $duration = $result->duration;
     $discNumber = $result->discs;
     $album = $result->title;
@@ -223,7 +270,7 @@ if (preg_match("#^/player/hash/(([a-fA-F0-9]{8,32},?)+)(\\?.*|)$#", $actualPath,
     $title = $album . "" . (($artist !== false and $artist !== null) ? " by " . $artist : "") . " :: " . count($songs) . " tracks" . ($discNumber > 1 ? ", $discNumber discs" : "") . ", " . floor($duration / 60) . "m";
 } elseif (preg_match("#^/player/catalog/(.+?)(\\?.*|)$#iu", $actualPath, $matches) > 0) {
     $q = strtolower(urldecode($matches[1]));
-    $result = pg_query_params($dbconn, $tagSql, ["catalog-$q"]);
+    $result = pg_query_params($dbconn, $tagSql . " " . $orderByString . ";", ["catalog-$q"]);
     $albumView = true;
 
     $results = [];
@@ -257,13 +304,13 @@ if (preg_match("#^/player/hash/(([a-fA-F0-9]{8,32},?)+)(\\?.*|)$#", $actualPath,
                 "tag" => $tag,
                 "type" => $type,
                 "q" => $q,
-                "params" => [$tagSql, ["$tag$type-$q"]]
+                "params" => [$tagSql . " " . $orderByString . ";", ["$tag$type-$q"]]
             ];
             $entries[] = [
                 "tag" => $tag,
                 "type" => $type,
                 "q" => $q,
-                "params" => [$pathSql, ["%/[$tag$type-$q]/%"]]
+                "params" => [$pathSql . " " . $orderByString . ";", ["%/[$tag$type-$q]/%"]]
             ];
         }
 
@@ -302,7 +349,7 @@ if (preg_match("#^/player/hash/(([a-fA-F0-9]{8,32},?)+)(\\?.*|)$#", $actualPath,
     $q = urldecode($matches[3]);
     $tag = $matches[1];
     $type = $matches[2];
-    $result = pg_query_params($dbconn, $tagSql, ["$tag$type-$q"]);
+    $result = pg_query_params($dbconn, $tagSql . " " . $orderByString . ";", ["$tag$type-$q"]);
     $album = strtoupper($tag) . strtolower($type) . "#$q";
     $albumView = true;
 
@@ -334,7 +381,7 @@ if (count($queue) > 0) {
     foreach ($queue as $hash) {
 
 
-        $result = pg_query_params($dbconn, $hashSql, [$hash . "%"]);
+        $result = pg_query_params($dbconn, $hashSql . " " . $orderByString . ";", [$hash . "%"]);
         while ($data = pg_fetch_row($result, null, PGSQL_ASSOC)) {
             foreach ($data as $k => &$v) {
                 if ($k === "tags" or $k === "favored_by" or $k === "lyrics") {
@@ -383,24 +430,41 @@ if ($desc == "") {
     $desc = $title;
 }
 
-$title = htmlspecialchars($title, ENT_QUOTES | ENT_HTML5, "UTF-8");
-
-if (isRequestSatsuki()) {
-    $title = "Join #radio ~ $title";
-}
-
 if (!isRequestSatsuki() and !isRequestTheLounge() and $playlistFormat !== null) {
-    if ($playlistFormat === "m3u") {
+    if ($playlistFormat === "m3u" or $playlistFormat === "m3u8") {
         $m3u = "#EXTM3U" . PHP_EOL . PHP_EOL;
         if (strpos($_SERVER["REQUEST_URI"], "soundcloud.com") !== false) {
-            $m3u .= "#EXT-X-STREAM-INF:CODECS=\"mp3,opus,vorbis\",AUDIO=\"audio\"" . PHP_EOL . PHP_EOL;
+            $m3u .= "#EXT-X-STREAM-INF:CODECS=\"mp3,opus,vorbis,flac\",AUDIO=\"audio\"" . PHP_EOL . PHP_EOL;
         }
+        $m3u .= "#PLAYLIST:$title" . PHP_EOL;
+        if($albumView){
+            if(isset($album) and $album !== false){
+                $m3u .= "#EXTALB:" . $album . PHP_EOL;
+            }
+            if(isset($artist) and $artist !== false){
+                $m3u .= "#EXTART:" . $artist . PHP_EOL;
+            }
+        }
+
         foreach ($songs as $k => $data) {
-            $m3u .= "#EXTINF:" . $data["duration"] . ", " . $data["artist"] . " - " . $data["title"] . " (" . $data["album"] . ")" . PHP_EOL;
+            if($albumView){
+                $m3u .= "#EXTINF:" . $data["duration"] . ", " . $data["artist"] . " - " . (isset($data["originalTitle"]) ? $data["originalTitle"] : $data["title"]) . PHP_EOL;
+            }else{
+                $m3u .= "#EXTINF:" . $data["duration"] . ", " . $data["artist"] . " - " . $data["title"] . " (" . $data["album"] . ")" . PHP_EOL;
+                $m3u .= "#EXTART:" . $data["album"] . PHP_EOL;
+                $m3u .= "#EXTALB:" . $data["artist"] . PHP_EOL;
+            }
+            if($data["cover"] !== null){
+                $m3u .= "#EXTALBUMARTURL:" . "https://".SITE_HOSTNAME."/api/cover/".$data["cover"]."/large" . PHP_EOL;
+                $m3u .= "#EXTIMG:" . "https://".SITE_HOSTNAME."/api/cover/".$data["cover"]."/large" . PHP_EOL;
+            }
             $m3u .= "https://".SITE_HOSTNAME."/api/download/" . $data["hash"] . PHP_EOL . PHP_EOL;
         }
-        header("Content-Type: application/mpegurl; charset=utf-8'");
-        header('Content-Disposition: attachment; filename="' . sha1($m3u) . '.m3u"');
+        $hash = hash("sha256", $m3u);
+
+        header("ETag: \"$hash\"");
+        header("Content-Type: application/mpegurl; charset=utf-8");
+        header('Content-Disposition: attachment; filename="' . $hash . '.'.$playlistFormat.'"');
         header('Content-Length: ' . strlen($m3u));
         echo $m3u;
         exit();
@@ -415,12 +479,21 @@ if (!isRequestSatsuki() and !isRequestTheLounge() and $playlistFormat !== null) 
         }
         $pls .= "NumberOfEntries=" . ($index - 1) . PHP_EOL;
         $pls .= "Version=2" . PHP_EOL;
-        header("Content-Type: audio/x-scpls; charset=utf-8'");
-        header('Content-Disposition: attachment; filename="' . sha1($pls) . '.pls"');
+        $hash = hash("sha256", $pls);
+
+        header("ETag: \"$hash\"");
+        header("Content-Type: audio/x-scpls; charset=utf-8");
+        header('Content-Disposition: attachment; filename="' . $hash . '.pls"');
         header('Content-Length: ' . strlen($pls));
         echo $pls;
         exit();
     }
+}
+
+$title = htmlspecialchars($title, ENT_QUOTES | ENT_HTML5, "UTF-8");
+
+if (isRequestSatsuki()) {
+    $title = "Join #radio ~ $title";
 }
 
 header("Link: </css/foundation.min.css" . VERSION_HASH . "; rel=preload; as=style", false);
@@ -749,7 +822,7 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
     }
     ?>
 
-    var songPlaylist = <?php echo json_encode($songPlaylist, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>;
+    var songPlaylist = <?php echo json_encode($songPlaylist, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_NUMERIC_CHECK); ?>;
 
     var baseApiUrl = window.localStorage.getItem("radio-api-url") != null ? window.localStorage.getItem("radio-api-url") : location.protocol + '//' + document.domain + ':' + location.port;
     var currentLyrics = null;
@@ -843,10 +916,10 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
     });
 
 
-    var songElement = $("div#radio-right");
+    var songElement = $("div#radio-right").clone();
     for (var index = 0; index < songPlaylist.length; ++index) {
         var data = songPlaylist[index];
-        if (index === 0 || songPlaylist[index - 1]["album"] !== data["album"]) {
+        if (<?php echo ($doSplit ? "true" : "false"); ?> && (index === 0 || songPlaylist[index - 1]["album"] !== data["album"])) {
             if(index > 0){
                 songElement.append("<hr/>");
             }
@@ -854,7 +927,7 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
             songElement.append('<div class="album-header">' + data["album"] + '</div>');
         }
         songElement.append('<div class="song radio-song-container" song-index="' + index + '" song-hash="' + data["hash"] + '">' +
-            '<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII=" style="background-image: url(' + (data["cover"] !== null ? "/api/cover/" + data["cover"] + "/small" : "/img/no-cover.jpg") + ')" class="queue-cover" loading="lazy"/>' +
+            '<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII=" data-background-image="' + (data["cover"] !== null ? "/api/cover/" + data["cover"] + "/small" : "/img/no-cover.jpg") + '" class="queue-cover lazy-bg"/>' +
             '<div class="song-now-playing-icon-container">' +
             '<div class="play-button-container">' +
             '</div>' +
@@ -868,6 +941,26 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
             '<span class="song-duration">' + uplayer.zeroPad(Math.floor(data["duration"] / 60), 2) + ':' + uplayer.zeroPad(data["duration"] % 60, 2) + '</span>' +
             '</div>');
     }
+    $("div#radio-right").replaceWith(songElement);
+
+    document.addEventListener("DOMContentLoaded", function() {
+        var lazyBackgrounds = [].slice.call(document.querySelectorAll(".lazy-bg"));
+
+        if ("IntersectionObserver" in window) {
+            let lazyBackgroundObserver = new IntersectionObserver(function(entries, observer) {
+                entries.forEach(function(entry) {
+                    if (entry.isIntersecting) {
+                        entry.target.style["background-image"] = "url("+entry.target.getAttribute("data-background-image")+")";
+                        lazyBackgroundObserver.unobserve(entry.target);
+                    }
+                });
+            });
+
+            lazyBackgrounds.forEach(function(lazyBackground) {
+                lazyBackgroundObserver.observe(lazyBackground);
+            });
+        }
+    });
 
     function shuffleArray(array) {
         for (var i = array.length - 1; i > 0; i--) {
@@ -1101,8 +1194,52 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
             });
         })
     }
+    
+    function decodeASSEntry(input){
+        let output = new Uint8Array(input.length);
+        let grouping = new Uint8Array(4);
+
+        let offset = 0;
+        let arrayOffset = 0;
+        let writeOffset = 0;
+        let charCode;
+        while (offset < input.length){
+            charCode = input.charCodeAt(offset++);
+            if(charCode >= 0x21 && charCode <= 0x60){
+                grouping[arrayOffset++] = charCode - 33;
+                if(arrayOffset === 4){
+                    output[writeOffset++] = (grouping[0] << 2) | (grouping[1] >> 4);
+                    output[writeOffset++] = ((grouping[1] & 0xf) << 4) | (grouping[2] >> 2);
+                    output[writeOffset++] = ((grouping[2] & 0x3) << 6) | (grouping[3]);
+                    //charCode = (grouping[0] << 18) | (grouping[1] << 12) | (grouping[2] << 6) | grouping[3];
+                    //output[writeOffset++] = (charCode >> 16) & 0xff;
+                    //output[writeOffset++] = (charCode >> 8) & 0xff;
+                    //output[writeOffset++] = charCode & 0xff;
+                    arrayOffset = 0;
+                }
+            }
+        }
+
+        //Handle ASS special padding
+        if(arrayOffset > 0){
+            if(arrayOffset === 2){
+                output[writeOffset++] = ((grouping[0] << 6) | grouping[1]) >> 4;
+            }else if(arrayOffset === 3){
+                let ix = ((grouping[0] << 12) | (grouping[1] << 6) | grouping[2]) >> 2;
+                output[writeOffset++] = ix >> 8;
+                output[writeOffset++] = ix & 0xff;
+            }
+        }
+
+        return output.slice(0, writeOffset);
+    }
 
     function createSubtitlesInstance(subsContent){
+        if(subtitles !== null){
+            subtitles.dispose();
+            subtitles = null;
+        }
+
         var fonts = {
             "open sans": "/fonts/OpenSans-Regular.ttf",
             "open sans regular": "/fonts/OpenSans-Regular.ttf",
@@ -1131,75 +1268,116 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
             "franklin gothic book regular": "/fonts/frabk.ttf"
         };
 
-        var regex = /^fontnamev2:[ \t]*([^_]+)_([^,]*)\.([a-z0-9]{3,4}),[ \t]*(.+)$/mg;
+        var promises = [];
+
+        var regex = /^fontnamev2:[ \t]*([^_]+)_([^,]*)\.([a-z0-9]{3,5}),[ \t]*(.+)$/mg;
         var result;
         while((result = regex.exec(subsContent)) !== null){
             var fontName = result[1];
             var fontProperties = result[2];
             var fontExtension = result[3];
-            var fontURI = result[4];
-
-            fonts[fontName.toLowerCase()] = fontURI;
+            fonts[fontName.toLowerCase()] = result[4];
         }
 
-        var canvas = document.getElementById("lyrics-area");
+        regex = /^fontname:[ \t]*([^_]+)_([^$]*)\.([a-z0-9]{3,5})((?:\r?\n[\x21-\x60]+)+)/mg;
+        while((result = regex.exec(subsContent)) !== null){
+            const currentResult = result;
+            promises.push(new Promise(((resolve, reject) => {
+                var fontName = currentResult[1];
+                var fontProperties = currentResult[2];
+                var fontExtension = currentResult[3];
+                var blob = new Blob([decodeASSEntry(currentResult[4])], {type: "application/font-" + fontExtension.toLowerCase()});
+                var reader = new FileReader();
+                reader.readAsDataURL(blob);
+                reader.addEventListener("load", function () {
+                    fonts[fontName.toLowerCase()] = reader.result;
+                    resolve();
+                }, false);
+            })));
+        }
 
-        var resolutionInformation = {
-            aspectRatio: 10.6666667//1.777778
-        };
-        result = subsContent.match(/^PlayResX:[ \t]*([0-9]+)$/m);
-        if(result !== null){
-            resolutionInformation.x = parseInt(result[1]);
-        }
-        result = subsContent.match(/^PlayResY:[ \t]*([0-9]+)$/m);
-        if(result !== null){
-            resolutionInformation.y = parseInt(result[1]);
-        }
-        if(resolutionInformation.x && resolutionInformation.y){
-            resolutionInformation.aspectRatio = resolutionInformation.x / resolutionInformation.y;
-        }
+        Promise.all(promises).then(() => {
+            var canvas = document.getElementById("lyrics-area");
 
-        canvas.setAttribute("aspect-ratio", resolutionInformation.aspectRatio);
-
-        if(subtitles !== null){
-            subtitles.dispose();
-        }
-        subtitles = new SubtitlesOctopus({
-            canvas: canvas,
-            lossyRender: typeof createImageBitmap !== 'undefined',
-            workerUrl: "/js/subtitles/subtitles-octopus-worker.js",
-            legacyWorkerUrl: "/js/subtitles/subtitles-octopus-worker-legacy.js",
-            availableFonts: fonts,
-            subContent: subsContent,
-            onReady: () => {
-                resizeSubtitlesToMatchCanvas(false);
+            var resolutionInformation = {
+                aspectRatio: 10.6666667//1.777778
+            };
+            result = subsContent.match(/^PlayResX:[ \t]*([0-9]+)$/m);
+            if(result !== null){
+                resolutionInformation.x = parseInt(result[1]);
             }
-        });
-        if(uplayer.playerObject !== null){
-            if(uplayer.nativePlayback){
-                subtitles.setCurrentTime(uplayer.playerObject.currentTime);
-            }else{
-                subtitles.setCurrentTime(uplayer.playerObject.currentTime / 1000);
+            result = subsContent.match(/^PlayResY:[ \t]*([0-9]+)$/m);
+            if(result !== null){
+                resolutionInformation.y = parseInt(result[1]);
             }
-        }else{
-            subtitles.setCurrentTime(0);
-        }
+            if(resolutionInformation.x && resolutionInformation.y){
+                resolutionInformation.aspectRatio = resolutionInformation.x / resolutionInformation.y;
+            }
 
+            canvas.setAttribute("aspect-ratio", resolutionInformation.aspectRatio);
+            result = subsContent.match(/^CanvasBackground:[ \t]*&H([0-9A-F]{2})([0-9A-F]{2})([0-9A-F]{2})([0-9A-F]{2})$/m);
 
-        var updateFps = 30;
+            var alpha = 0.4;
+            var blue = 0;
+            var green = 0;
+            var red = 0;
 
-        if(subtitlesTimer !== null){
-            clearInterval(subtitlesTimer);
-        }
-        subtitlesTimer = setInterval(() => {
-            if(subtitles !== null && currentLyrics !== null && uplayer.isPlaying()){
+            if(result !== null){
+                alpha = parseInt(result[1], 16) / 255;
+                blue = parseInt(result[2], 16) / 255;
+                green = parseInt(result[3], 16) / 255;
+                red = parseInt(result[4], 16) / 255;
+            }
+            canvas.style["background-color"] = "rgba("+red+", "+green+", "+blue+", "+alpha+")";
+
+            if(subtitles !== null){
+                subtitles.dispose();
+            }
+            subtitles = new SubtitlesOctopus({
+                canvas: canvas,
+                renderMode: typeof createImageBitmap !== 'undefined' ? "fast" : "normal",
+                //renderMode: "blend",
+                workerUrl: "/js/subtitles/subtitles-octopus-worker.js",
+                legacyWorkerUrl: "/js/subtitles/subtitles-octopus-worker-legacy.js",
+                availableFonts: fonts,
+                subContent: subsContent,
+                targetFps: 30,
+                resizeVariation: 0.1,
+                libassMemoryLimit: 40,
+                libassGlyphLimit: 40,
+                //renderAhead: 30,
+                dropAllAnimations: lyricsAnimationLevel == 0,
+                onReady: () => {
+                    resizeSubtitlesToMatchCanvas(false);
+                }
+            });
+            if(uplayer.playerObject !== null){
                 if(uplayer.nativePlayback){
                     subtitles.setCurrentTime(uplayer.playerObject.currentTime);
                 }else{
                     subtitles.setCurrentTime(uplayer.playerObject.currentTime / 1000);
                 }
+            }else{
+                subtitles.setCurrentTime(0);
             }
-        }, Math.floor(1 / updateFps * 1000));
+
+
+            var updateFps = 30;
+
+            if(subtitlesTimer !== null){
+                clearInterval(subtitlesTimer);
+            }
+            subtitlesTimer = setInterval(() => {
+                if(subtitles !== null && currentLyrics !== null && uplayer.isPlaying()){
+                    if(uplayer.nativePlayback){
+                        subtitles.setCurrentTime(uplayer.playerObject.currentTime);
+                    }else{
+                        subtitles.setCurrentTime(uplayer.playerObject.currentTime / 1000);
+                    }
+                }
+            }, Math.floor(1 / updateFps * 1000));
+            resizeSubtitlesToMatchCanvas(false);
+        });
     }
 
     function createSubtitleFromEntries(lyricEntries){
@@ -1214,10 +1392,11 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
             'PlayResY: 52\n' +
             'Timer: 100.0000\n' +
             'PlayDepth: 0\n' +
+            'CanvasBackground: &H66000000\n' +
             '\n' +
             '[Aegisub Project Garbage]\n' +
             'Last Style Storage: Default\n' +
-            'Video File: ?dummy:23.976000:40000:512:48:47:163:254:\n' +
+            'Video File: ?dummy:23.976000:40000:512:52:47:163:254:\n' +
             'Video AR Value: 5.000000\n' +
             '\n' +
             '[V4+ Styles]\n' +
@@ -1256,7 +1435,7 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
             const line = lyricEntries[i];
             //TODO: secondary line
 
-            var entryLine = 'Dialogue: 0,' + timeToStamp(line.start) + ', ' + timeToStamp(line.end !== undefined ? line.end : line.start + 5) + ',Current,,0,0,0,,';
+            var entryLine = 'Dialogue: 1,' + timeToStamp(line.start) + ', ' + timeToStamp(line.end !== undefined ? line.end : line.start + 5) + ',Current,,0,0,0,,';
             var lineDuration = Math.max(1, Math.floor(((line.end !== undefined ? line.end : line.start + 5) - line.start) * 100));
             if(line.entries && line.entries.length > 0){
                 entryLine += ((lyricsAnimationLevel > 0 && lineDuration > 50) ? '{\\fade(50,250)}' : '');

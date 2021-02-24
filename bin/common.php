@@ -97,6 +97,6 @@ function isRequestTheLounge(){
 }
 
 function isRequestSatsuki(){
-  return @stripos($_SERVER['HTTP_USER_AGENT'], "node-fetch") !== false;
+  return @stripos($_SERVER['HTTP_USER_AGENT'], "kana/") === 0;
   //return isset($_COOKIE["PREF"]) and $_COOKIE["PREF"] == "f6=42008";
 }
