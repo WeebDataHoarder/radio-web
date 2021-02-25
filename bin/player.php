@@ -1704,7 +1704,7 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
                         body: "by " + song.artist + " from " + song.album,
                         silent: true,
                         requireInteraction: false,
-                        tag: "player.radio.animebits.moe"
+                        tag: "player." + window.location.hostname
                     });
                     n.onclick = function () {
                         window.focus();

@@ -548,7 +548,7 @@ function updateTrackData(data) {
                 body: "from " + data.album + ' [' + uplayer.zeroPad(Math.floor(data["duration"] / 60), 2) + ':' + uplayer.zeroPad(data["duration"] % 60, 2) + ']' + (('favored_by' in data && data.favored_by.length > 0) ? " Favorited " + data.favored_by.length + " time(s)." : ""),
                 silent: true,
                 requireInteraction: false,
-                tag: "np.radio.animebits.moe",
+                tag: "np." + window.location.hostname,
                 data: data,
                 actions: actions
             });
@@ -677,7 +677,7 @@ function apiKeyIdentify(key) {
     });
     jQuery.ajax(baseApiUrl + "/api/user/info").done(function (data) {
         if (data.user) {
-            docCookies.setItem("radio-apikey", apiKey, Infinity, "/", "radio.animebits.moe", true);
+            docCookies.setItem("radio-apikey", apiKey, Infinity, "/", window.location.hostname, true);
             nickIdentify(data.user);
             initWebSocket();
         } else {
