@@ -41,7 +41,7 @@ SQL;
 
 $actualPath = parse_url($_SERVER["REQUEST_URI"], PHP_URL_PATH);
 
-if (preg_match("#^/service/encode/(?P<hash>[a-fA-F0-9]{8,32})(|/(?P<codec>(aac|mp3|opus|flac)))$#", $actualPath, $matches) > 0) {
+if (preg_match("#^/service/encode/(?P<hash>[a-fA-F0-9]{8,32})(|/(?P<codec>(m4a|aac|mp3|opus|flac)))$#", $actualPath, $matches) > 0) {
     $hash = $matches["hash"];
     $codec = $matches["codec"] ?? null;
 
@@ -53,11 +53,20 @@ if (preg_match("#^/service/encode/(?P<hash>[a-fA-F0-9]{8,32})(|/(?P<codec>(aac|m
             }
         }
 
-        $cmd = "ffmpeg -hide_banner -loglevel panic -strict -2 -i " . escapeshellarg($data["path"]);
+        if(isset($_GET["realtime"]) and $_GET["realtime"] !== "false" and $_GET["realtime"] !== "0"){
+            $cmd = "ffmpeg -hide_banner -loglevel panic -strict -2 -re -i " . escapeshellarg($data["path"]);
+        }else{
+            $cmd = "ffmpeg -hide_banner -loglevel panic -strict -2 -i " . escapeshellarg($data["path"]);
+        }
+
         $cmd .= " -map_metadata -1 -map 0:a -filter_complex 'volume=volume=1.0:replaygain=track' -ac 2 ";
 
         header("Transfer-encoding: chunked");
         switch ($codec){
+            case "m4a":
+                $cmd .= " -ar 44100 -c:a aac -b:a 256k -f mp4 -moov_size 8192 -movflags frag_keyframe+empty_moov+separate_moof+omit_tfhd_offset -frag_duration 1000 -min_frag_duration 100";
+                header("Content-Type: audio/m4a;codecs=aac");
+                break;
             case "aac":
                 $cmd .= " -ar 44100 -c:a aac -b:a 256k -f adts";
                 header("Content-Type: audio/aac");
@@ -70,7 +79,7 @@ if (preg_match("#^/service/encode/(?P<hash>[a-fA-F0-9]{8,32})(|/(?P<codec>(aac|m
                 break;
             case "opus":
                 // OPUS only supports 48kHz sample rates
-                $cmd .= " -ar 48000 -c:a libopus -b:a 256k -f ogg";
+                $cmd .= " -ar 48000 -c:a libopus -b:a 192k -f ogg";
                 header("Content-Type: audio/ogg;codecs=opus");
                 break;
             case "flac":
