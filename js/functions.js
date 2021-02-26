@@ -254,6 +254,7 @@ function initWebSocket() {
             }
         } else if (data.type == 'playing') {
             np = data.data;
+            nr = null;
             updateTrackData(np);
             updateQueueData(currentQueue);
         } else if (data.type == 'listeners') {
