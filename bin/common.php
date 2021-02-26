@@ -1,7 +1,7 @@
 <?php
 
 setlocale(LC_CTYPE, "en_US.UTF-8");
-define("VERSION_HASH", rtrim(base64_encode(md5(file_get_contents(__DIR__ . "/../.git/refs/heads/master"), true)), "="));
+define("VERSION_HASH", rtrim(base64_encode(md5(file_get_contents(__DIR__ . "/../.version"), true)), "="));
 define("SCRIPT_NONCE", isset($_SERVER["HTTP_X_NONCE"]) ? bin2hex(hex2bin($_SERVER["HTTP_X_NONCE"])) : null);
 
 require_once("config.php");
