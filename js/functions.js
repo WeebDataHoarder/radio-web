@@ -253,8 +253,10 @@ function initWebSocket() {
                 updateQueueData(currentQueue);
             }
         } else if (data.type == 'playing') {
+            if(np != null){
+                nr = null;
+            }
             np = data.data;
-            nr = null;
             updateTrackData(np);
             updateQueueData(currentQueue);
         } else if (data.type == 'listeners') {
