@@ -33,6 +33,7 @@
             <li><a href="#favorite-.fav">.favorite .fav</a></li>
             <li><a href="#unfavorite">.unfavorite .unfav</a></li>
             <li><a href="#associate">.associate </a></li>
+            <li><a href="#nick">.nick </a></li>
             <li><a href="#unassociate">.unassociate </a></li>
             <li><a href="#genkey">.genkey </a></li>
             <li><a href="#lskeys">.lskeys </a></li>
@@ -129,7 +130,7 @@
       <h2 id="history">.related</h2>
       <p>Shows the current random playback mode.</p>
       <h2 id="top">.top [day|week|month] [player]</h2>
-      <p>Shows the top#3 tracks from the last week/month/day, or a player link with the top 10 if specified.</p>
+      <p>Shows the top#6 tracks from the last week/month/day, or a player link with the top 20 if specified.</p>
       <h2 id="qpop">.qpop</h2>
       <p>Removes the last entry in the queue. Only works in channel.</p>
       <h2 id="qshift">.qshift</h2>
@@ -140,20 +141,26 @@
       <p>Unfavorites the now playing track. If <code>[hash]</code> is specified, unfavorite that track instead. If you have a different radio nick than your IRC nick, please use <code>.associate</code> first</p>
       <h2 id="associate">.associate &lt;nick&gt;</h2>
       <p>Associates radio <code>&lt;nick&gt;</code> with your IRC nick for favorite-related commands and authentication. You need to be authed via Satsuki. Check <a href="#genkey">.genkey</a> to learn how to create an API key afterwards.</p>
-      <h2 id="unassociate">.unssociate</h2>
+      <h2 id="nick">.nick &lt;nick&gt;</h2>
+      <p>Changes radio nick to <code>&lt;nick&gt;</code></p>
+      <h2 id="unassociate">.unassociate</h2>
       <p>Unassociates radio nick -> IRC nick relation for favorite-related commands. Only works in channel.</p>
       <h2 id="genkey">.genkey &lt;name&gt;</h2>
       <p>Creates or regenerates a new API key that you can use to authenticate on the web interface or the API (put this on an Authorization header when requesting things). You can have multiple API keys, each with a different name. You have to use <a href="#associate">.associate</a> first</p>
+      <p>NOTE: This command only works over private message.</p>
       <h2 id="lskeys">.lskeys</h2>
       <p>Lists all of your API keys.</p>
+      <p>NOTE: This command only works over private message.</p>
       <h2 id="rmkey">.rmkey &lt;name&gt;</h2>
       <p>Removes one of your API keys.</p>
+      <p>NOTE: This command only works over private message.</p>
       <h2 id="search-query-.s-query">.search &lt;query&gt;, .s &lt;query&gt;</h2>
-      <p>Does a track search and displays the top three results. You can then send the number (just <code>1</code> or <code>3</code>, or multiple like <code>1,3,5</code>) of the result(s) to queue them. <code>&lt;query&gt;</code> can use multiple selectors (<code>title, album, artist, fav, duration, hash, audio, tag, favcount, playcount, tagcount</code>) to reduce the number of results and find the track you want, for example: <code>.search album:"naruto" title:"come back" duration>100</code></p>
+      <p>Does a track search and displays the top three results. You can then send the number (just <code>1</code> or <code>3</code>, or multiple like <code>1,3,5</code>) of the result(s) to queue them. <code>&lt;query&gt;</code> can use multiple selectors (<code>title, album, artist, fav, duration, hash, audio, lyrics, tag, favcount, playcount, tagcount</code>) to reduce the number of results and find the track you want, for example: <code>.search album:"naruto" title:"come back" duration>100</code></p>
       <p>Advanced queries are also supported, using currently playing context (<em>$album</em> or <em>$artist</em>) to refer to current playing track details, quotes, equality operators, or AND / OR / NOT (-) / parenthesis. By default every new term you add uses AND (with higher precedence), but you can specify OR instead (note they must be uppercase).</p>
       <p>For example: <code>favcount>3 (artist=shibayan OR artist="ELECTRO.MUSTER") @mns -"el dorado" #remix</code></p>
       <p>All searches are case insensitive. When using the equality operator, you can include <em>%</em> as a wildcard.</p>
       <p>You can use .more to expand the list of results afterwards. Be nice and do this over private message if you want to go through a lot of them.</p>
+      <p>For a more in-depth look at this rich syntax, look at the <a href="https://github.com/WeebDataHoarder/stewdio-api/tree/master/stewdio/search" target="_blank">stewdio-api search code</a>.</p>
       <h2 id="qrand-query">.qrand &lt;query&gt;</h2>
       <p>Does a track search and queues a random result. Same syntax for <code>&lt;query&gt;</code> as <code>.search</code>. Can also specify these commands to queue up to three tracks at once: <code>.qrand1 &lt;query&gt;, .qrand2 &lt;query&gt;, .qrand3 &lt;query&gt;</code></p>
       <h2 id="qfav">.qfav [query]</h2>
@@ -167,6 +174,7 @@
       <p>Also works with these radio sites (link stream or page directly instead of file): <em>Stewdio Radio System</em>, <em>r/a/dio</em>, <em>edenofthewest</em>, <em>JpopSuki</em>, <em>gensokyoradio</em>, <em>animenfo</em>, <em>listen.moe</em></p>
       <h1 id="information">Out-Of-Band Player</h1>
       <p>The radio has ways to playback your favorited tracks or other queries like albums or single songs without having to put them live on the radio. Most of these require your browser to playback the original file format, but thanks to modern technology we are able to implement JavaScript decoding of most file formats even if your browser does not support them.</p>
+      <p>This player also supports timed lyrics on either LRC or ASS format. If you have timed lyrics for any track/album, ask on the IRC channel.</p>
       <p>For any of these links you can append <em>/m3u</em> or <em>/pls</em> to generate a playlist file. It will also work with a dot instead of a forward slash.</p>
       <h2 id="favorites_player">Favorites player</h2>
       <p>You can access your (or other user) favorites using this link format <code>https://radio.animebits.moe/player/favorites/&lt;nick&gt;</code> where &lt;nick&gt; is a valid user nick.</p>
@@ -185,9 +193,9 @@
       <p>You can write your own tools that use the API to fetch files. Otherwise, we provide a bash script that lets you query the radio database and fetch selected tracks. A use case of this would be exporting your favorites for offline playback. Do note that you are limited to a few number of concurrent connections, and there might be daily limits in the future.</p>
       <p>In doubt, you can use the API to extract tag information, like torrent IDs that you can fetch directly from the original site.</p>
       <p>If you want to use this bash script, you can <a href="https://radio.animebits.moe/radio-downloader.sh" target="_blank">grab radio-downloader.sh over here</a>, and remember to <code>chmod +x radio.downloader.sh</code> afterwards. Do note you will have to edit the file to include an <em>API_KEY</em> on it.</p>
-      <p>Some dependencies might need to be installed, in this case <em>curl</em> and <em>jq</em> (JSON command line parser).</p>
+      <p>Some dependencies might need to be installed, in this case <em>curl</em> and <em>jq</em> (JSON command line parser). On Debian/Ubuntu you can install them via <code>sudo apt install curl jq</code>.</p>
       <p>Usage: <code>./radio-downloader.sh &lt;query&gt;</code>, where <em>&lt;query&gt;</em> is any normal search query. It can be set with and without quotes, but remember to escape special characters like <em>&gt; &lt; @ #</em> and similar.</p>
-      <p>After running the query, the script will ask you which tracks to fetch. You can configure some settings on the top next to API_KEY, and present your own download path over envoronment variables. Defaults to current directory.</p>
+      <p>After running the query, the script will ask you which tracks to fetch. You can configure some settings on the top next to API_KEY, and present your own download path over environment variables. Defaults to current directory.</p>
       <p><figure><img src="/img/script-example.png" alt="An example run of radio-downloader.sh"/><figcaption>An example run of radio-downloader.sh</figcaption></figure></p>
 
       <h1 id="import-script">Importing favorites</h1>
@@ -295,15 +303,21 @@
       <p><b>TL;DR: Use a VPN, we don't want to know what your IP is. Do not authenticate on Web UI / stream and use just IRC control features if you don't trust us. Use a made-up nick if you don't want other users seeing what you like.</b></p>
 
       <h1 id="source">Source code</h1>
-      <p>Most of the parts used to build this site were source code originally, but some were patched. Listed below are the distinct parts that compose the radio, and if able, a location with the currently available source code.</p>
+      <p>Most of the parts used to build this site were written by others originally, some were patched, others were written from scratch. Listed below are the distinct parts that compose the radio, and if able, a location with the currently available source code.</p>
       <p>
       <ul>
-        <li><b>radio-docker</b>: Merges all projects together in a single platform, and containerizes it via Docker and docker-compose. Used for testing and site itself in the future. Source code is available at <a href="https://github.com/WeebDataHoarder/radio-docker" target="_blank">github.com/WeebDataHoarder/radio-docker</a>.</li>
-        <li><b>radio-web</b>: Radio website. Though mainly static, Out of Band player has some extra PHP code to run the backend search and matching. Source code is available at <a href="https://github.com/WeebDataHoarder/radio-web" target="_blank">github.com/WeebDataHoarder/radio-web</a>.</li>
-        <li><b>stewdio-api</b>: Main music database, and API interaction system written in Python. Forked from original <a href="https://git.sr.ht/~minus/stewdio-api" target="_blank">stewdio-api</a>. Adds extra features (covers, database indexes, extra search, and others) and mainly removes user management. Source code is available at <a href="https://github.com/WeebDataHoarder/stewdio-api" target="_blank">github.com/WeebDataHoarder/stewdio-api</a>.</li>
-        <li><b>kawa</b>: Radio live streamer and queue management written in Rust. Fork with few changes from original. Source code is available at <a href="https://github.com/WeebDataHoarder/kawa" target="_blank">github.com/WeebDataHoarder/kawa</a>.</li>
-        <li><b>radio-matcher</b>: Metadata matcher and finder. Finds and collects metadata from other sources, and creates tags. All this is then pushed to main music database for normal use. Mainly a collection of PHP scripts and produced database. Source code is not available at this moment :(</li>
-        <li><b>miku</b>: IRC bot. Handles user management, provides rich search and other more useful features. Mainly PHP. Source code is available at <a href="https://github.com/WeebDataHoarder/radio-ircbot" target="_blank">github.com/WeebDataHoarder/radio-ircbot</a>.</li>
+        <li><b>radio-docker</b>: Merges all projects together in a single platform, and containerizes it via Docker and docker-compose. Used for testing and site itself in the future.
+          <br/>Source code is available at <a href="https://github.com/WeebDataHoarder/radio-docker" target="_blank">github.com/WeebDataHoarder/radio-docker</a>.</li>
+        <li><b>radio-web</b>: Radio website. Though mainly static, Out of Band player has some extra PHP code to run the backend search and matching.
+          <br/>Source code is available at <a href="https://github.com/WeebDataHoarder/radio-web" target="_blank">github.com/WeebDataHoarder/radio-web</a>.</li>
+        <li><b>stewdio-api</b>: Main music database, and API interaction system written in Python. Forked from original <a href="https://git.sr.ht/~minus/stewdio-api" target="_blank">stewdio-api</a>. Adds extra features (covers, database indexes, extra search, and others) and mainly removes user management.
+          <br/>Source code is available at <a href="https://github.com/WeebDataHoarder/stewdio-api" target="_blank">github.com/WeebDataHoarder/stewdio-api</a>.</li>
+        <li><b>kawa</b>: Radio live streamer and queue management written in Rust. Fork with some changes from original.
+          <br/>Source code is available at <a href="https://github.com/WeebDataHoarder/kawa" target="_blank">github.com/WeebDataHoarder/kawa</a>.</li>
+        <li><b>radio-matcher</b>: Metadata matcher and finder. Finds and collects metadata from other sources, and creates tags. All this is then pushed to main music database for normal use. Mainly a collection of PHP scripts and produced database.
+          <br/>Source code is not available at this moment :(</li>
+        <li><b>miku</b>: IRC bot. Handles user management, provides rich search and other more useful features. Mainly PHP.
+          <br/>Source code is available at <a href="https://github.com/WeebDataHoarder/radio-ircbot" target="_blank">github.com/WeebDataHoarder/radio-ircbot</a>.</li>
       </ul>
       </p>
     </div>
