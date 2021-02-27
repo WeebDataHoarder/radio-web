@@ -62,6 +62,7 @@ if (preg_match("#^/service/encode/(?P<hash>[a-fA-F0-9]{8,32})(|/(?P<codec>(m4a|a
         $cmd .= " -map_metadata -1 -map 0:a -filter_complex 'volume=volume=1.0:replaygain=track' -ac 2 ";
 
         header("Transfer-encoding: chunked");
+        header("Accept-Ranges: none");
         switch ($codec){
             case "m4a":
                 $cmd .= " -ar 44100 -c:a aac -b:a 256k -f mp4 -moov_size 8192 -movflags frag_keyframe+empty_moov+separate_moof+omit_tfhd_offset -frag_duration 1000 -min_frag_duration 100";
