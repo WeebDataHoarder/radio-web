@@ -61,7 +61,7 @@ if (preg_match("#^/service/encode/(?P<hash>[a-fA-F0-9]{8,32})(|/(?P<codec>(m4a|a
 
         $cmd .= " -map_metadata -1 -map 0:a -filter_complex 'volume=volume=1.0:replaygain=track' -ac 2 ";
 
-        header("Transfer-encoding: chunked");
+        //header("Transfer-encoding: chunked");
         header("Accept-Ranges: none");
         switch ($codec){
             case "m4a":
