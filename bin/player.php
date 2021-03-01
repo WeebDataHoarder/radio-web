@@ -929,7 +929,7 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
             songElement.append('<div class="album-header">' + data["album"] + '</div>');
         }
         songElement.append('<div class="song radio-song-container" song-index="' + index + '" song-hash="' + data["hash"] + '">' +
-            '<div class="queue-fit"><img src="' + (data["cover"] !== null ? "/api/cover/" + data["cover"] + "/small" : "/img/no-cover.jpg") + '" class="queue-cover" loading=lazy/></div>' +
+            '<div class="queue-fit"><img data-src="' + (data["cover"] !== null ? "/api/cover/" + data["cover"] + "/small" : "/img/no-cover.jpg") + '" class="queue-cover"/></div>' +
             '<div class="song-now-playing-icon-container">' +
             '<div class="play-button-container">' +
             '</div>' +
@@ -944,6 +944,25 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
             '</div>');
     }
     $("div#radio-right").replaceWith(songElement);
+
+    document.addEventListener("DOMContentLoaded", function() {
+        var lazyImages = [].slice.call(document.querySelectorAll(".queue-cover"));
+
+        if ("IntersectionObserver" in window) {
+            let lazyImageObserver = new IntersectionObserver(function(entries, observer) {
+                entries.forEach(function(entry) {
+                    if (entry.isIntersecting) {
+                        entry.target.src = entry.target.getAttribute("data-src");
+                        lazyImageObserver.unobserve(entry.target);
+                    }
+                });
+            });
+
+            lazyImages.forEach(function(lazyBackground) {
+                lazyImageObserver.observe(lazyBackground);
+            });
+        }
+    });
 
     function shuffleArray(array) {
         for (var i = array.length - 1; i > 0; i--) {
