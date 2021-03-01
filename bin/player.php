@@ -616,7 +616,7 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
                 display: none;
             }
 
-            div#radio-right div.song img.queue-cover {
+            div#radio-right div.song .queue-fit {
                 height: 42px;
                 width: 42px;
             }
@@ -693,8 +693,10 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
                  id="radio-left">
                 <div class="hash-area np-hash" id="np-hash-cover"></div>
                 <div class="tag-area" id="np-tags"></div>
-                <img class="main-cover"
-                     src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII="/>
+                <div class="cover-fit-container">
+                    <img class="main-cover"
+                         src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII="/>
+                </div>
                 <div id="player-left-bottom">
                     <canvas id="lyrics-area"></canvas>
                     <div id="time-container">
@@ -927,7 +929,7 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
             songElement.append('<div class="album-header">' + data["album"] + '</div>');
         }
         songElement.append('<div class="song radio-song-container" song-index="' + index + '" song-hash="' + data["hash"] + '">' +
-            '<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII=" data-background-image="' + (data["cover"] !== null ? "/api/cover/" + data["cover"] + "/small" : "/img/no-cover.jpg") + '" class="queue-cover lazy-bg"/>' +
+            '<div class="queue-fit"><img src="' + (data["cover"] !== null ? "/api/cover/" + data["cover"] + "/small" : "/img/no-cover.jpg") + '" class="queue-cover" loading=lazy/></div>' +
             '<div class="song-now-playing-icon-container">' +
             '<div class="play-button-container">' +
             '</div>' +
@@ -942,25 +944,6 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
             '</div>');
     }
     $("div#radio-right").replaceWith(songElement);
-
-    document.addEventListener("DOMContentLoaded", function() {
-        var lazyBackgrounds = [].slice.call(document.querySelectorAll(".lazy-bg"));
-
-        if ("IntersectionObserver" in window) {
-            let lazyBackgroundObserver = new IntersectionObserver(function(entries, observer) {
-                entries.forEach(function(entry) {
-                    if (entry.isIntersecting) {
-                        entry.target.style["background-image"] = "url("+entry.target.getAttribute("data-background-image")+")";
-                        lazyBackgroundObserver.unobserve(entry.target);
-                    }
-                });
-            });
-
-            lazyBackgrounds.forEach(function(lazyBackground) {
-                lazyBackgroundObserver.observe(lazyBackground);
-            });
-        }
-    });
 
     function shuffleArray(array) {
         for (var i = array.length - 1; i > 0; i--) {
@@ -1529,7 +1512,7 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
         }
         oldActiveElement.removeClass("active-song-container");
         newActiveElement.addClass("active-song-container");
-        $(".main-cover").css("background-image", "url(" + (song["cover"] !== null ? "/api/cover/" + song["cover"] + "/large" : "/img/no-cover.jpg") + ")");
+        $(".main-cover").attr("src", song["cover"] !== null ? "/api/cover/" + song["cover"] + "/large" : "/img/no-cover.jpg");
         $("#meta-container .song-name").html(song["title"]);
         $("#meta-container .song-album").html(song["album"]);
         $("#meta-container .song-artist").html(song["artist"]);

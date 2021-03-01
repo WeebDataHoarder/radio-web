@@ -6,10 +6,6 @@
     display: none;
 }
 
-div#radio-player div#radio-left img.main-cover {
-    width: 100%;
-}
-
 div#radio-right div.song {
     cursor: pointer;
     padding: 5px;

@@ -82,7 +82,10 @@ header("Link: </js/functions.js".VERSION_HASH."; rel=preload; as=script", false)
 				<div class="large-6 medium-6 small-12 cell" id="radio-left">
 					<div class="hash-area np-hash user-feature" id="np-hash-cover"></div>
                     <div class="tag-area" id="np-tags"></div>
-					<img class="np-image main-cover" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII="/>
+                    <div class="cover-fit-container">
+                        <img class="np-image main-cover"
+                             src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII="/>
+                    </div>
 					<div id="player-left-bottom">
 						<div id="time-container">
 							<span class="current-time">
@@ -204,7 +207,9 @@ header("Link: </js/functions.js".VERSION_HASH."; rel=preload; as=script", false)
 
 					<div id="np-queue">
 						<div class="song radio-song-container">
-							<img class="queue-cover np-image"/>
+							<div class="queue-fit">
+                                <img class="queue-cover np-image"/>
+                            </div>
 							<div class="song-now-playing-icon-container">
 								<div class="play-button-container">
 

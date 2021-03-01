@@ -488,7 +488,7 @@ function updateTrackData(data) {
     if (data.hash) {
         jQuery("#np-player").attr("href", baseApiUrl + "/player/hash/" + data.hash);
     }
-    jQuery(".np-image").css("background-image", "url(" + (data.cover !== null ? '/api/cover/' + data.cover + '/large' : '/img/no-cover.jpg') + ")");
+    jQuery(".np-image").attr("src", (data.cover !== null ? '/api/cover/' + data.cover + '/large' : '/img/no-cover.jpg'));
 
     if ('mediaSession' in navigator) {
 
@@ -593,7 +593,7 @@ function createQueueEntry(data, startTime = null) {
     var username = jQuery("#current-nick").text();
     return '' +
         '<div class="song radio-song-container">' +
-        '<img class="queue-cover" style="background-image:url(' + (data.cover !== null ? '/api/cover/' + data.cover + '/small' : '/img/no-cover.jpg') + ')"/>' +
+        '<div class="queue-fit"><img class="queue-cover" src="' + (data.cover !== null ? '/api/cover/' + data.cover + '/small' : '/img/no-cover.jpg') + '" loading=lazy/></div>' +
         '<div class="song-now-playing-icon-container">' +
         ("random" in data && data.random ? '<img class="now-playing" src="/img/shuffle-on.svg"/>' : '') +
         ("random" in data && data.random ? '' : '<div class="now-playing song-favorite user-feature ' + ('favored_by' in data && jQuery.inArray(username.toLowerCase(), data.favored_by) !== -1 ? "favorited" : "") + '" data-track-hash="' + data.hash + '">' + ('favored_by' in data && data.favored_by.length > 0 ? data.favored_by.length : "") + '</div>') +
@@ -618,7 +618,7 @@ function createResultsEntry(data) {
     return '' +
         '<div class="song radio-song-container search-result-queue" data-track-hash="' + data.hash + '">' +
         '<img class="queue-add" src="/img/add.svg"/>' +
-        '<img class="queue-cover" style="background-image:url(' + (data.cover !== null ? '/api/cover/' + data.cover + '/small' : '/img/no-cover.jpg') + '"/>' +
+        '<div class="queue-fit"><img class="queue-cover" src="' + (data.cover !== null ? '/api/cover/' + data.cover + '/small' : '/img/no-cover.jpg') + '" loading=lazy/></div>' +
         '<div class="song-now-playing-icon-container">' +
         '<div class="now-playing song-favorite user-feature ' + (jQuery.inArray(username.toLowerCase(), data.favored_by) !== -1 ? "favorited" : "") + '" data-track-hash="' + data.hash + '">' + (data.favored_by.length > 0 ? data.favored_by.length : "") + '</div>' +
         '</div>' +
