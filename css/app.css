@@ -291,6 +291,7 @@ div.tag[class*="tag-catalog-"] {
 .cover-fit-container {
     position: relative;
     width: 100%;
+    z-index: -1;
 }
 
 .cover-fit-container:before {
@@ -303,7 +304,6 @@ div#radio-player div#radio-left .main-cover {
     object-fit: contain;
 
     position: absolute;
-    z-index: -1;
     left: 0;
     right: 0;
     top: 0;
