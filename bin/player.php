@@ -528,6 +528,8 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
         } else if ($ext === "tta") {
             $mimeType = "audio/tta";
         } else if ($ext === "m4a") {
+            $mimeType = "audio/mp4";
+        } else if ($ext === "aac") {
             $mimeType = "audio/aac";
         } else if ($ext === "wav") {
             $mimeType = "audio/wav";
@@ -992,6 +994,8 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
                         lazyImageObserver.unobserve(entry.target);
                     }
                 });
+            }, {
+                rootMargin: '250px'
             });
 
             lazyImages.forEach(function(lazyBackground) {
