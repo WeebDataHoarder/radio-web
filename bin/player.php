@@ -811,6 +811,7 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
     $neededMimeTypes = [];
     $songPlaylist = [];
     $allowedTags = ["aotw" => true, "op" => true, "ed" => true, "touhou" => true, "vocaloid" => true, "soundtrack" => true, "remix" => true, "doujin" => true, "drama" => true, "alternative" => true, "house" => true, "ambient" => true, "eurobeat" => true, "symphogear" => true, "dance" => true, "trance" => true, "electronic" => true, "funk" => true, "gothic" => true, "jazz" => true, "metal" => true, "pop" => true, "rock" => true, "vocal" => true,];
+    $prevEntry = null;
     foreach ($songs as $index => $data) {
         $neededMimeTypes[$data["mimeType"]] = $data["mimeType"];
         $tags = [];
@@ -820,7 +821,20 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
             }
         }
 
-        $songPlaylist[] = ["title" => $data["title"], "artist" => $data["artist"], "album" => $data["album"], "url" => "/api/download/" . $data["hash"], "hash" => $data["hash"], "duration" => $data["duration"], "mime_type" => $data["mimeType"], "cover" => $data["cover"], "tags" => $tags, "lyrics" => $data["lyrics"]];
+        $centry = $entry = ["title" => $data["title"], "artist" => $data["artist"], "album" => $data["album"], "hash" => $data["hash"], "duration" => $data["duration"], "mime" => $data["mimeType"], "cover" => $data["cover"], "tags" => $tags];
+        if(count($data["lyrics"]) > 0){
+            $entry["lyrics"] = $data["lyrics"];
+        }
+        if($prevEntry !== null){
+            foreach (["artist", "album", "mime", "cover", "tags"] as $k){
+                if($entry[$k] === $prevEntry[$k]){
+                    unset($entry[$k]);
+                }
+            }
+        }
+
+        $songPlaylist[] = $entry;
+        $prevEntry = $centry;
     }
     ?>
 
@@ -919,8 +933,29 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
 
 
     var songElement = $("div#radio-right").clone();
+    var prevData = null;
     for (var index = 0; index < songPlaylist.length; ++index) {
         var data = songPlaylist[index];
+        if (!('url' in data)){
+            data.url = "/api/download/" + data.hash;
+        }
+        if(prevData !== null){
+            if (!('album' in data)){
+                data.album = prevData.album;
+            }
+            if (!('artist' in data)){
+                data.artist = prevData.artist;
+            }
+            if (!('cover' in data)){
+                data.cover = prevData.cover;
+            }
+            if (!('tags' in data)){
+                data.tags = prevData.tags;
+            }
+            if (!('mime' in data)){
+                data.mime = prevData.mime;
+            }
+        }
         if (<?php echo ($doSplit ? "true" : "false"); ?> && (index === 0 || songPlaylist[index - 1]["album"] !== data["album"])) {
             if(index > 0){
                 songElement.append("<hr/>");
@@ -942,6 +977,7 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
             '</div>' +
             '<span class="song-duration">' + uplayer.zeroPad(Math.floor(data["duration"] / 60), 2) + ':' + uplayer.zeroPad(data["duration"] % 60, 2) + '</span>' +
             '</div>');
+        prevData = data;
     }
     $("div#radio-right").replaceWith(songElement);
 
@@ -1053,7 +1089,7 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
 
     function preloadThisSong(song, isPlaying = null) {
         console.log("Trying to preload next track " + song["url"]);
-        uplayer.preload(song["url"], [song["mime_type"]]).then(e => {
+        uplayer.preload(song["url"], [song["mime"]]).then(e => {
             console.log("preloaded next song!");
         }).catch(e => {
             console.log("failed to preload: ");
@@ -1467,7 +1503,7 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
             var subtitleEntry = null;
 
             for(var index = 0; index < preferredLyrics.length; ++index){
-                if(song.lyrics.includes(preferredLyrics[index])){
+                if('lyrics' in song && song.lyrics.includes(preferredLyrics[index])){
                     subtitleEntry = preferredLyrics[index];
 
                     jQuery.ajax(baseApiUrl + "/api/info/" + song.hash + "/lyrics/" + subtitleEntry, {
@@ -1512,7 +1548,7 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
             playing = isPlaying;
         }
 
-        uplayer.init(song["url"], [song["mime_type"]]);
+        uplayer.init(song["url"], [song["mime"]]);
         var oldActiveElement = $(".active-song-container");
         var newActiveElement = $(".song[song-hash=\"" + song["hash"] + "\"]");
         if (oldActiveElement.length > 0 && newActiveElement.length > 0) {
