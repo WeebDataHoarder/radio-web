@@ -415,7 +415,7 @@ function updateTrackData(data) {
             if (data.tags.includes('touhou')) {
                 targetSearch = "https://thwiki.cc/index.php?setlang=en&search=" + encodeURIComponent("incategory:同人专辑 (" + catalog + ")");
             } else if (data.tags.includes('soundtrack') || data.tags.includes('doujin') || data.tags.includes('remix') || data.tags.includes('op') || data.tags.includes('ed')) {
-                targetSearch = "https://vgmdb.net/search?q=" + encodeURIComponent(catalog);
+                targetSearch = "https://vgmdb.info/search?q=" + encodeURIComponent(catalog);
             } else if (data.tags.includes('vocaloid')) {
                 targetSearch = "https://vocadb.net/Search?searchType=Album&filter=" + encodeURIComponent(catalog);
             } else if (data.tags.includes('eurobeat')) {

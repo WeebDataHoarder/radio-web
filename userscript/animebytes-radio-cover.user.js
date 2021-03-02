@@ -163,7 +163,7 @@ let pageURL = new URL(document.location);
                 {
                     if(catalogs.length > 0){
                         let e = document.createElement("a");
-                        e.setAttribute("href", "https://vgmdb.net/search?q=" + encodeURIComponent(catalogs[0]));
+                        e.setAttribute("href", "https://vgmdb.info/search?q=" + encodeURIComponent(catalogs[0]));
                         e.setAttribute("target", "_blank");
                         e.setAttribute("title", "Open VGMdb search");
                         e.textContent = "[VGM]";

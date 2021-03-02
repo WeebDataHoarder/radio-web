@@ -372,6 +372,7 @@ if (preg_match("#^/player/hash/(([a-fA-F0-9]{8,32},?)+)(\\?.*|)$#", $actualPath,
 
     $title = $album . "" . (($artist !== false and $artist !== null) ? " by " . $artist : "") . " [" . strtoupper($tag) . strtolower($type) . "#$q] :: " . count($songs) . " tracks, " . floor($duration / 60) . "m";
 } else {
+    http_response_code(404);
     exit();
 }
 
@@ -395,7 +396,8 @@ if (count($queue) > 0) {
 }
 
 if (count($songs) === 0) {
-    exit(0);
+    http_response_code(404);
+    exit();
 }
 
 if (count($songs) === 1) {
@@ -1664,7 +1666,7 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
                 if (song.tags.includes('touhou')) {
                     targetSearch = "https://thwiki.cc/index.php?setlang=en&search=" + encodeURIComponent("incategory:同人专辑 (" + catalog + ")");
                 } else if (song.tags.includes('soundtrack') || song.tags.includes('doujin') || song.tags.includes('remix') || song.tags.includes('ed') || song.tags.includes('op')) {
-                    targetSearch = "https://vgmdb.net/search?q=" + encodeURIComponent(catalog);
+                    targetSearch = "https://vgmdb.info/search?q=" + encodeURIComponent(catalog);
                 } else if (song.tags.includes('vocaloid')) {
                     targetSearch = "https://vocadb.net/Search?searchType=Album&filter=" + encodeURIComponent(catalog);
                 } else if (song.tags.includes('eurobeat')) {
