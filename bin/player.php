@@ -1022,10 +1022,6 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
     $(".radio-repeat").addClass("repeat-off");
     $(".radio-shuffle").addClass("shuffle-off");
 
-    $("img.main-cover").on("load", function () {
-        $("body").css("background-image", "url("+ $(this).attr("src") +")");
-    });
-
     $(".radio-repeat").on("click", function () {
         if (repeat) {
             repeat = false;
@@ -1578,7 +1574,10 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
         }
         oldActiveElement.removeClass("active-song-container");
         newActiveElement.addClass("active-song-container");
-        $(".main-cover").attr("src", song["cover"] !== null ? "/api/cover/" + song["cover"] + "/large" : "/img/no-cover.jpg");
+        let imageUrl;
+        $(".main-cover").attr("src", imageUrl = song["cover"] !== null ? "/api/cover/" + song["cover"] + "/large" : "/img/no-cover.jpg");
+        $(".body-blur").css("background-image", "url("+ imageUrl +")");
+
         $("#meta-container .song-name").html(song["title"]);
         $("#meta-container .song-album").html(song["album"]);
         $("#meta-container .song-artist").html(song["artist"]);

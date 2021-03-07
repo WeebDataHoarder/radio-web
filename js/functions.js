@@ -22,7 +22,6 @@ $(document).ready(function () {
 });
 
 function initWebsite() {
-
     jQuery("#radio-quality").on('change', function () {
         var playing = uplayer.isPlaying();
 
@@ -54,11 +53,6 @@ function initWebsite() {
                 url: baseApiUrl + "/api/skip"
             });
         }
-    });
-
-
-    jQuery("img.main-cover").on("load", function () {
-        jQuery("body").css("background-image", "url("+ jQuery(this).attr("src") +")");
     });
 
 
@@ -494,7 +488,9 @@ function updateTrackData(data) {
     if (data.hash) {
         jQuery("#np-player").attr("href", baseApiUrl + "/player/hash/" + data.hash);
     }
-    jQuery(".np-image").attr("src", (data.cover !== null ? '/api/cover/' + data.cover + '/large' : '/img/no-cover.jpg'));
+    let imageUrl;
+    jQuery(".np-image").attr("src", imageUrl = (data.cover !== null ? '/api/cover/' + data.cover + '/large' : '/img/no-cover.jpg'));
+    jQuery(".body-blur").css("background-image", "url("+ imageUrl +")");
 
     if ('mediaSession' in navigator) {
 

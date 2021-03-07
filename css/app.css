@@ -4,8 +4,13 @@
     height: 100%;
     margin: 0;
     padding: 0;
-    backdrop-filter: blur(30px);
+    filter: blur(30px);
     z-index: -100;
+    background-attachment: fixed;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: 50% 50%;
+    transition: background-image 0.2s ease-in-out;
 }
 
 .hidden {
@@ -1202,11 +1207,6 @@ body {
     background: #292929;
     height: 100vh;
     color: #999;
-    background-attachment: fixed;
-    background-size: cover;
-    background-repeat: no-repeat;
-    background-position: 50% 50%;
-    transition: background-image 0.2s ease-in-out;
 }
 
 label {
