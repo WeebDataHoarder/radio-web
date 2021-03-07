@@ -683,6 +683,7 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
     ?>
 </head>
 <body>
+<div class="body-blur"></div>
 <div class="grid-x" id="blue-playlist-container">
     <div class="large-12 medium-12 small-12 cell" id="title-bar">
         <img src="/img/title.svg" id="radio-title"/>
@@ -814,7 +815,7 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
     <?php
     $neededMimeTypes = [];
     $songPlaylist = [];
-    $allowedTags = ["aotw" => true, "op" => true, "ed" => true, "touhou" => true, "vocaloid" => true, "soundtrack" => true, "remix" => true, "doujin" => true, "drama" => true, "alternative" => true, "house" => true, "ambient" => true, "eurobeat" => true, "symphogear" => true, "dance" => true, "trance" => true, "electronic" => true, "funk" => true, "gothic" => true, "jazz" => true, "metal" => true, "pop" => true, "rock" => true, "vocal" => true,];
+    $allowedTags = ["aotw" => true, "op" => true, "ed" => true, "touhou" => true, "vocaloid" => true, "soundtrack" => true, "remix" => true, "doujin" => true, "drama" => true, "alternative" => true, "house" => true, "ambient" => true, "eurobeat" => true, "symphogear" => true, "dance" => true, "trance" => true, "electronic" => true, "funk" => true, "gothic" => true, "jazz" => true, "metal" => true, "pop" => true, "rock" => true, "hip.hop" => true, "vocal" => true,];
     $prevEntry = null;
     foreach ($songs as $index => $data) {
         $neededMimeTypes[$data["mimeType"]] = $data["mimeType"];
@@ -1020,6 +1021,10 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
     var shuffle = false;
     $(".radio-repeat").addClass("repeat-off");
     $(".radio-shuffle").addClass("shuffle-off");
+
+    $("img.main-cover").on("load", function () {
+        $("body").css("background-image", "url("+ $(this).attr("src") +")");
+    });
 
     $(".radio-repeat").on("click", function () {
         if (repeat) {
@@ -1624,6 +1629,7 @@ header("Link: </js/player/player.js" . VERSION_HASH . "; rel=preload; as=script"
                 metal: 1,
                 pop: 2,
                 rock: 1,
+                "hip.hop": 1,
                 vocal: 1
             };
             for (var i = 0; i < song.tags.length; ++i) {

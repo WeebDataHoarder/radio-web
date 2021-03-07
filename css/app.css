@@ -1,9 +1,12 @@
-/*
-  1. Base
-*/
-/*
-  2. Components
-*/
+.body-blur{
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    backdrop-filter: blur(30px);
+    z-index: -100;
+}
 
 .hidden {
     display: none !important;
@@ -58,7 +61,7 @@ div#title-bar a, div#title-bar label {
 }
 
 div#radio-player {
-    background: #252525;
+    background: rgba(37, 37, 37, 0.1);
     margin: auto;
     max-width: 1200px;
     width: 100%;
@@ -170,13 +173,12 @@ p {
 
 div#radio-left {
     padding: 0px;
-    background: #252525;
     position: relative;
 }
 
 div#radio-left div#player-left-bottom {
     position: relative;
-    background-color: #313131;
+    background-color: rgba(49, 49, 49, 0.8);
     padding: 20px 10px;
 }
 
@@ -208,7 +210,7 @@ div#radio-player div#radio-left div#np-hash-cover.hash-area {
     width: 10ch;
     font-size: 0.8em;
     color: #333;
-    text-shadow: 0px 0px 1px #FFF;
+    text-shadow: 0px 0px 2px #FFF;
 }
 
 
@@ -292,6 +294,7 @@ div.tag[class*="tag-catalog-"] {
     position: relative;
     width: 100%;
     z-index: -1;
+    background: rgba(37, 37, 37, 0.3);
 }
 
 .cover-fit-container:before {
@@ -320,7 +323,7 @@ div#radio-player div#radio-left .main-cover {
 
 div#radio-right {
     padding: 0px;
-    background: #252525;
+    background: rgba(37, 37, 37, 0.85);
 }
 
 div#radio-right div.song {
@@ -1199,6 +1202,11 @@ body {
     background: #292929;
     height: 100vh;
     color: #999;
+    background-attachment: fixed;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: 50% 50%;
+    transition: background-image 0.2s ease-in-out;
 }
 
 label {

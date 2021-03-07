@@ -56,6 +56,12 @@ function initWebsite() {
         }
     });
 
+
+    jQuery("img.main-cover").on("load", function () {
+        jQuery("body").css("background-image", "url("+ jQuery(this).attr("src") +")");
+    });
+
+
     setInterval(function () {
         if (np === null) {
             return;

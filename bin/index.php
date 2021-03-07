@@ -65,6 +65,7 @@ header("Link: </js/functions.js".VERSION_HASH."; rel=preload; as=script", false)
 	<link rel="search" type="application/opensearchdescription+xml" title="anime(bits) Artist" href="/search-artist.xml"/>
 </head>
 <body>
+    <div class="body-blur"></div>
 	<div class="grid-x" id="blue-playlist-container">
 		<div class="large-12 medium-12 small-12 cell non-auth" id="title-bar">
 			<img src="/img/title.svg" id="radio-title" />
