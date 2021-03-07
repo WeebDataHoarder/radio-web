@@ -317,8 +317,7 @@ div#radio-player div#radio-left .main-cover {
     top: 0;
     bottom: 0;
     margin: auto;
-    max-height: 100%;
-    max-width: 100%;
+    height: 100%;
 }
 
 /* Small only */
