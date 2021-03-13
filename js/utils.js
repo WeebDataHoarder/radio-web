@@ -183,7 +183,8 @@ function applyTagEntries(element, tagEntries){
         });
         newTag.innerText = tag.text;
         if("link" in tag){
-            tag.href = tag.link;
+            newTag.href = tag.link;
+            newTag.setAttribute("target", "_blank");
         }
         element.appendChild(newTag);
     });
