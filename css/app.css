@@ -267,28 +267,28 @@ div#radio-player div#radio-left div#np-tags.tag-area div.tag {
     content: "#";
 }
 
-div.tag.tag-op, div.tag.tag-ed {
+.tag.tag-op, .tag.tag-ed {
     background-color: #2ECC40 !important;
 }
 
-div.tag.tag-aotw {
+.tag.tag-aotw {
     background-color: #FFA500 !important;
 }
 
-div.tag.tag-touhou, div.tag.tag-vocaloid, div.tag.tag-symphogear, div.tag.tag-soundtrack, div.tag.tag-remix, div.tag.tag-doujin, div.tag.tag-drama, div.tag.tag-eurobeat {
+.tag.tag-touhou, .tag.tag-vocaloid, .tag.tag-symphogear, .tag.tag-soundtrack, .tag.tag-remix, .tag.tag-doujin, .tag.tag-drama, .tag.tag-eurobeat {
     background-color: #001f3f !important;
     color: hsla(210, 100%, 75%, 1.0) !important;
 }
 
-div.tag.tag-alternative, div.tag.tag-dance, div.tag.tag-electronic, div.tag.tag-funk, div.tag.tag-house, div.tag.tag-gothic, div.tag.tag-jazz, div.tag.tag-metal, div.tag.tag-pop, div.tag.tag-rock, div.tag.tag-trance, div.tag.tag-ambient, div.tag.tag-vocal {
+.tag.tag-alternative, .tag.tag-dance, .tag.tag-electronic, .tag.tag-funk, .tag.tag-house, .tag.tag-gothic, .tag.tag-jazz, .tag.tag-metal, .tag.tag-pop, .tag.tag-rock, .tag.tag-trance, .tag.tag-ambient, .tag.tag-vocal, .tag.tag-hip-hop {
     background-color: #7FDBFF !important;
 }
 
-div.tag[class*="tag-catalog-"]::before {
+.tag[class*="tag-catalog-"]::before {
     content: "\1F4BF";
 }
 
-div.tag[class*="tag-catalog-"] {
+.tag[class*="tag-catalog-"] {
     cursor: pointer;
     background-color: #111111 !important;
     color: hsla(210, 100%, 75%, 1.0) !important;

@@ -1,31 +1,75 @@
-var currentQueue = [];
-var np = [];
-var nr = null;
-var listeners = [];
+const basePageUrl = new URL(document.location.origin);
+if (basePageUrl.searchParams.get("apiurl") !== null) {
+    if (basePageUrl.searchParams.get("apiurl") === "") {
+        window.localStorage.removeItem("radio-api-url");
+    } else {
+        window.localStorage.setItem("radio-api-url", String(basePageUrl.searchParams.get("apiurl")).trimEnd("/"));
+    }
+}
 
-var searchRequest = null;
-var searchTimer;
-var searchTimeout = 500;
-var oldQuery = "";
-var socket = null;
+const baseApiUrl = window.localStorage.getItem("radio-api-url") != null ? window.localStorage.getItem("radio-api-url") : location.protocol + '//' + document.domain + ':' + location.port;
+let apiKey = null;
 
-$(document).ready(function () {
+let currentQueue = [];
+let np = [];
+let nr = null;
+let listeners = [];
+
+let searchRequest = null;
+let searchTimer;
+const searchTimeout = 500;
+let oldQuery = "";
+let socket = null;
+
+jQuery(document).ready(function () {
     /*
         When the window resizes, ensure the left and right side of the player
         are equal.
     */
-    $(window).on('resize', function () {
+    jQuery(window).on('resize', function () {
         //adjustPlayerHeights();
     });
 
     initWebsite();
 });
 
+function applyTagMeta(meta){
+    if("dl-link-type" in meta){
+        jQuery("#np-download").addClass(meta["dl-link-type"]);
+    }
+    if("dl-link-href" in meta){
+        jQuery("#np-download").attr("href", meta["dl-link-href"]);
+    }
+}
+
+const uplayer = new UPlayer({
+    "limitCodecs": ["audio/flac", "audio/ogg;codecs=opus", "audio/mpeg;codecs=mp3", "audio/aac"],
+    "volume": window.localStorage.getItem("radio-volume") !== null ? window.localStorage.getItem("radio-volume") / 100 : 1.0,
+    "preload": false,
+    "streaming": true,
+    "muted": false,
+    "retry": true,
+    "play-pause-element": jQuery(".play-pause"),
+    //"progress-minutes-element": jQuery(".radio-current-minutes"),
+    //"progress-seconds-element": jQuery(".radio-current-seconds"),
+    //"duration-minutes-element": jQuery(".radio-duration-minutes"),
+    //"duration-seconds-element": jQuery(".radio-duration-seconds"),
+    //"progress-element": jQuery(".radio-song-played-progress"),
+    //"buffer-progress-element": jQuery(".radio-song-played-progress"),
+    "mute-element": jQuery(".mute"),
+    "volume-element": jQuery(".volume-slider"),
+    "on-ready": function () {
+        jQuery(".play-pause").removeClass("hidden");
+    }
+});
+
+let audioStream;
+
 function initWebsite() {
     jQuery("#radio-quality").on('change', function () {
-        var playing = uplayer.isPlaying();
+        const playing = uplayer.isPlaying();
 
-        for (var i = 0; i < compatibleAudioStreams.length; ++i) {
+        for (let i = 0; i < compatibleAudioStreams.length; ++i) {
             if (compatibleAudioStreams[i].id == jQuery(this).val()) {
                 audioStream = compatibleAudioStreams[i];
                 break;
@@ -61,10 +105,10 @@ function initWebsite() {
             return;
         }
 
-        var totalDuration = np.duration;
-        var currentDuration = Math.floor((new Date()).getTime() / 1000 - np.started);
+        const totalDuration = np.duration;
+        const currentDuration = Math.floor((new Date()).getTime() / 1000 - np.started);
 
-        var current = Math.max(0, Math.min(totalDuration, currentDuration));
+        const current = Math.max(0, Math.min(totalDuration, currentDuration));
 
         jQuery(".np-seconds").text(("" + (current % 60)).padStart(2, "0"));
         jQuery(".np-minutes").text(("" + Math.floor(current / 60)).padStart(2, "0"));
@@ -97,8 +141,8 @@ function initWebsite() {
     }
 
     jQuery("#radio-player").on('click', ".song-favorite", function () {
-        var username = jQuery("#current-nick").text();
-        var thisElement = this;
+        const username = jQuery("#current-nick").text();
+        const thisElement = this;
         if (username == "") {
             return;
         }
@@ -114,8 +158,8 @@ function initWebsite() {
     });
 
     jQuery("#search-results").on('mousedown', ".search-result-queue", function (a) {
-        var target = jQuery(a.target);
-        var songHash = jQuery(this).attr("data-track-hash");
+        const target = jQuery(a.target);
+        const songHash = jQuery(this).attr("data-track-hash");
         if (a.ctrlKey || (a.which == 2 || a.button == 2)) {
             window.open(baseApiUrl + "/player/hash/" + songHash, '_blank');
             a.stopImmediatePropagation();
@@ -124,7 +168,7 @@ function initWebsite() {
         if (target.hasClass("song-favorite")/* || target.hasClass("song-album") || target.hasClass("song-artist") || target.hasClass("song-title")*/) {
             return;
         }
-        var thisElement = this;
+        const thisElement = this;
         jQuery.ajax(baseApiUrl + "/api/request/" + songHash, {
             method: "GET",
             async: true
@@ -174,7 +218,7 @@ function initWebsite() {
 */
 
     jQuery(".hash-area").on('click', function () {
-        var temp = jQuery("<input>");
+        const temp = jQuery("<input>");
         jQuery("body").append(temp);
         temp.val(jQuery(this).text()).select();
         document.execCommand("copy");
@@ -199,9 +243,9 @@ function initWebsite() {
 }
 
 function initWebSocket() {
-    var socketUrl = new URL(baseApiUrl);
+    const socketUrl = new URL(baseApiUrl);
     socketUrl.protocol = socketUrl.protocol === 'https:' ? 'wss:' : 'ws:';
-    var fullUrl = socketUrl.href + '/api/events/basic';
+    let fullUrl = socketUrl.href + '/api/events/basic';
     if (apiKey !== null) {
         socketUrl.username = apiKey;
         fullUrl = socketUrl.href + '/api/events/all'
@@ -226,13 +270,13 @@ function initWebSocket() {
         socket.close();
     };
     socket.onmessage = function (event) {
-        var data = JSON.parse(event.data);
+        const data = JSON.parse(event.data);
         if (data.type == 'queue') {
             if (data.data.action == 'initial') {
                 currentQueue = data.data.queue;
                 updateQueueData(currentQueue);
             } else if (data.data.action == 'remove') {
-                for (var i = 0; i < currentQueue.length; ++i) {
+                for (let i = 0; i < currentQueue.length; ++i) {
                     if (
                         currentQueue[i].id == data.data.song.id
                     ) {
@@ -273,8 +317,8 @@ function initWebSocket() {
                 jQuery("#listeners").text("Listeners: " + data.data.num_listeners + " guest(s)");
             }
         } else if (data.type == 'favorite') {
-            var username = jQuery("#current-nick").text().toLowerCase();
-            var targetElement = $(".song-favorite[data-track-hash=\"" + data.data.song.hash + "\"]");
+            const username = jQuery("#current-nick").text().toLowerCase();
+            const targetElement = jQuery(".song-favorite[data-track-hash=\"" + data.data.song.hash + "\"]");
             if (targetElement.length === 0) {
                 //No target on screen
             } else {
@@ -304,7 +348,7 @@ function updateTrackData(data) {
         jQuery("#radio-favorite").attr("data-track-hash", data.hash);
     }
 
-    var username = jQuery("#current-nick").text();
+    const username = jQuery("#current-nick").text();
     if ('favored_by' in data && username != "") {
         if (jQuery.inArray(username.toLowerCase(), data.favored_by) !== -1) {
             jQuery("#radio-favorite").addClass("favorited");
@@ -319,171 +363,9 @@ function updateTrackData(data) {
     jQuery("#np-download").removeClass("bbt");
     jQuery("#np-tags.tag-area").html("");
 
-    if ("tags" in data) {
-        var groupId = null;
-        var torrentId = null;
-        var linkType = null;
-
-
-        var catalog = null;
-
-        var miscTags = [];
-        var miscPriority = 100;
-        var allowedMiscTags = {
-            aotw: 1,
-            op: 1,
-            ed: 1
-        };
-
-
-        var classTags = [];
-        var classPriority = 100;
-        var allowedClassTags = {
-            touhou: 1,
-            vocaloid: 1,
-            eurobeat: 1,
-            symphogear: 3,
-            soundtrack: 2,
-            remix: 3,
-            doujin: 4,
-            drama: 4
-        };
-
-
-        var genreTags = [];
-        var genrePriority = 100;
-        var allowedGenreTags = {
-            alternative: 1,
-            house: 1,
-            dance: 1,
-            trance: 1,
-            ambient: 1,
-            electronic: 2,
-            funk: 1,
-            gothic: 1,
-            jazz: 1,
-            metal: 1,
-            pop: 2,
-            rock: 1,
-            vocal: 1
-        };
-        for (var i = 0; i < data.tags.length; ++i) {
-            var tag = data.tags[i];
-            var matches = null;
-            if ((matches = tag.match(/^(jps|ab|red|bbt)([gt])\-([0-9]+)$/i)) !== null) {
-                if (matches[2] == "g") {
-                    groupId = matches[3];
-                } else if (matches[2] == "t") {
-                    torrentId = matches[3];
-                }
-                linkType = matches[1];
-            } else if ((matches = tag.match(/^catalog\-(.+)$/i)) !== null) {
-                catalog = matches[1].toUpperCase();
-            } else if (tag in allowedMiscTags) {
-                if (allowedMiscTags[tag] === miscPriority) {
-                    miscPriority = allowedMiscTags[tag];
-                    miscTags.push(tag);
-                } else if (allowedMiscTags[tag] < miscPriority) {
-                    miscPriority = allowedMiscTags[tag];
-                    miscTags = [];
-                    miscTags.push(tag);
-                }
-            } else if (tag in allowedClassTags) {
-                if (allowedClassTags[tag] === classPriority) {
-                    classPriority = allowedClassTags[tag];
-                    classTags.push(tag);
-                } else if (allowedClassTags[tag] < classPriority) {
-                    classPriority = allowedClassTags[tag];
-                    classTags = [];
-                    classTags.push(tag);
-                }
-            } else if (tag in allowedGenreTags) {
-                if (allowedGenreTags[tag] === genrePriority) {
-                    genrePriority = allowedGenreTags[tag];
-                    genreTags.push(tag);
-                } else if (allowedGenreTags[tag] < genrePriority) {
-                    genrePriority = allowedGenreTags[tag];
-                    genreTags = [];
-                    genreTags.push(tag);
-                }
-            }
-        }
-
-
-        if (catalog !== null) {
-            var targetSearch = "https://musicbrainz.org/search?advanced=1&type=release&query=" + encodeURIComponent("catno:" + catalog);
-            if (data.tags.includes('touhou')) {
-                targetSearch = "https://thwiki.cc/index.php?setlang=en&search=" + encodeURIComponent("incategory:同人专辑 (" + catalog + ")");
-            } else if (data.tags.includes('soundtrack') || data.tags.includes('doujin') || data.tags.includes('remix') || data.tags.includes('op') || data.tags.includes('ed')) {
-                targetSearch = "https://vgmdb.info/search?q=" + encodeURIComponent(catalog);
-            } else if (data.tags.includes('vocaloid')) {
-                targetSearch = "https://vocadb.net/Search?searchType=Album&filter=" + encodeURIComponent(catalog);
-            } else if (data.tags.includes('eurobeat')) {
-                targetSearch = "http://www.dancegroove.net/database/search.php?mode=cd&catalog=" + encodeURIComponent(catalog);
-            } else if (data.tags.includes('pop')) {
-                //targetSearch = "https://www.discogs.com/search/?type=release&catno=" + encodeURIComponent(catalog);
-            }
-            var newTag = $(document.createElement("div"));
-            newTag.addClass("tag");
-            newTag.addClass("tag-catalog-" + catalog);
-            newTag.text(catalog);
-            newTag.on('mousedown', function (a) {
-                if (a.ctrlKey || (a.which == 2 || a.button == 2)) {
-                    window.open(targetSearch, '_blank');
-                    a.stopImmediatePropagation();
-                    return;
-                }
-                var temp = jQuery("<input>");
-                jQuery("body").append(temp);
-                temp.val(jQuery(this).text()).select();
-                document.execCommand("copy");
-                temp.remove();
-            });
-            jQuery("#np-tags.tag-area").append(newTag);
-        }
-
-        for (var i = 0; i < classTags.length; ++i) {
-            var newTag = $(document.createElement("div"));
-            newTag.addClass("tag");
-            newTag.addClass("tag-" + classTags[i]);
-            newTag.text(classTags[i]);
-            jQuery("#np-tags.tag-area").append(newTag);
-        }
-
-        for (var i = 0; i < genreTags.length; ++i) {
-            var newTag = $(document.createElement("div"));
-            newTag.addClass("tag");
-            newTag.addClass("tag-" + genreTags[i]);
-            newTag.text(genreTags[i]);
-            jQuery("#np-tags.tag-area").append(newTag);
-        }
-
-        for (var i = 0; i < miscTags.length; ++i) {
-            var newTag = $(document.createElement("div"));
-            newTag.addClass("tag");
-            newTag.addClass("tag-" + miscTags[i]);
-            newTag.text(miscTags[i]);
-            jQuery("#np-tags.tag-area").append(newTag);
-        }
-
-        if (groupId !== null && torrentId !== null && (linkType == "ab" || linkType == "jps" || linkType == "red" || linkType == "bbt")) {
-            jQuery("#np-download").addClass(linkType);
-            if (linkType == "ab") {
-                jQuery("#np-download").attr("href", "https://animebytes.tv/torrents2.php?id=" + groupId + "&torrentid=" + torrentId);
-            } else if (linkType == "jps") {
-                jQuery("#np-download").attr("href", "https://jpopsuki.eu/torrents.php?id=" + groupId + "&torrentid=" + torrentId);
-            } else if (linkType == "red") {
-                jQuery("#np-download").attr("href", "https://redacted.ch/torrents.php?id=" + groupId + "&torrentid=" + torrentId);
-            } else if (linkType == "bbt") {
-                jQuery("#np-download").attr("href", "https://bakabt.me/torrent/" + torrentId + "/show");
-            }
-        } else {
-            if (data.hash) {
-                jQuery("#np-download").attr("href", baseApiUrl + "/api/download/" + data.hash);
-            }
-        }
-    }
-
+    let tagData = getTagEntries(data);
+    applyTagEntries(jQuery("#np-tags.tag-area").get(0), tagData.tags);
+    applyTagMeta(tagData.meta);
 
     if (data.hash) {
         jQuery("#np-player").attr("href", baseApiUrl + "/player/hash/" + data.hash);
@@ -492,107 +374,19 @@ function updateTrackData(data) {
     jQuery(".np-image").attr("src", imageUrl = (data.cover !== null ? '/api/cover/' + data.cover + '/large' : '/img/no-cover.jpg'));
     jQuery(".body-blur").css("background-image", "url("+ imageUrl +")");
 
-    if ('mediaSession' in navigator) {
 
-        navigator.mediaSession.metadata = new MediaMetadata({
-            title: data.title,
-            artist: data.artist,
-            album: data.album,
-            artwork: [
-                {
-                    src: location.protocol + '//' + document.domain + ':' + location.port + (data.cover !== null ? "/api/cover/" + data.cover + "/large" : "/img/no-cover.jpg"),
-                    sizes: '800x800',
-                    type: 'image/jpeg'
-                },
-                {
-                    src: location.protocol + '//' + document.domain + ':' + location.port + (data.cover !== null ? "/api/cover/" + data.cover + "/small" : "/img/no-cover.jpg"),
-                    sizes: '55x55',
-                    type: 'image/jpeg'
-                }
-            ]
-        });
-    }
+    pushMediaSessionMetadata(data);
 
 
-    if (jQuery("#notify-check").prop("checked") && Notification.permission === "granted" && uplayer.isPlaying()) {
+    if (uplayer.isPlaying()) {
         setTimeout(function () {
-            var actions = [];
-            var username = jQuery("#current-nick").text();
-            /*if(username != "" && 'actions' in Notification.prototype && Notification.maxActions >= 3){
-                if(jQuery.inArray(username.toLowerCase(), data.favored_by) !== -1){
-                    actions.push({
-                        action: 'unfavorite',
-                        title: 'Favorited'
-                    });
-                }else{
-                    actions.push({
-                        action: 'favorite',
-                        title: 'Favorite',
-                        icon: '/img/heart.svg'
-                    });
-                }
-
-                if('hash' in data){
-                    actions.push({
-                        action: 'player',
-                        title: 'Open Player',
-                        icon: '/img/external-player.svg'
-                    });
-                }
-
-                if(listeners.num_listeners <= 2){
-                    actions.push({
-                        action: 'skip',
-                        title: 'Skip',
-                    });
-                }
-            }*/
-            var n = new Notification(data.title + " by " + data.artist, {
-                icon: (data.cover !== null ? '/api/cover/' + data.cover + '/small' : '/img/no-cover.jpg') + "?apikey=" + apiKey,
-                image: (data.cover !== null ? '/api/cover/' + data.cover + '/large' : '/img/no-cover.jpg') + "?apikey=" + apiKey,
-                body: "from " + data.album + ' [' + uplayer.zeroPad(Math.floor(data["duration"] / 60), 2) + ':' + uplayer.zeroPad(data["duration"] % 60, 2) + ']' + (('favored_by' in data && data.favored_by.length > 0) ? " Favorited " + data.favored_by.length + " time(s)." : ""),
-                silent: true,
-                requireInteraction: false,
-                tag: "np." + window.location.hostname,
-                data: data,
-                actions: actions
-            });
-            n.onclick = function(){
-                window.focus();
-            };
-            /*
-            n.addEventListener('notificationclick', function (event) {
-                var data = event.notification.data;
-
-                if (event.action === 'skip' && listeners.num_listeners <= 2) {
-                    jQuery.ajax({
-                        type: "GET",
-                        url: baseApiUrl + "/api/skip"
-                    });
-                    event.notification.close();
-                } else if (event.action === 'favorite') {
-                    jQuery.ajax(baseApiUrl + "/api/favorites/" + username + "/" + data.hash, {
-                        method: "PUT",
-                        async: true
-                    }).done(function (data, code, xhr) {
-                        event.notification.close();
-                    });
-                } else if (event.action === 'player') {
-                    clients.openWindow("/player/hash/" + data.hash.substring(0, 12));
-                    event.notification.close();
-                } else {
-                    parent.focus();
-                    window.focus();
-                    event.notification.close();
-                }
-            }, false);*/
-            setTimeout(n.close.bind(n), 30000);
+            pushPlayNotification(data, "np");
         }, 6000);
     }
 }
 
 function createQueueEntry(data, startTime = null) {
-    var username = jQuery("#current-nick").text();
+    const username = jQuery("#current-nick").text();
     return '' +
         '<div class="song radio-song-container">' +
         '<div class="queue-fit"><img class="queue-cover" src="' + (data.cover !== null ? '/api/cover/' + data.cover + '/small' : '/img/no-cover.jpg') + '" loading=lazy/></div>' +
@@ -609,14 +403,8 @@ function createQueueEntry(data, startTime = null) {
         '</div>';
 }
 
-function htmlentities(rawStr) {
-    return String(rawStr).replace(/[\u00A0-\u9999<>\&]/gim, function (i) {
-        return '&#' + i.charCodeAt(0) + ';';
-    });
-}
-
 function createResultsEntry(data) {
-    var username = jQuery("#current-nick").text();
+    const username = jQuery("#current-nick").text();
     return '' +
         '<div class="song radio-song-container search-result-queue" data-track-hash="' + data.hash + '">' +
         '<img class="queue-add" src="/img/add.svg"/>' +
@@ -634,7 +422,7 @@ function createResultsEntry(data) {
 }
 
 function updateQueueData(res) {
-    var queueDuration = np && 'started' in np ? np.started + np.duration : null;
+    let queueDuration = np && 'started' in np ? np.started + np.duration : null;
     if (res.length == 0) {
         jQuery("#radio-queue").html("");
         if (nr !== null) {
@@ -664,7 +452,7 @@ function updateQueueData(res) {
         }
     } else {
         jQuery("#radio-queue").html("");
-        for (var i = 0; i < res.length; i++) {
+        for (let i = 0; i < res.length; i++) {
             jQuery("#radio-queue").append(createQueueEntry(res[i], queueDuration));
             if (queueDuration !== null) {
                 queueDuration += res[i].duration;
@@ -708,23 +496,21 @@ function nickIdentify(username) {
     if (username == "") {
         return;
     }
-    jQuery(".non-auth").addClass("auth");
-    jQuery(".non-auth").removeClass("non-auth");
-    jQuery("#current-nick").text(username);
-    jQuery("#current-nick").attr("href", baseApiUrl + "/player/favorites/" + username);
+    jQuery(".non-auth").addClass("auth").removeClass("non-auth");
+    jQuery("#current-nick").text(username).attr("href", baseApiUrl + "/player/favorites/" + username);
     jQuery("#user-login").css("display", "none");
     jQuery("#radio-favorite").css("display", "inline-block");
 
 
     jQuery(".stream-link").each(function () {
-        var url = new URL(jQuery(this).attr("href"), location.protocol + '//' + document.domain + ':' + location.port + '/');
+        const url = new URL(jQuery(this).attr("href"), location.protocol + '//' + document.domain + ':' + location.port + '/');
         url.searchParams.set("apikey", apiKey);
         jQuery(this).attr("href", url.href);
     });
 
-    var playing = !uplayer.isPaused();
+    const playing = !uplayer.isPaused();
 
-    var url = new URL(uplayer.currentUrl, baseApiUrl);
+    const url = new URL(uplayer.currentUrl, baseApiUrl);
     url.searchParams.set("apikey", apiKey);
 
     uplayer.init(url, [audioStream.format]);
@@ -741,8 +527,7 @@ function initSearch() {
     jQuery("#search-query").on("keyup", function () {
         clearTimeout(searchTimer);
         searchTimer = setTimeout(runQuery, searchTimeout);
-    });
-    jQuery("#search-query").on("keydown", function () {
+    }).on("keydown", function () {
         clearTimeout(searchTimer);
     });
 
@@ -760,17 +545,17 @@ function initSearch() {
 function runQuery(force) {
     clearTimeout(searchTimer);
 
-    var username = jQuery("#current-nick").text();
+    const username = jQuery("#current-nick").text();
 
-    if (username == "") {
+    if (username === "") {
         return;
     }
 
-    var query = jQuery("#search-query").val().trim();
+    let query = jQuery("#search-query").val().trim();
 
-    var results = jQuery("#search-results");
+    const results = jQuery("#search-results");
 
-    var type = jQuery("#search-type").val();
+    const type = jQuery("#search-type").val();
 
     if (query == "" && type != "favorites" && type != "history") {
         //TODO: clear list
@@ -779,7 +564,7 @@ function runQuery(force) {
         return;
     }
 
-    var orderType = 'orderBy=score&orderDirection=desc&';
+    let orderType = 'orderBy=score&orderDirection=desc&';
     if(type == 'album'){
         orderType = 'orderBy=albumPath&orderDirection=asc&'
     }
@@ -797,7 +582,7 @@ function runQuery(force) {
         searchRequest.abort();
     }
 
-    var requestUrl = null;
+    let requestUrl = null;
     if (type == "favorites" && query != "") {
         requestUrl = "/api/search?orderBy=score&orderDirection=desc&q=" + encodeURIComponent("fav:\"" + username + "\" AND (" + query + ")");
     } else if (type == "favorites") {
@@ -815,8 +600,8 @@ function runQuery(force) {
     }).done(function (data, status, xhr) {
         if (xhr.status >= 200 && xhr.status < 300) {
             results.html("");
-            for (var i = 0; i < data.length; i++) {
-                var entry = data[i];
+            for (let i = 0; i < data.length; i++) {
+                let entry = data[i];
                 if (type == "history") {
                     entry = entry["song"];
                 }
@@ -843,3 +628,93 @@ function runQuery(force) {
         }
     }*/
 }
+
+
+jQuery(".volume-slider").on("change", function () {
+    window.localStorage.setItem("radio-volume", jQuery(this).val());
+});
+
+
+findCompatibleAudioStreams();
+
+const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+
+audioStream = null;
+if (connection && (connection.effectiveType === "cellular" || connection.effectiveType === "bluetooth" || connection.saveData)) {
+    //better data usage
+    audioStream = selectAudioStream(["medium"]);
+} else {
+    audioStream = selectAudioStream(["high", "medium"]);
+}
+
+
+if (audioStream === null) {
+    audioStream = compatibleAudioStreams[0];
+}
+
+let i;
+if (window.localStorage.getItem("radio-stream-id") !== null) {
+    compatibleAudioStreams.forEach((aStream) => {
+
+    });
+    for (i = 0; i < compatibleAudioStreams.length; ++i) {
+        if (compatibleAudioStreams[i].id == window.localStorage.getItem("radio-stream-id")) {
+            audioStream = compatibleAudioStreams[i];
+            break;
+        }
+    }
+}
+
+let stream;
+for (i = 0; i < compatibleAudioStreams.length; ++i) {
+    stream = compatibleAudioStreams[i];
+    let element = jQuery("#radio-quality-group-" + stream.quality);
+    if (element.length == 0) {
+        element = jQuery("#radio-quality");
+    }
+    element.append('<option value="' + stream.id + '" ' + (stream.id == audioStream.id ? " selected" : "") + '>' + (stream.info.playbackType == "codec" ? stream.name + " (via codec" + (stream.info.powerEfficient ? "" : ", power-hungry") + ")" : stream.name + (stream.info.powerEfficient ? "" : ", power-hungry")) + '</option>');
+}
+
+for (i = 0; i < audioStreams.length; ++i) {
+    stream = audioStreams[i];
+    jQuery("#streams-" + stream.quality).append('<a href="' + (new URL(stream.url, baseApiUrl)).href + '" id="stream-' + stream.id + '" class="stream-link button">' + stream.name + '</a>');
+}
+
+console.log("Playing " + audioStream.quality + " - " + audioStream.name);
+uplayer.init((new URL(audioStream.url, baseApiUrl)).href, [audioStream.format]);
+
+if (docCookies.getItem("radio-apikey") !== null) {
+    apiKeyIdentify(docCookies.getItem("radio-apikey"));
+} else {
+    initWebSocket();
+}
+
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', (e) => {
+    // Prevent Chrome 67 and earlier from automatically showing the prompt
+    e.preventDefault();
+    // Stash the event so it can be triggered later.
+    deferredPrompt = e;
+
+    if (window.localStorage.getItem("radio-skip-install") === "yes") {
+        return;
+    }
+
+    jQuery("#install-webapp").removeClass("hidden");
+});
+
+jQuery("#install-webapp").on("click", function () {
+    if (deferredPrompt === null) {
+        return;
+    }
+    jQuery("#install-webapp").addClass("hidden");
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(function (choiceResult) {
+        if (choiceResult.outcome === 'accepted') {
+            window.localStorage.setItem("radio-skip-install", "no");
+        } else {
+            window.localStorage.setItem("radio-skip-install", "yes");
+        }
+        deferredPrompt = null;
+    });
+});

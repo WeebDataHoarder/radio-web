@@ -95,7 +95,7 @@ function findCompatibleAudioStreams() {
         }
     }
 
-    if (compatibleAudioStreams.length == 0) {
+    if (compatibleAudioStreams.length === 0) {
         //TODO: wat
     }
 }
@@ -107,16 +107,16 @@ function selectAudioStream(wantedQualities) {
         var wantedQuality = wantedQualities[j];
         for (var i = 0; i < compatibleAudioStreams.length; ++i) {
             var entry = audioStreams[i];
-            if (entry.quality == wantedQuality) {
+            if (entry.quality === wantedQuality) {
                 selectedStream = i;
                 break;
             }
         }
 
-        if (selectedStream != -1) {
+        if (selectedStream !== -1) {
             break;
         }
     }
 
-    return selectedStream == -1 ? null : compatibleAudioStreams[selectedStream];
+    return selectedStream === -1 ? null : compatibleAudioStreams[selectedStream];
 }

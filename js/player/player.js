@@ -36,7 +36,7 @@ class UPlayer {
         this.bufferProgress = 0;
 
         if ("play-pause-element" in this.options) {
-            $(this.options["play-pause-element"]).on("click", this.playPause.bind(this));
+            jQuery(this.options["play-pause-element"]).on("click", this.playPause.bind(this));
         }
 
         if ("mediaSession" in navigator) {
@@ -58,7 +58,7 @@ class UPlayer {
         if ("mute-element" in this.options) {
             this.options["mute-element"].removeClass("muted");
             this.options["mute-element"].addClass("not-muted");
-            $(this.options["mute-element"]).on("click", function () {
+            jQuery(this.options["mute-element"]).on("click", function () {
                 if (this.isMuted()) {
                     this.unmute();
                 } else {
@@ -68,23 +68,23 @@ class UPlayer {
         }
 
         if ("volume-element" in this.options) {
-            $(this.options["volume-element"]).val(this.volume * 100);
-            $(this.options["volume-element"]).on("change", function () {
+            jQuery(this.options["volume-element"]).val(this.volume * 100);
+            jQuery(this.options["volume-element"]).on("change", function () {
                 if (this.playerObject !== null) {
-                    this.volume = $(this.options["volume-element"]).val() / 100;
+                    this.volume = jQuery(this.options["volume-element"]).val() / 100;
                     this.playerObject.volume = this.nativePlayback ? this.volume : this.volume * 100;
                 }
             }.bind(this));
-            $(this.options["volume-element"]).on("input", function () {
+            jQuery(this.options["volume-element"]).on("input", function () {
                 if (this.playerObject !== null) {
-                    this.volume = $(this.options["volume-element"]).val() / 100;
+                    this.volume = jQuery(this.options["volume-element"]).val() / 100;
                     this.playerObject.volume = this.nativePlayback ? this.volume : this.volume * 100;
                 }
             }.bind(this));
         }
 
         if ("seek-element" in this.options) {
-            $(this.options["seek-element"]).on("change", function () {
+            jQuery(this.options["seek-element"]).on("change", function () {
                 if (this.playerObject !== null) {
                     if (this.nativePlayback) {
                         this.playerObject.currentTime = this.totalDuration * ($(this.options["seek-element"]).val() / 100);
@@ -93,7 +93,7 @@ class UPlayer {
                     }
                 }
             }.bind(this));
-            $(this.options["seek-element"]).on("input", function () {
+            jQuery(this.options["seek-element"]).on("input", function () {
                 if (this.playerObject !== null) {
                     if (this.nativePlayback) {
                         this.playerObject.currentTime = this.totalDuration * ($(this.options["seek-element"]).val() / 100);
@@ -245,9 +245,11 @@ class UPlayer {
     }
 
     checkBrowserCompatibility() {
-        for (var check in this.codecSupport) {
+        let j;
+        let check;
+        for (check in this.codecSupport) {
             if (this.codecSupport.hasOwnProperty(check)) {
-                if (check == '*' || navigator.userAgent.match(new RegExp(check)) > -1) {
+                if (check === '*' || navigator.userAgent.match(new RegExp(check)) !== null) {
 
                     if (typeof this.codecSupport[check] === "function") {
                         this.supportsCodecs = this.codecSupport[check]();
@@ -264,20 +266,20 @@ class UPlayer {
         }
 
         console.log("[UPlayer] Checking which codecs can be played natively and loading codecs...");
-        var audioTest = new Audio();
-        var forceCodec = ("forceCodec" in this.options && this.options["forceCodec"]);
-        for (var i = 0; i < this.audioCodecs.length; ++i) {
-            var entry = this.audioCodecs[i];
+        const audioTest = new Audio();
+        const forceCodec = ("forceCodec" in this.options && this.options["forceCodec"]);
+        for (let i = 0; i < this.audioCodecs.length; ++i) {
+            const entry = this.audioCodecs[i];
             if (typeof audioTest.canPlayType === "function") {
-                for (var j = 0; j < entry.format.length; ++j) {
+                for (j = 0; j < entry.format.length; ++j) {
                     if ("playback" in this.audioCodecs[i]) {
                         break;
                     }
-                    var result = audioTest.canPlayType(entry.format[j]);
+                    const result = audioTest.canPlayType(entry.format[j]);
                     if (result in entry.supported) {
-                        for (var check in entry.supported[result]) {
+                        for (check in entry.supported[result]) {
                             if (entry.supported[result].hasOwnProperty(check)) {
-                                if (check == '*') {
+                                if (check === '*') {
                                     if (typeof entry.supported[result][check] === "function") {
                                         this.audioCodecs[i].playback = entry.supported[result][check]() ? "native" : "";
                                     } else {
@@ -306,23 +308,23 @@ class UPlayer {
                 this.audioCodecs[i].playback = "";
             }
 
-            if (!forceCodec && this.audioCodecs[i].playback == "native") {
+            if (!forceCodec && this.audioCodecs[i].playback === "native") {
                 console.log("[UPlayer] Browser can play " + entry.format + " natively.");
             } else if ("limitCodecs" in this.options && !this.options.limitCodecs.some(r => this.audioCodecs[i]["format"].indexOf(r) >= 0)) {
                 //Just do nothing
             } else if ("softCodec" in this.audioCodecs[i] && this.supportsCodecs) {
 
-                var codecsNeeded = this.audioCodecs[i].softCodec.length;
-                if (codecsNeeded == 0) {
+                const codecsNeeded = this.audioCodecs[i].softCodec.length;
+                if (codecsNeeded === 0) {
                     this.audioCodecs[i].playback = "codec";
                     console.log("[UPlayer] Browser has no native support for " + entry.format + ", providing via software codec.");
                 } else {
                     console.log("[UPlayer] Browser has no native support for " + entry.format + ", loading software codec.");
-                    for (var j = 0; j < this.audioCodecs[i].softCodec.length; ++j) {
-                        var codec = this.audioCodecs[i].softCodec[j];
-                        var format = entry.format;
+                    for (j = 0; j < this.audioCodecs[i].softCodec.length; ++j) {
+                        const codec = this.audioCodecs[i].softCodec[j];
+                        const format = entry.format;
                         this.audioCodecs[i].playback = "codec";
-                        $.ajax({
+                        jQuery.ajax({
                             url: codec,
                             dataType: "script",
                             cache: true,
@@ -362,9 +364,9 @@ class UPlayer {
         this.forceCodec = ("forceCodec" in this.options ? this.options["forceCodec"] : false);
         console.log("[UPlayer] Init playback of " + url + " with formats " + formats);
 
-        for (var i = 0; i < this.guessedFormats.length; ++i) {
-            var playbackType = this.canPlayType(this.guessedFormats[i]);
-            if (playbackType == "native") {
+        for (let i = 0; i < this.guessedFormats.length; ++i) {
+            const playbackType = this.canPlayType(this.guessedFormats[i]);
+            if (playbackType === "native") {
                 this.currentFormat = i;
                 break;
             }
@@ -376,18 +378,23 @@ class UPlayer {
         }
         if ("preload" in this.options && this.options["preload"]) {
             this.tryToPlay(this.currentUrl, this.guessedFormats[this.currentFormat], this.forceCodec);
+        }else{
+            if ("on-ready" in this.options) {
+                this.options["on-ready"]();
+            }
+            this.readyToPlay = true;
         }
     }
 
     tryNextFormat() {
-        var tryFormatNext = this.currentFormat + 1;
+        let tryFormatNext = this.currentFormat + 1;
         if (tryFormatNext >= (this.guessedFormats.length - 1)) {
             tryFormatNext = 0;
             //this.forceCodec = !this.forceCodec;
         }
 
-        for (var i = tryFormatNext; i < this.guessedFormats.length; ++i) {
-            var playbackType = this.canPlayType(this.guessedFormats[i]);
+        for (let i = tryFormatNext; i < this.guessedFormats.length; ++i) {
+            const playbackType = this.canPlayType(this.guessedFormats[i]);
             if (playbackType !== "") {
                 this.currentFormat = i;
                 this.tryToPlay(this.currentUrl, this.guessedFormats[i], this.forceCodec);
@@ -457,15 +464,15 @@ class UPlayer {
 
 
     preload(url, guessedFormats, forceCodec = false) {
-        var playbackType = null;
-        for (var i = 0; i < guessedFormats.length; ++i) {
+        let playbackType = null;
+        for (let i = 0; i < guessedFormats.length; ++i) {
             playbackType = this.canPlayType(guessedFormats[i]);
-            if (playbackType == "native" || playbackType == "codec") {
+            if (playbackType === "native" || playbackType === "codec") {
                 break;
             }
         }
 
-        if (forceCodec !== true && playbackType == "native") {
+        if (forceCodec !== true && playbackType === "native") {
             this.nativePreload = true;
             this.preloadObject = new Audio();
             this.preloadObject.autoplay = false;
@@ -486,7 +493,7 @@ class UPlayer {
                 this.preloadObject.src = url;
                 this.preloadObject.load();
             }.bind(this));
-        } else if (playbackType == "codec" || forceCodec == true) {
+        } else if (playbackType === "codec" || forceCodec === true) {
             this.nativePreload = false;
             if ("streaming" in this.options && this.options["streaming"]) {
                 this.preloadObject = new AV.Player(new AV.Asset(new FetchStreamingSource(url)));
@@ -515,9 +522,9 @@ class UPlayer {
 
 
     tryToPlay(url, currentFormat, forceCodec) {
-        var playbackType = this.canPlayType(currentFormat);
+        const playbackType = this.canPlayType(currentFormat);
         this.sentPreEndEvent = false;
-        if (forceCodec !== true && playbackType == "native") {
+        if (forceCodec !== true && playbackType === "native") {
             this.nativePlayback = true;
             if (this.oldPlayerObject !== null && this.oldNativePlayback === this.nativePlayback) {
                 this.playerObject = this.oldPlayerObject;
@@ -856,7 +863,7 @@ class UPlayer {
     }
 
     checkSendPreEnd() {
-        var left = (this.totalDuration - this.currentProgress * this.totalDuration);
+        const left = (this.totalDuration - this.currentProgress * this.totalDuration);
         if (!this.sentPreEndEvent && left <= 15 && left > 0 && "on-pre-end" in this.options) {
             this.sentPreEndEvent = true;
             this.options["on-pre-end"]();
@@ -888,7 +895,7 @@ class UPlayer {
                 if (!this.readyToPlay) {
                     this.playerObject.load();
                 }
-                var promise = this.playerObject.play();
+                const promise = this.playerObject.play();
                 if (promise !== undefined) {
                     promise.catch(function (error) {
                         console.log(error);
@@ -1016,7 +1023,7 @@ class UPlayer {
 
 
     canPlayExtension(toTest) {
-        for (var i = 0; i < this.audioCodecs.length; ++i) {
+        for (let i = 0; i < this.audioCodecs.length; ++i) {
             if (this.audioCodecs[i].extensions.includes(toTest)) {
                 return this.audioCodecs[i].playback;
             }
@@ -1026,8 +1033,8 @@ class UPlayer {
     }
 
     getFormatsForExtension(ext) {
-        var formats = [];
-        for (var i = 0; i < this.audioCodecs.length; ++i) {
+        const formats = [];
+        for (let i = 0; i < this.audioCodecs.length; ++i) {
             if (this.audioCodecs[i].extensions.includes(ext)) {
                 formats.push(this.audioCodecs[i].format[0]);
             }
@@ -1039,7 +1046,7 @@ class UPlayer {
     //MediaDecodingConfiguration
     decodingInfo(conf) {
         if ('type' in conf && (conf.type === 'file' || conf.type === 'media-source') && 'audio' in conf && 'contentType' in conf.audio) {
-            for (var i = 0; i < this.audioCodecs.length; ++i) {
+            for (let i = 0; i < this.audioCodecs.length; ++i) {
                 if (this.audioCodecs[i].format.includes(conf.audio.contentType)) {
                     return {
                         supported: true,
@@ -1057,7 +1064,7 @@ class UPlayer {
     }
 
     canPlayType(toTest) {
-        for (var i = 0; i < this.audioCodecs.length; ++i) {
+        for (let i = 0; i < this.audioCodecs.length; ++i) {
             if (this.audioCodecs[i].format.includes(toTest)) {
                 return this.audioCodecs[i].playback;
             }
