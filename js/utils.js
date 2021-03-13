@@ -8,7 +8,7 @@ function htmlentities(rawStr) {
 
 
 function getCatalogNumberSearchLink(catalog, tags){
-    //let targetSearch = "https://www.discogs.com/search/?type=release&catno=" + encodeURIComponent("catno:" + catalog);
+    //alternate, sometimes either of them has it and the other does not: let targetSearch = "https://www.discogs.com/search/?type=release&catno=" + encodeURIComponent(catalog);
     let targetSearch = "https://musicbrainz.org/search?advanced=1&type=release&query=" + encodeURIComponent("catno:" + catalog);
     if (tags.includes('touhou')) {
         targetSearch = "https://thwiki.cc/index.php?setlang=en&search=" + encodeURIComponent("incategory:同人专辑 (" + catalog + ")");
@@ -18,8 +18,6 @@ function getCatalogNumberSearchLink(catalog, tags){
         targetSearch = "https://vocadb.net/Search?searchType=Album&filter=" + encodeURIComponent(catalog);
     } else if (tags.includes('eurobeat')) {
         targetSearch = "http://www.dancegroove.net/database/search.php?mode=cd&catalog=" + encodeURIComponent(catalog);
-    } else if (tags.includes('pop')) {
-        //targetSearch = "https://www.discogs.com/search/?type=release&catno=" + encodeURIComponent(catalog);
     }
 
     return targetSearch;
@@ -81,14 +79,14 @@ function getTagEntries(song){
 
         song.tags.forEach((tag) => {
             let matches = null;
-            if ((matches = tag.match(/^(jps|ab|red|bbt)([gt])\-([0-9]+)$/i)) !== null) {
+            if ((matches = tag.match(/^(jps|ab|red|bbt)([gt])-([0-9]+)$/i)) !== null) {
                 if (matches[2] === "g") {
                     groupId = matches[3];
                 } else if (matches[2] === "t") {
                     torrentId = matches[3];
                 }
                 linkType = matches[1];
-            } else if ((matches = tag.match(/^catalog\-(.+)$/i)) !== null) {
+            } else if ((matches = tag.match(/^catalog-(.+)$/i)) !== null) {
                 catalog = matches[1].toUpperCase();
             } else if (tag in allowedMiscTags) {
                 if (allowedMiscTags[tag] === miscPriority) {
