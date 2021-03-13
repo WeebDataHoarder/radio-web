@@ -248,7 +248,7 @@ div#radio-player div#radio-left div#np-tags.tag-area {
     font-size: 0.7em;
 }
 
-div#radio-player div#radio-left div#np-tags.tag-area div.tag {
+div#radio-player div#radio-left div#np-tags.tag-area .tag {
     position: relative;
     display: inline-block;
     margin-left: 3px;
