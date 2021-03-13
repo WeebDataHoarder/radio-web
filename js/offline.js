@@ -50,6 +50,7 @@ let index;
 let currentPlaylistIndex;
 let repeat;
 let shuffle;
+const seekElement = jQuery(".radio-song-slider");
 const uplayer = new UPlayer({
     "volume": window.localStorage.getItem("radio-volume") !== null ? window.localStorage.getItem("radio-volume") / 100 : 1.0,
     "preload": true,
@@ -64,7 +65,7 @@ const uplayer = new UPlayer({
     "duration-minutes-element": jQuery(".radio-duration-minutes"),
     "duration-seconds-element": jQuery(".radio-duration-seconds"),
     "progress-element": jQuery(".radio-song-played-progress"),
-    "seek-element": jQuery(".radio-song-slider"),
+    "seek-element": seekElement,
     "buffer-progress-element": jQuery(".radio-buffered-progress"),
     "mute-element": jQuery(".mute"),
     "volume-element": jQuery(".volume-slider"),
@@ -110,6 +111,13 @@ const uplayer = new UPlayer({
         const currentTime = uplayer.currentProgress * uplayer.totalDuration;
         if (subtitles !== null) {
             subtitles.setCurrentTime(currentTime);
+        }
+        if ('mediaSession' in navigator) {
+            navigator.mediaSession.setPositionState({
+                duration: uplayer.totalDuration,
+                playbackRate: 1.0,
+                position: currentTime
+            });
         }
     }
 });
@@ -279,10 +287,25 @@ function previousSong() {
 
 jQuery(".radio-next").on("click", nextSong);
 jQuery(".radio-prev").on("click", previousSong);
-if ('mediaSession' in navigator) {
-    navigator.mediaSession.setActionHandler('nexttrack', nextSong);
-    navigator.mediaSession.setActionHandler('previoustrack', previousSong);
+
+try{
+    if ('mediaSession' in navigator) {
+        navigator.mediaSession.setActionHandler('nexttrack', nextSong);
+        navigator.mediaSession.setActionHandler('previoustrack', previousSong);
+        navigator.mediaSession.setActionHandler('seekbackward', (details) => {
+            seekElement.val((Math.min(uplayer.totalDuration, Math.max(0, uplayer.currentProgress * uplayer.totalDuration - (details.seekOffset || 30))) / uplayer.totalDuration) * 100).trigger("change");
+        });
+        navigator.mediaSession.setActionHandler('seekforward', (details) => {
+            seekElement.val((Math.min(uplayer.totalDuration, Math.max(0, uplayer.currentProgress * uplayer.totalDuration + (details.seekOffset || 30))) / uplayer.totalDuration) * 100).trigger("change");
+        });
+        navigator.mediaSession.setActionHandler('seekto', (details) => {
+            seekElement.val((Math.min(uplayer.totalDuration, Math.max(0, details.seekTime)) / uplayer.totalDuration) * 100).trigger("change");
+        });
+    }
+}catch (e){
+    console.log(e);
 }
+
 
 jQuery(".radio-song-container").on("click", function () {
     currentPlaylistIndex = parseInt($(this).attr("song-index"));
