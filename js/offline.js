@@ -733,25 +733,29 @@ function tryLoadLyrics(song){
             if('lyrics' in song && song.lyrics.includes(preferredLyrics[index])){
                 subtitleEntry = preferredLyrics[index];
 
-                jQuery.ajax(baseApiUrl + "/api/info/" + song.hash + "/lyrics/" + subtitleEntry, {
+                fetch(baseApiUrl + "/api/lyrics/" + song.hash + "/" + subtitleEntry, {
                     method: "GET",
-                    async: true
-                }).done(function (data, status, xhr) {
-                    if (xhr.status >= 200 && xhr.status < 300) {
-                        if(typeof data === "string"){
-                            if(subtitleEntry === "timed"){
-                                loadLRCLyrics(data);
-                            }else if(subtitleEntry === "ass"){
-                                currentLyrics = {
-                                    type: "ass",
-                                    entries: data
-                                }
-                                createSubtitlesInstance(data);
-                            }
-                        }
+                    mode: "cors",
+                    credentials: "omit"
+                }).then((response) => {
+                    if(!response.ok){
+                        throw new Error(`HTTP error! status: ${response.status}`);
                     }
-                });
 
+                    return response.text().then((data) => {
+                        if(subtitleEntry === "timed"){
+                            loadLRCLyrics(data);
+                        }else if(subtitleEntry === "ass"){
+                            currentLyrics = {
+                                type: "ass",
+                                entries: data
+                            }
+                            createSubtitlesInstance(data);
+                        }
+                    });
+                }).catch((e) => {
+                    console.log(e);
+                });
                 return;
             }
         }
