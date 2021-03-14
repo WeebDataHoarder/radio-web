@@ -1235,7 +1235,7 @@ input:-moz-placeholder {
 }
 
 
-div#radio-right div.song.search-result-queue:hover img.queue-cover {
+div#radio-right div.song.search-result-queue:hover .queue-fit {
     display: none;
 }
 
