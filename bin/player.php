@@ -560,6 +560,7 @@ header("Link: </js/kuroshiro-analyzer-kuromoji.min.js?".VERSION_HASH."; rel=prel
 header("Link: </js/subtitles/subtitles-octopus.js?".VERSION_HASH."; rel=preload; as=script", false);
 
 ?>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8">

@@ -22,7 +22,6 @@ if ($user === null) {
 }
 
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>

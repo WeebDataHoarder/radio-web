@@ -1,8 +1,10 @@
 #!/bin/bash
 
 API_URL="https://radio.animebits.moe/api/"
-API_TOKEN="YOUR_API_TOKEN_HERE"
+API_TOKEN="${API_TOKEN:-YOUR_API_TOKEN_HERE}"
 KEEP_ORIGINAL_NAME="0"
+ORDER_BY="score"
+ORDER_DIRECTION="desc"
 if [ -z "${DOWNLOAD_PATH}" ]; then
     DOWNLOAD_PATH='.'
 fi
@@ -17,14 +19,15 @@ FORMAT_COLOR_GREEN="\e[32m"
 FORMAT_COLOR_YELLOW="\e[33m"
 
 FORMAT_COLOR_GRAY="\e[37m"
+VERSIONED_AGENT="radio-downloader/1.1"
 
 function searchApi() {
-  curl "${API_URL}search" --get --user-agent "radio-downloader/1.0" --header "Authorization: ${API_TOKEN}" --fail --silent --data-urlencode "q=${1}" --data-urlencode "limit=500"
+  curl "${API_URL}search" --get --user-agent "${VERSIONED_AGENT}" --header "Authorization: ${API_TOKEN}" --fail --silent --data-urlencode "q=${1}" --data-urlencode "limit=500" --data-urlencode "orderBy=${ORDER_BY}" --data-urlencode "orderDirection=${ORDER_DIRECTION}"
 }
 
 function fetchSong() {
   if ! [ -f "${2}" ]; then
-    curl "${API_URL}download/${1}" --get --user-agent "radio-downloader/1.0" --header "Authorization: ${API_TOKEN}" --fail --progress-bar > "${2}"
+    curl "${API_URL}download/${1}" --get --user-agent "${VERSIONED_AGENT}" --header "Authorization: ${API_TOKEN}" --fail --progress-bar > "${2}"
   fi
 }
 
@@ -48,7 +51,12 @@ echo -e "${FORMAT_BOLD}${FORMAT_COLOR_RED}=>${FORMAT_COLOR_DEFAULT} Searching:${
 declare -a items
 index=1
 while IFS= read -r item; do
-  echo -e "${FORMAT_BOLD}${FORMAT_COLOR_RED}${index}. $(jq -r '.artist' <<< ""${item}"")${FORMAT_RESET} - ${FORMAT_BOLD}${FORMAT_COLOR_YELLOW}$(jq -r '.title' <<< ""${item}"")${FORMAT_RESET}\t($(jq -r '.album' <<< ""${item}""))"
+  echo -n -e "${FORMAT_BOLD}${FORMAT_COLOR_RED}${index}. $(jq -r '.artist' <<< ""${item}"")${FORMAT_RESET} - ${FORMAT_BOLD}${FORMAT_COLOR_YELLOW}$(jq -r '.title' <<< ""${item}"")${FORMAT_RESET}\t($(jq -r '.album' <<< ""${item}""))"
+  fav_count=$(jq '.favored_by | length' <<< "${item}")
+  if [[ "${fav_count}" -gt "0" ]]; then
+    echo -n -e "${FORMAT_RESET}${FORMAT_BOLD}${FORMAT_COLOR_RED} ❤ ${fav_count}"
+  fi
+  echo
   items[$index]="${item}"
   index=$((index + 1))
 done < <(searchApi "$*" | jq -c '.[]')

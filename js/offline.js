@@ -172,7 +172,7 @@ for (index = 0; index < songPlaylist.length; ++index) {
 
         songElement.append('<div class="album-header">' + data["album"] + '</div>');
     }
-    songElement.append('<div class="song radio-song-container" song-index="' + index + '" song-hash="' + data["hash"] + '">' +
+    songElement.append('<div class="song radio-song-container" data-song-index="' + index + '" data-song-hash="' + data["hash"] + '">' +
         '<div class="queue-fit"><img data-src="' + (data["cover"] !== null ? "/api/cover/" + data["cover"] + "/small" : "/img/no-cover.jpg") + '" class="queue-cover"/></div>' +
         '<div class="song-now-playing-icon-container">' +
         '<div class="play-button-container">' +
@@ -308,7 +308,7 @@ try{
 
 
 jQuery(".radio-song-container").on("click", function () {
-    currentPlaylistIndex = parseInt($(this).attr("song-index"));
+    currentPlaylistIndex = parseInt($(this).attr("data-song-index"));
     playThisSong(songPlaylist[currentPlaylistIndex]);
 });
 
@@ -767,8 +767,7 @@ function tryLoadLyrics(song){
         subtitlesTimer = null;
     }
 
-    jQuery("#lyrics-area").css("height", "0px");
-    jQuery("#lyrics-area").css("top", "-0px");
+    jQuery("#lyrics-area").css("height", "0px").css("top", "-0px");
 
 }
 
@@ -781,7 +780,7 @@ function playThisSong(song, isPlaying = null) {
 
     uplayer.init(song["url"], [song["mime"]]);
     const oldActiveElement = jQuery(".active-song-container");
-    const newActiveElement = jQuery(".song[song-hash=\"" + song["hash"] + "\"]");
+    const newActiveElement = jQuery(".song[data-song-hash=\"" + song["hash"] + "\"]");
     if (oldActiveElement.length > 0 && newActiveElement.length > 0) {
         const oldBounds = oldActiveElement[0].getBoundingClientRect();
         if ((oldBounds.top >= 0 && oldBounds.bottom <= window.innerHeight) || (oldBounds.top < window.innerHeight && oldBounds.bottom >= 0)) {
