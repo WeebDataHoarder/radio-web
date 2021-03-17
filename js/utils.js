@@ -11,7 +11,7 @@ function getCatalogNumberSearchLink(catalog, tags){
     //alternate, sometimes either of them has it and the other does not: let targetSearch = "https://www.discogs.com/search/?type=release&catno=" + encodeURIComponent(catalog);
     let targetSearch = "https://musicbrainz.org/search?advanced=1&type=release&query=" + encodeURIComponent("catno:" + catalog);
     if (tags.includes('touhou')) {
-        targetSearch = "https://thwiki.cc/index.php?setlang=en&search=" + encodeURIComponent("incategory:同人专辑 (" + catalog + ")");
+        targetSearch = "https://thwiki.cc/index.php?setlang=en&search=" + encodeURIComponent("incategory:同人专辑 (\"" + catalog + "\")");
     } else if (tags.includes('soundtrack') || tags.includes('doujin') || tags.includes('remix') || tags.includes('op') || tags.includes('ed')) {
         targetSearch = "https://vgmdb.info/search?q=" + encodeURIComponent(catalog);
     } else if (tags.includes('vocaloid')) {
