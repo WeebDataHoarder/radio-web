@@ -100,3 +100,10 @@ function isRequestSatsuki(){
   return @stripos($_SERVER['HTTP_USER_AGENT'], "kana/") === 0;
   //return isset($_COOKIE["PREF"]) and $_COOKIE["PREF"] == "f6=42008";
 }
+
+function isRequestMediaPlayer(){
+    return @stripos($_SERVER['HTTP_USER_AGENT'], "libmpv") !== false or //mpv
+        @stripos($_SERVER['HTTP_USER_AGENT'], "lavf/") === 0 or //ffplay
+        @stripos($_SERVER['HTTP_USER_AGENT'], "libvlc") !== false or //VLC
+        (isset($_SERVER['HTTP_ICY_METADATA']) and $_SERVER['HTTP_ICY_METADATA'] === "1"); //others?
+}

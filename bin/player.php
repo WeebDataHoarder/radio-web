@@ -260,6 +260,8 @@ if (preg_match("#(.*)[/\\.]m3u(\\?.*|)$#iu", $actualPath, $matches) > 0) {
 } else if (preg_match("#(.*)[/\\.]pls(\\?.*|)$#iu", $actualPath, $matches) > 0) {
     $playlistFormat = "pls";
     $_SERVER["REQUEST_URI"] = $matches[1] . $matches[2];
+} else if (isRequestMediaPlayer()){
+    $playlistFormat = "m3u";
 }
 
 
