@@ -583,17 +583,18 @@ foreach ($songs as $k => $data) {
 
 reset($songs);
 
-header("Link: </api/download/".current($songs)["hash"].">; rel=preload; as=audio; type=".current($songs)["mimeType"], false);
 header("Link: </css/foundation.min.css?".VERSION_HASH.">; rel=preload; as=style", false);
-header("Link: </css/app.css?".VERSION_HASH."; rel=preload; as=style", false);
-header("Link: </css/player.css?".VERSION_HASH."; rel=preload; as=style", false);
-header("Link: </js/jquery.js?".VERSION_HASH."; rel=preload; as=script", false);
-header("Link: </js/player/aurora.js?".VERSION_HASH."; rel=preload; as=script", false);
-header("Link: </js/player/player.js?".VERSION_HASH."; rel=preload; as=script", false);
-header("Link: </js/utils.js?".VERSION_HASH."; rel=preload; as=script", false);
-header("Link: </js/offline.js?".VERSION_HASH."; rel=preload; as=script", false);
-header("Link: </js/kuroshiro-analyzer-kuromoji.min.js?".VERSION_HASH."; rel=preload; as=script", false);
-header("Link: </js/subtitles/subtitles-octopus.js?".VERSION_HASH."; rel=preload; as=script", false);
+header("Link: </css/app.css?".VERSION_HASH.">; rel=preload; as=style", false);
+header("Link: </css/player.css?".VERSION_HASH.">; rel=preload; as=style", false);
+header("Link: </js/jquery.js?".VERSION_HASH.">; rel=preload; as=script", false);
+header("Link: </js/player/aurora.js?".VERSION_HASH.">; rel=preload; as=script", false);
+header("Link: </js/player/player.js?".VERSION_HASH.">; rel=preload; as=script", false);
+header("Link: </js/utils.js?".VERSION_HASH.">; rel=preload; as=script", false);
+header("Link: </js/offline.js?".VERSION_HASH.">; rel=preload; as=script", false);
+header("Link: </js/kuroshiro-analyzer-kuromoji.min.js?".VERSION_HASH.">; rel=preload; as=script", false);
+header("Link: </js/subtitles/subtitles-octopus.js?".VERSION_HASH.">; rel=preload; as=script", false);
+header("Link: <".(current($songs)["cover"] !== null ? "/api/cover/" . current($songs)["cover"] . "/large" : "/img/no-cover.jpg").">; rel=preload; as=image; type=image/jpeg", false);
+header("Link: </api/download/".current($songs)["hash"].">; rel=preload; as=audio; type=".current($songs)["mimeType"], false);
 
 ?>
 <!DOCTYPE html>
@@ -744,8 +745,7 @@ header("Link: </js/subtitles/subtitles-octopus.js?".VERSION_HASH."; rel=preload;
                 <div class="hash-area np-hash" id="np-hash-cover"></div>
                 <div class="tag-area" id="np-tags"></div>
                 <div class="cover-fit-container">
-                    <img class="main-cover"
-                         src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII="/>
+                    <img class="main-cover" src="<?php echo current($songs)["cover"] !== null ? "/api/cover/" . current($songs)["cover"] . "/large" : "/img/no-cover.jpg"; ?>"/>
                 </div>
                 <div id="player-left-bottom">
                     <canvas id="lyrics-area"></canvas>
@@ -790,11 +790,11 @@ header("Link: </js/subtitles/subtitles-octopus.js?".VERSION_HASH."; rel=preload;
 
 
                     <div id="meta-container">
-                        <span class="song-name"></span>
+                        <span class="song-name"><?php echo htmlspecialchars(current($songs)["title"], ENT_QUOTES | ENT_HTML5, "UTF-8"); ?></span>
 
                         <div class="song-artist-album">
-                            <span class="song-artist"></span>
-                            <span class="song-album"></span>
+                            <span class="song-artist"><?php echo htmlspecialchars(current($songs)["artist"], ENT_QUOTES | ENT_HTML5, "UTF-8"); ?></span>
+                            <span class="song-album"><?php echo htmlspecialchars(current($songs)["album"], ENT_QUOTES | ENT_HTML5, "UTF-8"); ?></span>
                         </div>
                     </div>
                 </div>
