@@ -8,6 +8,10 @@ if ($dbconn === null) {
 }
 
 
+function sanitizeAlbumName($name, $indexMatch){
+    return trim(preg_replace("#(part|cd|disc|disk|box)[ _\t\\-]*?0*$indexMatch#ui", "", $name), " \t:-");
+}
+
 function processAlbumResults($result){
     $songs = [];
 
@@ -17,31 +21,60 @@ function processAlbumResults($result){
     $duration = 0;
     $image = null;
 
-    foreach ($result as $data){
-        $artist = $artist === null ? $data["artist"] : ($data["artist"] === $artist ? $artist : false);
-        if (preg_match("#/([0-9]+)[\\- \\.]+[\\(\\[]?([0-9]+)[\\)\\\]?[ \t]*[\\.\\-_\\# ][^/]+\\.[a-z0-9]{2,6}$#ui", $data["path"], $matches) > 0) {
-            $data["album"] = ($album = trim(str_ireplace(["part " . $matches[2], "cd " . $matches[2], "disc " . $matches[2],  "disk " . $matches[2], "box " . $matches[2]], "", $data["album"]), " \t:-"));
-            $num = ltrim($matches[1], "0");
-            $data["parentIndex"] = (int) $num;
-            $data["index"] = (int) ltrim($matches[2], "0");
-            if ($num > $discNumber) {
-                $discNumber = (int)$num;
-            }
+
+
+    $matchFunctions = [
+        "#/(?<parentIndex>[0-9]+)[\\- \\.]+[\\(\\[]?(?<index>[0-9]+)[\\)\\\]?[ \t]*[\\.\\-_\\# ][^/]+\\.[a-z0-9]{2,6}$#ui" => function($matches, &$data){
+            $data["parentIndex"] = (int) ltrim($matches["parentIndex"], "0");
+            $data["album"] = sanitizeAlbumName($data["album"], $data["parentIndex"]);
+            $data["index"] = (int) ltrim($matches["index"], "0");
             $data["sortTitle"] = str_pad($data["parentIndex"], 2, "0", STR_PAD_LEFT) . "-" . str_pad($data["index"], 2, "0", STR_PAD_LEFT) . ". " . $data["title"];
-        } else if (preg_match("#/(part|cd|disc|disk|box)[ _\\-\\#]{0,2}([0-9]+)[^/]*/[\\(\\[]?([0-9]+)[\\)\\\]?[ \t]*[\\.\\-_\\# ][^/]+\\.[a-z0-9]{2,6}$#ui", $data["path"], $matches) > 0) {
-            $data["album"] = ($album = trim(str_ireplace(["part " . $matches[2], "cd " . $matches[2], "disc " . $matches[2], "disk " . $matches[2], "box " . $matches[2]], "", $data["album"]), " \t:-"));
-            $num = ltrim($matches[2], "0");
-            $data["parentIndex"] = (int) $num;
-            $data["index"] = (int) ltrim($matches[3], "0");
-            if ($num > $discNumber) {
-                $discNumber = (int)$num;
-            }
+        },
+        "#/(part|cd|disc|disk|box)[ _\\-\\#]{0,2}(?<parentIndex>[0-9]+)[^/]*/[\\(\\[]?(?<index>[0-9]+)[\\)\\\]?[ \t]*[\\.\\-_\\# ][^/]+\\.[a-z0-9]{2,6}$#ui" => function($matches, &$data, &$album){
+            $data["parentIndex"] = (int) ltrim($matches["parentIndex"], "0");
+            $data["album"] = sanitizeAlbumName($data["album"], $data["parentIndex"]);
+            $data["index"] = (int) ltrim($matches["index"], "0");
             $data["sortTitle"] = str_pad($data["parentIndex"], 2, "0", STR_PAD_LEFT) . "-" . str_pad($data["index"], 2, "0", STR_PAD_LEFT) . ". " . $data["title"];
-        } else if (preg_match("#/[\\(\\[]?([0-9]+)[\\)\\\]?[ \t]*[\\.\\-_ ][^/]+\\.[a-z0-9]{2,6}$#ui", $data["path"], $matches) > 0) {
-            $data["index"] = (int) ltrim($matches[1], "0");
+        },
+        "#/[\\(\\[]?(?<index>[0-9]+)[\\)\\\]?[ \t]*[\\.\\-_ ][^/]+\\.[a-z0-9]{2,6}$#ui" => function($matches, &$data, &$album){
+            $data["parentIndex"] = 1;
+            $data["index"] = (int) ltrim($matches["index"], "0");
             $data["sortTitle"] = str_pad(1, 2, "0", STR_PAD_LEFT) . "-" . str_pad($data["index"], 2, "0", STR_PAD_LEFT) . ". " . $data["title"];
-        }else {
+        },
+        "#.#ui" => function($matches, &$data, &$album){
+            $data["parentIndex"] = 1;
             $data["sortTitle"] = str_pad(1, 2, "0", STR_PAD_LEFT) . "-" . basename($data["path"]);
+        }
+    ];
+
+
+    $bestMatches = [];
+    foreach ($matchFunctions as $regex => $function){
+        $bestMatches[$regex] = 0;
+    }
+
+    foreach ($result as $data){
+        foreach ($matchFunctions as $regex => $function){
+            if(preg_match($regex, $data["path"]) > 0){
+                $bestMatches[$regex]++;
+                break;
+            }
+        }
+    }
+
+    $regex = array_keys($bestMatches, max($bestMatches))[0];
+
+    foreach ($result as $data){
+        if(preg_match($regex, $data["path"], $matches) > 0){
+            $matchFunctions[$regex]($matches, $data, $album);
+        }else{
+            //TODO: handle these errors?
+            $data["parentIndex"] = 1;
+            $data["sortTitle"] = basename($data->path);
+        }
+
+        if ($data["parentIndex"] > $discNumber) {
+            $discNumber = $data["parentIndex"];
         }
 
         $album = $data["album"];
@@ -54,9 +87,10 @@ function processAlbumResults($result){
             $data["originalAlbum"] = $data["album"];
             $data["album"] = $data["album"] . " - Disc " . str_pad($data["parentIndex"], 2, "0", STR_PAD_LEFT);
         }
-        
+
         $duration += $data["duration"];
         $songs[] = $data;
+
     }
 
     usort($songs, function($a, $b){
