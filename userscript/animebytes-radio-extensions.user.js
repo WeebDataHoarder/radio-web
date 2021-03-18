@@ -3,7 +3,7 @@
 // @namespace   animebits.radio.extension.animebytes
 // @author      anime(bits)
 // @description Adds group radio links on AnimeBytes to artists, series, collages listings, and direct links to each torrent group on related lists as well.
-// @version     1.4.0
+// @version     1.5.0
 // @homepage    https://radio.animebits.moe
 // @icon        https://radio.animebits.moe/img/icon-128.png
 // @updateURL   https://radio.animebits.moe/userscript/animebytes-radio-extensions.user.js
@@ -83,12 +83,14 @@ function getGroupRadioLink(url){
             const id = url.searchParams.get("torrentid");
             const groupId = url.searchParams.get("id");
             e.setAttribute("href", "https://radio.animebits.moe/player/abt/" + parseInt(id) + "/abg/" + parseInt(groupId));
+            e.setAttribute("rel", "noopener");
             e.setAttribute("title", "Open anime(bits) release player");
             e.appendChild(createIconElement());
             return e;
         }else{
             const id = url.searchParams.get("id");
             e.setAttribute("href", "https://radio.animebits.moe/player/abg/" + parseInt(id));
+            e.setAttribute("rel", "noopener");
             e.setAttribute("title", "Open anime(bits) group player");
             e.appendChild(createIconElement());
             return e;
@@ -114,6 +116,7 @@ function getSearchRadioLink(searchQueries){
         searchQuery += extraEncodeURIComponent(searchQueries[i]);
     }
     e.setAttribute("href", "https://radio.animebits.moe/player/search/" + searchQuery);
+    e.setAttribute("rel", "noopener");
     e.setAttribute("title", "Open anime(bits) search player for: "+searchQuery);
     e.appendChild(document.createTextNode("[search "));
     e.appendChild(createIconElement());
@@ -155,6 +158,7 @@ let pageURL = new URL(document.location);
             const e = document.createElement("a");
             const id = pageURL.searchParams.get("id");
             e.setAttribute("href", "https://radio.animebits.moe/player/abs/" + parseInt(id));
+            e.setAttribute("rel", "noopener");
             e.setAttribute("title", "Open anime(bits) series player");
             e.appendChild(createIconElement());
             addToGroupExtraLinks(e);
@@ -180,6 +184,7 @@ let pageURL = new URL(document.location);
             const e = document.createElement("a");
             const id = pageURL.searchParams.get("id");
             e.setAttribute("href", "https://radio.animebits.moe/player/aba/" + parseInt(id));
+            e.setAttribute("rel", "noopener");
             e.setAttribute("title", "Open anime(bits) artist player");
             e.appendChild(createIconElement());
             addToGroupExtraLinks(e);

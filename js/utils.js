@@ -183,6 +183,7 @@ function applyTagEntries(element, tagEntries){
         if("link" in tag){
             newTag.href = tag.link;
             newTag.setAttribute("target", "_blank");
+            newTag.setAttribute("rel", "noopener");
         }
         element.appendChild(newTag);
     });

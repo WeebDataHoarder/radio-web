@@ -93,22 +93,22 @@
       <tr>
       <td align="left">AAC</td>
       <td align="left">ADTS</td>
-      <td align="left"><a href="https://radio.animebits.moe/stream/stream256.aac">256kbit/s</a> <a href="https://radio.animebits.moe/stream/stream128.aac">128kbit/s</a> <a href="https://radio.animebits.moe/stream/stream64.aac">64kbit/s</a></td>
+      <td align="left"><a href="/stream/stream256.aac">256kbit/s</a> <a href="/stream/stream128.aac">128kbit/s</a> <a href="/stream/stream64.aac">64kbit/s</a></td>
       </tr>
       <tr>
       <td align="left">Opus</td>
       <td align="left">Ogg</td>
-      <td align="left"><a href="https://radio.animebits.moe/stream/stream256.ogg">256kbit/s</a> <a href="https://radio.animebits.moe/stream/stream128.ogg">128kbit/s</a> <a href="https://radio.animebits.moe/stream/stream64.ogg">64kbit/s</a></td>
+      <td align="left"><a href="/stream/stream256.ogg">256kbit/s</a> <a href="/stream/stream128.ogg">128kbit/s</a> <a href="/stream/stream64.ogg">64kbit/s</a></td>
       </tr>
       <tr>
       <td align="left">MP3</td>
       <td align="left">MP3</td>
-      <td align="left"><a href="https://radio.animebits.moe/stream/stream192.mp3">192kbit/s</a> (<a href="https://radio.animebits.moe/m3u/stream192.mp3.m3u">.m3u</a>)</td>
+      <td align="left"><a href="/stream/stream192.mp3">192kbit/s</a> (<a href="/m3u/stream192.mp3.m3u">.m3u</a>)</td>
       </tr>
       <tr>
       <td align="left">FLAC</td>
       <td align="left">FLAC</td>
-      <td align="left"><a href="https://radio.animebits.moe/stream/stream.flac">16-bit</a></td>
+      <td align="left"><a href="/stream/stream.flac">16-bit</a></td>
       </tr>
       </tbody>
       </table>
@@ -160,7 +160,7 @@
       <p>For example: <code>favcount>3 (artist=shibayan OR artist="ELECTRO.MUSTER") @mns -"el dorado" #remix</code></p>
       <p>All searches are case insensitive. When using the equality operator, you can include <em>%</em> as a wildcard.</p>
       <p>You can use .more to expand the list of results afterwards. Be nice and do this over private message if you want to go through a lot of them.</p>
-      <p>For a more in-depth look at this rich syntax, look at the <a href="https://github.com/WeebDataHoarder/stewdio-api/tree/master/stewdio/search" target="_blank">stewdio-api search code</a>.</p>
+      <p>For a more in-depth look at this rich syntax, look at the <a href="https://github.com/WeebDataHoarder/stewdio-api/tree/master/stewdio/search" target="_blank" rel="noopener">stewdio-api search code</a>.</p>
       <h2 id="qrand-query">.qrand &lt;query&gt;</h2>
       <p>Does a track search and queues a random result. Same syntax for <code>&lt;query&gt;</code> as <code>.search</code>. Can also specify these commands to queue up to three tracks at once: <code>.qrand1 &lt;query&gt;, .qrand2 &lt;query&gt;, .qrand3 &lt;query&gt;</code></p>
       <h2 id="qfav">.qfav [query]</h2>
@@ -192,7 +192,7 @@
       <h1 id="export-script">Exporting files offline</h1>
       <p>You can write your own tools that use the API to fetch files. Otherwise, we provide a bash script that lets you query the radio database and fetch selected tracks. A use case of this would be exporting your favorites for offline playback. Do note that you are limited to a few number of concurrent connections, and there might be daily limits in the future.</p>
       <p>In doubt, you can use the API to extract tag information, like torrent IDs that you can fetch directly from the original site.</p>
-      <p>If you want to use this bash script, you can <a href="https://github.com/WeebDataHoarder/radio-web/tree/master/userscript/radio-downloader.sh" target="_blank">grab radio-downloader.sh from GitHub</a> or directly from <a href="https://radio.animebits.moe/radio-downloader.sh" target="_blank">this site</a>, and remember to <code>chmod +x radio.downloader.sh</code> afterwards. Do note you will have to edit the file to include an <em>API_KEY</em> on it, or pass it as an environment variable like <code>API_KEY="YOUR_API_KEY_HERE" ./radio-downloader.sh</code>.</p>
+      <p>If you want to use this bash script, you can <a href="https://github.com/WeebDataHoarder/radio-web/tree/master/userscript/radio-downloader.sh" target="_blank" rel="noopener">grab radio-downloader.sh from GitHub</a> or directly from <a href="/userscript/radio-downloader.sh" target="_blank">this site</a>, and remember to <code>chmod +x radio.downloader.sh</code> afterwards. Do note you will have to edit the file to include an <em>API_KEY</em> on it, or pass it as an environment variable like <code>API_KEY="YOUR_API_KEY_HERE" ./radio-downloader.sh</code>.</p>
       <p>Some dependencies might need to be installed, in this case <em>curl</em> and <em>jq</em> (JSON command line parser). On Debian/Ubuntu you can install them via <code>sudo apt install curl jq</code>.</p>
       <p>Usage: <code>./radio-downloader.sh &lt;query&gt;</code>, where <em>&lt;query&gt;</em> is any normal search query. It can be set with and without quotes, but remember to escape special characters like <em>&gt; &lt; @ #</em> and similar.</p>
       <p>After running the query, the script will ask you which tracks to fetch. You can configure some settings on the top next to API_KEY, and present your own download path over environment variables. Defaults to current directory.</p>
@@ -200,14 +200,14 @@
 
       <h1 id="import-script">Importing favorites</h1>
       <p>You might have a large collection of favorite tracks already. If you want to add these to your radio favorites, we got you covered.</p>
-      <p>Head over <a href="https://radio.animebits.moe/import" target="_blank">radio.animebits.moe/import</a> and you can use that to find matches locally without sending any data to the search API except metadata</p>
+      <p>Head over <a href="/import" target="_blank">radio.animebits.moe/import</a> and you can use that to find matches locally without sending any data to the search API except metadata</p>
       <p>You need to be authenticated on main radio page to use this service.</p>
 
       <h1 id="userscripts">UserScripts</h1>
       <p>Some userscripts are provided that add extra radio functionality to some other related sites.</p>
       <p>You will need an UserScript manager like TamperMonkey, GreaseMonkey, VioletMonkey or similar to use these.</p>
-      <p><a href="https://radio.animebits.moe/userscript/animebytes-radio-extensions.user.js" target="_blank">anime(bits) extension for AnimeBytes</a>: Adds several direct album links for player to torrent groups, artists, collages, series, forums with, and other search links for finding related tracks.</p>
-      <p><a href="https://radio.animebits.moe/userscript/animebytes-radio-cover.user.js" target="_blank">anime(bits) cover extension for AnimeBytes</a>: Allows finding new covers directly from torrent group, and other utilities to find further data.</p>
+      <p><a href="/userscript/animebytes-radio-extensions.user.js" target="_blank">anime(bits) extension for AnimeBytes</a>: Adds several direct album links for player to torrent groups, artists, collages, series, forums with, and other search links for finding related tracks.</p>
+      <p><a href="/userscript/animebytes-radio-cover.user.js" target="_blank">anime(bits) cover extension for AnimeBytes</a>: Allows finding new covers directly from torrent group, and other utilities to find further data.</p>
 
       <h1 id="api">API documentation</h1>
       <p>This radio features an extensive API, which is the main way to interact with the radio, and even the landing page uses it. If you don't have an API key, you will be limited to which methods you can use to limit leakage of user data.</p>
@@ -234,7 +234,7 @@
         Some details for your handling of this data:
         <ul>
           <li><em>id</em> is an internal field. You will not use it to refer to anything in this API and could change.</li>
-          <li><em>hash</em> can be considered your unique identifier. Most endpoints that act or show information on a song will use this to refer to them. This is an <a href="https://en.wikipedia.org/wiki/MD5" target="_blank">MD5 digest</a> across the entire file, tags and all. If this hash mathces a file you have, they are the same.</li>
+          <li><em>hash</em> can be considered your unique identifier. Most endpoints that act or show information on a song will use this to refer to them. This is an <a href="https://en.wikipedia.org/wiki/MD5" target="_blank" rel="noopener">MD5 digest</a> across the entire file, tags and all. If this hash mathces a file you have, they are the same.</li>
           <li><em>audio_hash</em> is an MD5 digest of raw audio data applied over the decoded audio as signed raw PCM16. This is useful for finding exact audio dupes (with altered metadata).Most endpoints that act or show information on a song will use this to refer to them.</li>
           <li><em>title</em>, <em>album</em> and <em>artist</em> can change when files are tagged or newer metadata is fetched.</li>
           <li><em>path</em> relates to the full storage path the file is stored on. This could change.</li>
@@ -307,17 +307,17 @@
       <p>
       <ul>
         <li><b>radio-docker</b>: Merges all projects together in a single platform, and containerizes it via Docker and docker-compose. Used for testing and site itself in the future.
-          <br/>Source code is available at <a href="https://github.com/WeebDataHoarder/radio-docker" target="_blank">github.com/WeebDataHoarder/radio-docker</a>.</li>
+          <br/>Source code is available at <a href="https://github.com/WeebDataHoarder/radio-docker" target="_blank" rel="noopener">github.com/WeebDataHoarder/radio-docker</a>.</li>
         <li><b>radio-web</b>: Radio website. Though mainly static, Out of Band player has some extra PHP code to run the backend search and matching.
-          <br/>Source code is available at <a href="https://github.com/WeebDataHoarder/radio-web" target="_blank">github.com/WeebDataHoarder/radio-web</a>.</li>
-        <li><b>stewdio-api</b>: Main music database, and API interaction system written in Python. Forked from original <a href="https://git.sr.ht/~minus/stewdio-api" target="_blank">stewdio-api</a>. Adds extra features (covers, database indexes, extra search, and others) and mainly removes user management.
-          <br/>Source code is available at <a href="https://github.com/WeebDataHoarder/stewdio-api" target="_blank">github.com/WeebDataHoarder/stewdio-api</a>.</li>
+          <br/>Source code is available at <a href="https://github.com/WeebDataHoarder/radio-web" target="_blank" rel="noopener">github.com/WeebDataHoarder/radio-web</a>.</li>
+        <li><b>stewdio-api</b>: Main music database, and API interaction system written in Python. Forked from original <a href="https://git.sr.ht/~minus/stewdio-api" target="_blank" rel="noopener">stewdio-api</a>. Adds extra features (covers, database indexes, extra search, and others) and mainly removes user management.
+          <br/>Source code is available at <a href="https://github.com/WeebDataHoarder/stewdio-api" target="_blank" rel="noopener">github.com/WeebDataHoarder/stewdio-api</a>.</li>
         <li><b>kawa</b>: Radio live streamer and queue management written in Rust. Fork with some changes from original.
-          <br/>Source code is available at <a href="https://github.com/WeebDataHoarder/kawa" target="_blank">github.com/WeebDataHoarder/kawa</a>.</li>
+          <br/>Source code is available at <a href="https://github.com/WeebDataHoarder/kawa" target="_blank" rel="noopener">github.com/WeebDataHoarder/kawa</a>.</li>
         <li><b>radio-matcher</b>: Metadata matcher and finder. Finds and collects metadata from other sources, and creates tags. All this is then pushed to main music database for normal use. Mainly a collection of PHP scripts and produced database.
           <br/>Source code is not available at this moment :(</li>
         <li><b>miku</b>: IRC bot. Handles user management, provides rich search and other more useful features. Mainly PHP.
-          <br/>Source code is available at <a href="https://github.com/WeebDataHoarder/radio-ircbot" target="_blank">github.com/WeebDataHoarder/radio-ircbot</a>.</li>
+          <br/>Source code is available at <a href="https://github.com/WeebDataHoarder/radio-ircbot" target="_blank" rel="noopener">github.com/WeebDataHoarder/radio-ircbot</a>.</li>
       </ul>
       </p>
     </div>

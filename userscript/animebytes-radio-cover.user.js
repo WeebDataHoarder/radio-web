@@ -3,7 +3,7 @@
 // @namespace   animebits.radio.cover.animebytes
 // @author      anime(bits)
 // @description Allows finding new covers directly from torrent group, and other utilities to find further data
-// @version     1.0.1
+// @version     1.1.0
 // @homepage    https://radio.animebits.moe
 // @icon        https://radio.animebits.moe/img/icon-128.png
 // @updateURL   https://radio.animebits.moe/userscript/animebytes-radio-cover.user.js
@@ -75,7 +75,7 @@ let pageURL = new URL(document.location);
             for(let i = 0; i < boxes.length; ++i){
                 let box = boxes[i];
                 let head = box.getElementsByClassName("head");
-                if(head.length == 0){
+                if(head.length === 0){
                     continue;
                 }
 
@@ -123,6 +123,7 @@ let pageURL = new URL(document.location);
                     let e = document.createElement("a");
                     e.setAttribute("href", "https://www.google.com/searchbyimage?image_url=" + encodeURIComponent(imgUrl));
                     e.setAttribute("target", "_blank");
+                    e.setAttribute("rel", "noopener");
                     e.setAttribute("title", "Open Google reverse image search");
                     e.textContent = "[G]";
                     addExtraLinkToHeader(e, imageBox.getElementsByClassName("head")[0]);
@@ -154,6 +155,7 @@ let pageURL = new URL(document.location);
                         let e = document.createElement("a");
                         e.setAttribute("href", searchUrl);
                         e.setAttribute("target", "_blank");
+                        e.setAttribute("rel", "noopener");
                         e.setAttribute("title", "Open THBWiki search");
                         e.textContent = "[THB]";
                         addExtraLinkToHeader(e, imageBox.getElementsByClassName("head")[0]);
@@ -165,6 +167,7 @@ let pageURL = new URL(document.location);
                         let e = document.createElement("a");
                         e.setAttribute("href", "https://vgmdb.info/search?q=" + encodeURIComponent(catalogs[0]));
                         e.setAttribute("target", "_blank");
+                        e.setAttribute("rel", "noopener");
                         e.setAttribute("title", "Open VGMdb search");
                         e.textContent = "[VGM]";
                         addExtraLinkToHeader(e, imageBox.getElementsByClassName("head")[0]);
