@@ -755,6 +755,17 @@ function tryLoadLyrics(song){
                     });
                 }).catch((e) => {
                     console.log(e);
+                    if(subtitlesTimer !== null){
+                        clearInterval(subtitlesTimer);
+                        subtitlesTimer = null;
+                    }
+
+                    if(subtitles !== null){
+                        subtitles.dispose();
+                        subtitles = null;
+                    }
+
+                    jQuery("#lyrics-area").css("height", "0px").css("top", "-0px");
                 });
                 return;
             }
@@ -765,6 +776,11 @@ function tryLoadLyrics(song){
     if(subtitlesTimer !== null){
         clearInterval(subtitlesTimer);
         subtitlesTimer = null;
+    }
+
+    if(subtitles !== null){
+        subtitles.dispose();
+        subtitles = null;
     }
 
     jQuery("#lyrics-area").css("height", "0px").css("top", "-0px");
