@@ -436,6 +436,21 @@ if (count($songs) === 0) {
     exit();
 }
 
+if($playlistFormat === null){
+    header("Link: </css/foundation.min.css?".VERSION_HASH.">; rel=preload; as=style", false);
+    header("Link: </css/app.css?".VERSION_HASH.">; rel=preload; as=style", false);
+    header("Link: </css/player.css?".VERSION_HASH.">; rel=preload; as=style", false);
+    header("Link: </js/jquery.js?".VERSION_HASH.">; rel=preload; as=script", false);
+    header("Link: </js/player/aurora.js?".VERSION_HASH.">; rel=preload; as=script", false);
+    header("Link: </js/player/player.js?".VERSION_HASH.">; rel=preload; as=script", false);
+    header("Link: </js/utils.js?".VERSION_HASH.">; rel=preload; as=script", false);
+    header("Link: </js/offline.js?".VERSION_HASH.">; rel=preload; as=script", false);
+    header("Link: </js/kuroshiro-analyzer-kuromoji.min.js?".VERSION_HASH.">; rel=preload; as=script", false);
+    header("Link: </js/subtitles/subtitles-octopus.js?".VERSION_HASH.">; rel=preload; as=script", false);
+    flush();
+}
+
+
 if (count($songs) === 1) {
     $data = $songs[0];
     $duration = floor($data["duration"] / 60) . ":" . str_pad($data["duration"] % 60, 2, "0", STR_PAD_LEFT);
@@ -583,18 +598,9 @@ foreach ($songs as $k => $data) {
 
 reset($songs);
 
-header("Link: </css/foundation.min.css?".VERSION_HASH.">; rel=preload; as=style", false);
-header("Link: </css/app.css?".VERSION_HASH.">; rel=preload; as=style", false);
-header("Link: </css/player.css?".VERSION_HASH.">; rel=preload; as=style", false);
-header("Link: </js/jquery.js?".VERSION_HASH.">; rel=preload; as=script", false);
-header("Link: </js/player/aurora.js?".VERSION_HASH.">; rel=preload; as=script", false);
-header("Link: </js/player/player.js?".VERSION_HASH.">; rel=preload; as=script", false);
-header("Link: </js/utils.js?".VERSION_HASH.">; rel=preload; as=script", false);
-header("Link: </js/offline.js?".VERSION_HASH.">; rel=preload; as=script", false);
-header("Link: </js/kuroshiro-analyzer-kuromoji.min.js?".VERSION_HASH.">; rel=preload; as=script", false);
-header("Link: </js/subtitles/subtitles-octopus.js?".VERSION_HASH.">; rel=preload; as=script", false);
 header("Link: <".(current($songs)["cover"] !== null ? "/api/cover/" . current($songs)["cover"] . "/large" : "/img/no-cover.jpg").">; rel=preload; as=image; type=image/jpeg", false);
 header("Link: </api/download/".current($songs)["hash"].">; rel=preload; as=audio; type=".current($songs)["mimeType"], false);
+flush();
 
 ?>
 <!DOCTYPE html>
@@ -642,8 +648,7 @@ header("Link: </api/download/".current($songs)["hash"].">; rel=preload; as=audio
 
     <link rel="search" type="application/opensearchdescription+xml" title="anime(bits)" href="/search.xml"/>
     <link rel="search" type="application/opensearchdescription+xml" title="anime(bits) Album" href="/search-album.xml"/>
-    <link rel="search" type="application/opensearchdescription+xml" title="anime(bits) Artist"
-          href="/search-artist.xml"/>
+    <link rel="search" type="application/opensearchdescription+xml" title="anime(bits) Artist" href="/search-artist.xml"/>
     <?php
     if (count($covers) <= 1) {
         ?>
