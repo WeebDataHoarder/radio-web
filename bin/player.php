@@ -733,7 +733,7 @@ flush();
     ?>
 </head>
 <body>
-<div class="body-blur"></div>
+<div class="body-blur" style="background-image: url(<?php echo current($songs)["cover"] !== null ? "/api/cover/" . current($songs)["cover"] . "/large" : "/img/no-cover.jpg"; ?>)"></div>
 <div class="grid-x" id="blue-playlist-container">
     <div class="large-12 medium-12 small-12 cell" id="title-bar">
         <img src="/img/title.svg" id="radio-title"/>
@@ -802,7 +802,9 @@ flush();
                     </div>
                 </div>
             </div>
-            <div class="large-6 medium-6 small-12 cell<?php echo (count($songs) > 1) ? "" : " single-player"; ?>" id="radio-right"></div>
+            <div class="large-6 medium-6 small-12 cell<?php echo (count($songs) > 1) ? "" : " single-player"; ?>" id="radio-right">
+                <div class="album-header">Loading track list...</div>
+            </div>
         </div>
     </div>
 </div>

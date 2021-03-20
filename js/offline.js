@@ -141,6 +141,7 @@ document.querySelector("#lyrics-area").addEventListener("click", () => {
 
 
 const songElement = document.querySelector("div#radio-right").cloneNode(false);
+songElement.innerHTML = "";
 let prevData = null;
 
 for (index = 0; index < songPlaylist.length; ++index) {
