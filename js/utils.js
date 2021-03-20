@@ -86,7 +86,7 @@ function getTagEntries(song){
                     torrentId = matches[3];
                 }
                 linkType = matches[1];
-            } else if ((matches = tag.match(/^catalog-(.+)$/i)) !== null) {
+            } else if ((matches = tag.match(/^catalog-([^ ]+)$/i)) !== null) {
                 catalog = matches[1].toUpperCase();
             } else if (tag in allowedMiscTags) {
                 if (allowedMiscTags[tag] === miscPriority) {
