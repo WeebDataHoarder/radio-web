@@ -179,7 +179,7 @@ function applyTagEntries(element, tagEntries){
         tag.classes.forEach((c) => {
             newTag.classList.add(c);
         });
-        newTag.innerText = tag.text;
+        newTag.textContent = tag.text;
         if("link" in tag){
             newTag.href = tag.link;
             newTag.setAttribute("target", "_blank");

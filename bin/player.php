@@ -440,7 +440,6 @@ if($playlistFormat === null){
     header("Link: </css/foundation.min.css?".VERSION_HASH.">; rel=preload; as=style", false);
     header("Link: </css/app.css?".VERSION_HASH.">; rel=preload; as=style", false);
     header("Link: </css/player.css?".VERSION_HASH.">; rel=preload; as=style", false);
-    header("Link: </js/jquery.js?".VERSION_HASH.">; rel=preload; as=script", false);
     header("Link: </js/player/aurora.js?".VERSION_HASH.">; rel=preload; as=script", false);
     header("Link: </js/player/player.js?".VERSION_HASH.">; rel=preload; as=script", false);
     header("Link: </js/utils.js?".VERSION_HASH.">; rel=preload; as=script", false);
@@ -747,7 +746,7 @@ flush();
         <div class="grid-x">
             <div class="<?php echo (count($songs) > 1) ? "large-6 medium-6 small-12" : "large-12 medium-12 small-12"; ?> cell"
                  id="radio-left">
-                <div class="hash-area np-hash" id="np-hash-cover"></div>
+                <div class="hash-area np-hash" id="np-hash-cover"><?php echo current($songs)["hash"]; ?></div>
                 <div class="tag-area" id="np-tags"></div>
                 <div class="cover-fit-container">
                     <img class="main-cover" src="<?php echo current($songs)["cover"] !== null ? "/api/cover/" . current($songs)["cover"] . "/large" : "/img/no-cover.jpg"; ?>"/>
@@ -756,7 +755,7 @@ flush();
                     <canvas id="lyrics-area"></canvas>
                     <div id="time-container">
 							<span class="current-time">
-								<span class="radio-current-minutes"></span>:<span class="radio-current-seconds"></span>
+								<span class="radio-current-minutes">00</span>:<span class="radio-current-seconds">00</span>
 							</span>
                         <div id="progress-container">
                             <input type="range" class="radio-song-slider" value="0"/>
@@ -764,21 +763,20 @@ flush();
                             <progress id="song-buffered-progress" class="radio-buffered-progress" value="0"></progress>
                         </div>
                         <span class="duration">
-								<span class="radio-duration-minutes"></span>:<span
-                                    class="radio-duration-seconds"></span>
+								<span class="radio-duration-minutes">00</span>:<span class="radio-duration-seconds">00</span>
 							</span>
                     </div>
 
                     <div id="control-container">
                         <div id="repeat-container">
-                            <div class="radio-repeat" id="repeat"></div>
+                            <div class="radio-repeat repeat-off" id="repeat"></div>
                             <div class="radio-shuffle shuffle-off" id="shuffle"></div>
                         </div>
 
                         <div id="central-control-container">
                             <div id="central-controls">
                                 <div class="radio-prev" id="previous"></div>
-                                <div class="play-pause" id="play-pause"></div>
+                                <div class="play-pause paused" id="play-pause"></div>
                                 <div class="radio-next" id="next"></div>
                             </div>
                         </div>
@@ -804,17 +802,11 @@ flush();
                     </div>
                 </div>
             </div>
-            <div class="large-6 medium-6 small-12 cell<?php echo (count($songs) > 1) ? "" : " single-player"; ?>"
-                 id="radio-right">
-
-            </div>
+            <div class="large-6 medium-6 small-12 cell<?php echo (count($songs) > 1) ? "" : " single-player"; ?>" id="radio-right"></div>
         </div>
     </div>
 </div>
 
-
-<script type="text/javascript" src="/js/jquery.js?<?php echo VERSION_HASH; ?>"
-        nonce="<?php echo SCRIPT_NONCE; ?>"></script>
 <script type="text/javascript" src="/js/player/aurora.js?<?php echo VERSION_HASH; ?>"
         nonce="<?php echo SCRIPT_NONCE; ?>"></script>
 <script type="text/javascript" src="/js/player/player.js?<?php echo VERSION_HASH; ?>"

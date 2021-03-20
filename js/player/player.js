@@ -36,7 +36,7 @@ class UPlayer {
         this.bufferProgress = 0;
 
         if ("play-pause-element" in this.options) {
-            jQuery(this.options["play-pause-element"]).on("click", this.playPause.bind(this));
+            this.options["play-pause-element"].addEventListener("click", this.playPause.bind(this));
         }
 
         if ("mediaSession" in navigator) {
@@ -56,9 +56,9 @@ class UPlayer {
         }
 
         if ("mute-element" in this.options) {
-            this.options["mute-element"].removeClass("muted");
-            this.options["mute-element"].addClass("not-muted");
-            jQuery(this.options["mute-element"]).on("click", function () {
+            this.options["mute-element"].classList.remove("muted");
+            this.options["mute-element"].classList.add("not-muted");
+            this.options["mute-element"].addEventListener("click", function () {
                 if (this.isMuted()) {
                     this.unmute();
                 } else {
@@ -68,40 +68,30 @@ class UPlayer {
         }
 
         if ("volume-element" in this.options) {
-            jQuery(this.options["volume-element"]).val(this.volume * 100);
-            jQuery(this.options["volume-element"]).on("change", function () {
+            this.options["volume-element"].value = this.volume * 100;
+
+            const volumeChangeFunction = function () {
                 if (this.playerObject !== null) {
-                    this.volume = jQuery(this.options["volume-element"]).val() / 100;
+                    this.volume = this.options["volume-element"].value / 100;
                     this.playerObject.volume = this.nativePlayback ? this.volume : this.volume * 100;
                 }
-            }.bind(this));
-            jQuery(this.options["volume-element"]).on("input", function () {
-                if (this.playerObject !== null) {
-                    this.volume = jQuery(this.options["volume-element"]).val() / 100;
-                    this.playerObject.volume = this.nativePlayback ? this.volume : this.volume * 100;
-                }
-            }.bind(this));
+            }.bind(this);
+            this.options["volume-element"].addEventListener("change", volumeChangeFunction);
+            this.options["volume-element"].addEventListener("input", volumeChangeFunction);
         }
 
         if ("seek-element" in this.options) {
-            jQuery(this.options["seek-element"]).on("change", function () {
+            const seekChangeFunction = function () {
                 if (this.playerObject !== null) {
                     if (this.nativePlayback) {
-                        this.playerObject.currentTime = this.totalDuration * ($(this.options["seek-element"]).val() / 100);
+                        this.playerObject.currentTime = this.totalDuration * (this.options["seek-element"].value / 100);
                     } else {
-                        this.playerObject.seek(this.totalDuration * ($(this.options["seek-element"]).val() / 100) * 1000);
+                        this.playerObject.seek(this.totalDuration * (this.options["seek-element"].value / 100) * 1000);
                     }
                 }
-            }.bind(this));
-            jQuery(this.options["seek-element"]).on("input", function () {
-                if (this.playerObject !== null) {
-                    if (this.nativePlayback) {
-                        this.playerObject.currentTime = this.totalDuration * ($(this.options["seek-element"]).val() / 100);
-                    } else {
-                        this.playerObject.seek(this.totalDuration * ($(this.options["seek-element"]).val() / 100) * 1000);
-                    }
-                }
-            }.bind(this));
+            }.bind(this);
+            this.options["seek-element"].addEventListener("change", seekChangeFunction);
+            this.options["seek-element"].addEventListener("input", seekChangeFunction);
         }
 
 
@@ -324,14 +314,16 @@ class UPlayer {
                         const codec = this.audioCodecs[i].softCodec[j];
                         const format = entry.format;
                         this.audioCodecs[i].playback = "codec";
-                        jQuery.ajax({
-                            url: codec,
-                            dataType: "script",
-                            cache: true,
-                            //crossDomain: true,
-                            success: function (codec, format) {
-                                console.log("[UPlayer] Loaded codec " + codec + " for " + format);
-                            }.bind(this, codec, format)
+
+                        (new Promise((resolve, reject) => {
+                            const script = document.createElement('script');
+                            document.body.appendChild(script);
+                            script.onload = resolve;
+                            script.onerror = reject;
+                            script.async = true;
+                            script.src = codec;
+                        })).then(() => {
+                            console.log("[UPlayer] Loaded codec " + codec + " for " + format);
                         });
                     }
                 }
@@ -373,8 +365,8 @@ class UPlayer {
         }
 
         if ("play-pause-element" in this.options) {
-            this.options["play-pause-element"].removeClass("playing");
-            this.options["play-pause-element"].addClass("paused");
+            this.options["play-pause-element"].classList.remove("playing");
+            this.options["play-pause-element"].classList.add("paused");
         }
         if ("preload" in this.options && this.options["preload"]) {
             this.tryToPlay(this.currentUrl, this.guessedFormats[this.currentFormat], this.forceCodec);
@@ -436,25 +428,25 @@ class UPlayer {
         this.bufferProgress = 0.0;
         this.sentPreEndEvent = false;
         if ("duration-minutes-element" in this.options) {
-            this.options["duration-minutes-element"].text(this.zeroPad(Math.floor(this.totalDuration / 60), 2));
+            this.options["duration-minutes-element"].textContent = this.zeroPad(Math.floor(this.totalDuration / 60), 2);
         }
         if ("duration-seconds-element" in this.options) {
-            this.options["duration-seconds-element"].text(this.zeroPad(Math.floor(this.totalDuration % 60), 2));
+            this.options["duration-seconds-element"].textContent = this.zeroPad(Math.floor(this.totalDuration % 60), 2);
         }
         if ("progress-minutes-element" in this.options) {
-            this.options["progress-minutes-element"].text(this.zeroPad(Math.floor((this.currentProgress * this.totalDuration) / 60), 2));
+            this.options["progress-minutes-element"].textContent = this.zeroPad(Math.floor((this.currentProgress * this.totalDuration) / 60), 2);
         }
         if ("progress-seconds-element" in this.options) {
-            this.options["progress-seconds-element"].text(this.zeroPad(Math.floor((this.currentProgress * this.totalDuration) % 60), 2));
+            this.options["progress-seconds-element"].textContent = this.zeroPad(Math.floor((this.currentProgress * this.totalDuration) % 60), 2);
         }
         if (this.currentProgress >= 0.0 && this.currentProgress <= 1.0 && "progress-element" in this.options) {
-            this.options["progress-element"].val(this.currentProgress);
+            this.options["progress-element"].value = this.currentProgress;
         }
         if (this.bufferProgress >= 0.0 && this.bufferProgress <= 1.0 && "buffer-progress-element" in this.options) {
-            this.options["buffer-progress-element"].val(this.bufferProgress);
+            this.options["buffer-progress-element"].value = this.bufferProgress;
         }
         if (this.currentProgress >= 0.0 && this.currentProgress <= 1.0 && "seek-element" in this.options) {
-            this.options["seek-element"].val(this.currentProgress * 100);
+            this.options["seek-element"].value = this.currentProgress * 100;
         }
 
         if ("on-progress" in this.options) {
@@ -547,8 +539,8 @@ class UPlayer {
                         navigator.mediaSession.playbackState = "paused";
                     }
                     if ("play-pause-element" in this.options) {
-                        this.options["play-pause-element"].removeClass("playing");
-                        this.options["play-pause-element"].addClass("paused");
+                        this.options["play-pause-element"].classList.remove("playing");
+                        this.options["play-pause-element"].classList.add("paused");
                     }
                     switch (e.target.error.code) {
                         case e.target.error.MEDIA_ERR_ABORTED:
@@ -606,8 +598,8 @@ class UPlayer {
                         navigator.mediaSession.playbackState = "playing";
                     }
                     if ("play-pause-element" in this.options) {
-                        this.options["play-pause-element"].removeClass("paused");
-                        this.options["play-pause-element"].addClass("playing");
+                        this.options["play-pause-element"].classList.remove("paused");
+                        this.options["play-pause-element"].classList.add("playing");
                     }
                 }.bind(this));
 
@@ -616,8 +608,8 @@ class UPlayer {
                         navigator.mediaSession.playbackState = "playing";
                     }
                     if ("play-pause-element" in this.options) {
-                        this.options["play-pause-element"].removeClass("paused");
-                        this.options["play-pause-element"].addClass("playing");
+                        this.options["play-pause-element"].classList.remove("paused");
+                        this.options["play-pause-element"].classList.add("playing");
                     }
                 }.bind(this));
 
@@ -627,8 +619,8 @@ class UPlayer {
                         navigator.mediaSession.playbackState = "paused";
                     }
                     if ("play-pause-element" in this.options) {
-                        this.options["play-pause-element"].removeClass("playing");
-                        this.options["play-pause-element"].addClass("paused");
+                        this.options["play-pause-element"].classList.remove("playing");
+                        this.options["play-pause-element"].classList.add("paused");
                     }
                 }.bind(this));
 
@@ -640,8 +632,8 @@ class UPlayer {
                         navigator.mediaSession.playbackState = "paused";
                     }
                     if ("play-pause-element" in this.options) {
-                        this.options["play-pause-element"].removeClass("playing");
-                        this.options["play-pause-element"].addClass("paused");
+                        this.options["play-pause-element"].classList.remove("playing");
+                        this.options["play-pause-element"].classList.add("paused");
                     }
                     if (this.retry) {
                         this.tryRestartPlayer("stream ended");
@@ -667,22 +659,22 @@ class UPlayer {
                     }
                     this.totalDuration = this.playerObject.duration;
                     if ("duration-minutes-element" in this.options) {
-                        this.options["duration-minutes-element"].text(this.zeroPad(Math.floor(this.totalDuration / 60), 2));
+                        this.options["duration-minutes-element"].textContent = this.zeroPad(Math.floor(this.totalDuration / 60), 2);
                     }
                     if ("duration-seconds-element" in this.options) {
-                        this.options["duration-seconds-element"].text(this.zeroPad(Math.floor(this.totalDuration % 60), 2));
+                        this.options["duration-seconds-element"].textContent = this.zeroPad(Math.floor(this.totalDuration % 60), 2);
                     }
                     if ("progress-minutes-element" in this.options) {
-                        this.options["progress-minutes-element"].text(this.zeroPad(Math.floor((this.currentProgress * this.totalDuration) / 60), 2));
+                        this.options["progress-minutes-element"].textContent = this.zeroPad(Math.floor((this.currentProgress * this.totalDuration) / 60), 2);
                     }
                     if ("progress-seconds-element" in this.options) {
-                        this.options["progress-seconds-element"].text(this.zeroPad(Math.floor((this.currentProgress * this.totalDuration) % 60), 2));
+                        this.options["progress-seconds-element"].textContent = this.zeroPad(Math.floor((this.currentProgress * this.totalDuration) % 60), 2);
                     }
                     if (this.currentProgress >= 0.0 && this.currentProgress <= 1.0 && "progress-element" in this.options) {
-                        this.options["progress-element"].val(this.currentProgress);
+                        this.options["progress-element"].value = this.currentProgress;
                     }
                     if (this.currentProgress >= 0.0 && this.currentProgress <= 1.0 && "seek-element" in this.options) {
-                        this.options["seek-element"].val(this.currentProgress * 100);
+                        this.options["seek-element"].value = this.currentProgress * 100;
                     }
 
                     if ("on-progress" in this.options) {
@@ -698,7 +690,7 @@ class UPlayer {
                         this.bufferProgress = ((this.playerObject.buffered.length > 0 ? this.playerObject.buffered.end(0) : 0) / this.totalDuration);
                     }
                     if (this.bufferProgress >= 0.0 && this.bufferProgress <= 1.0 && "buffer-progress-element" in this.options) {
-                        this.options["buffer-progress-element"].val(this.bufferProgress);
+                        this.options["buffer-progress-element"].value = this.bufferProgress;
                     }
                 }.bind(this));
                 this.playerObject.addEventListener("timeupdate", function () {
@@ -709,16 +701,16 @@ class UPlayer {
                         this.currentProgress = (this.playerObject.currentTime / this.totalDuration);
                     }
                     if ("progress-minutes-element" in this.options) {
-                        this.options["progress-minutes-element"].text(this.zeroPad(Math.floor((this.currentProgress * this.totalDuration) / 60), 2));
+                        this.options["progress-minutes-element"].textContent = this.zeroPad(Math.floor((this.currentProgress * this.totalDuration) / 60), 2);
                     }
                     if ("progress-seconds-element" in this.options) {
-                        this.options["progress-seconds-element"].text(this.zeroPad(Math.floor((this.currentProgress * this.totalDuration) % 60), 2));
+                        this.options["progress-seconds-element"].textContent = this.zeroPad(Math.floor((this.currentProgress * this.totalDuration) % 60), 2);
                     }
                     if (this.currentProgress >= 0.0 && this.currentProgress <= 1.0 && "progress-element" in this.options) {
-                        this.options["progress-element"].val(this.currentProgress);
+                        this.options["progress-element"].value = this.currentProgress;
                     }
                     if (this.currentProgress >= 0.0 && this.currentProgress <= 1.0 && "seek-element" in this.options) {
-                        this.options["seek-element"].val(this.currentProgress * 100);
+                        this.options["seek-element"].value = this.currentProgress * 100;
                     }
 
                     if ("on-progress" in this.options) {
@@ -748,8 +740,8 @@ class UPlayer {
                     navigator.mediaSession.playbackState = "paused";
                 }
                 if ("play-pause-element" in this.options) {
-                    this.options["play-pause-element"].removeClass("playing");
-                    this.options["play-pause-element"].addClass("paused");
+                    this.options["play-pause-element"].classList.remove("playing");
+                    this.options["play-pause-element"].classList.add("paused");
                 }
                 if ("on-error" in this.options) {
                     this.options["on-error"](e);
@@ -768,8 +760,8 @@ class UPlayer {
                     navigator.mediaSession.playbackState = "paused";
                 }
                 if ("play-pause-element" in this.options) {
-                    this.options["play-pause-element"].removeClass("playing");
-                    this.options["play-pause-element"].addClass("paused");
+                    this.options["play-pause-element"].classList.remove("playing");
+                    this.options["play-pause-element"].classList.add("paused");
                 }
                 if (this.retry) {
                     this.tryRestartPlayer("stream ended");
@@ -795,22 +787,22 @@ class UPlayer {
             this.playerObject.on("duration", function (duration) {
                 this.totalDuration = duration / 1000;
                 if ("duration-minutes-element" in this.options) {
-                    this.options["duration-minutes-element"].text(this.zeroPad(Math.floor(this.totalDuration / 60), 2));
+                    this.options["duration-minutes-element"].textContent = this.zeroPad(Math.floor(this.totalDuration / 60), 2);
                 }
                 if ("duration-seconds-element" in this.options) {
-                    this.options["duration-seconds-element"].text(this.zeroPad(Math.floor(this.totalDuration % 60), 2));
+                    this.options["duration-seconds-element"].textContent = this.zeroPad(Math.floor(this.totalDuration % 60), 2);
                 }
                 if ("progress-minutes-element" in this.options) {
-                    this.options["progress-minutes-element"].text(this.zeroPad(Math.floor((this.currentProgress * this.totalDuration) / 60), 2));
+                    this.options["progress-minutes-element"].textContent = this.zeroPad(Math.floor((this.currentProgress * this.totalDuration) / 60), 2);
                 }
                 if ("progress-seconds-element" in this.options) {
-                    this.options["progress-seconds-element"].text(this.zeroPad(Math.floor((this.currentProgress * this.totalDuration) % 60), 2));
+                    this.options["progress-seconds-element"].textContent = this.zeroPad(Math.floor((this.currentProgress * this.totalDuration) % 60), 2);
                 }
                 if (this.currentProgress >= 0.0 && this.currentProgress <= 1.0 && "progress-element" in this.options) {
-                    this.options["progress-element"].val(this.currentProgress);
+                    this.options["progress-element"].value = this.currentProgress;
                 }
                 if (this.currentProgress >= 0.0 && this.currentProgress <= 1.0 && "seek-element" in this.options) {
-                    this.options["seek-element"].val(this.currentProgress * 100);
+                    this.options["seek-element"].value = this.currentProgress * 100;
                 }
                 if ("on-progress" in this.options) {
                     this.options["on-progress"]();
@@ -820,7 +812,7 @@ class UPlayer {
             this.playerObject.on("buffer", function (percent) {
                 this.bufferProgress = percent / 100;
                 if (this.bufferProgress >= 0.0 && this.bufferProgress <= 1.0 && "buffer-progress-element" in this.options) {
-                    this.options["buffer-progress-element"].val(this.bufferProgress);
+                    this.options["buffer-progress-element"].value = this.bufferProgress;
                 }
             }.bind(this));
             this.playerObject.on("progress", function (time) {
@@ -828,23 +820,23 @@ class UPlayer {
                     this.currentProgress = (time / 1000) / this.totalDuration;
                 }
                 if ("progress-minutes-element" in this.options) {
-                    this.options["progress-minutes-element"].text(this.zeroPad(Math.floor((this.currentProgress * this.totalDuration) / 60), 2));
+                    this.options["progress-minutes-element"].textContent = this.zeroPad(Math.floor((this.currentProgress * this.totalDuration) / 60), 2);
                 }
                 if ("progress-seconds-element" in this.options) {
-                    this.options["progress-seconds-element"].text(this.zeroPad(Math.floor((this.currentProgress * this.totalDuration) % 60), 2));
+                    this.options["progress-seconds-element"].textContent = this.zeroPad(Math.floor((this.currentProgress * this.totalDuration) % 60), 2);
                 }
                 if (this.currentProgress >= 0.0 && this.currentProgress <= 1.0 && "progress-element" in this.options) {
-                    this.options["progress-element"].val(this.currentProgress);
+                    this.options["progress-element"].value = this.currentProgress;
                 }
                 if (this.currentProgress >= 0.0 && this.currentProgress <= 1.0 && "seek-element" in this.options) {
-                    this.options["seek-element"].val(this.currentProgress * 100);
+                    this.options["seek-element"].value = this.currentProgress * 100;
                 }
                 if ('mediaSession' in navigator) {
                     navigator.mediaSession.playbackState = "playing";
                 }
                 if ("play-pause-element" in this.options) {
-                    this.options["play-pause-element"].removeClass("paused");
-                    this.options["play-pause-element"].addClass("playing");
+                    this.options["play-pause-element"].classList.remove("paused");
+                    this.options["play-pause-element"].classList.add("playing");
                 }
 
                 if ("on-progress" in this.options) {
@@ -936,8 +928,8 @@ class UPlayer {
         }
 
         if ("play-pause-element" in this.options) {
-            this.options["play-pause-element"].removeClass("paused");
-            this.options["play-pause-element"].addClass("playing");
+            this.options["play-pause-element"].classList.remove("paused");
+            this.options["play-pause-element"].classList.add("playing");
         }
     }
 
@@ -955,8 +947,8 @@ class UPlayer {
         this.volume = 0.0;
 
         if ("mute-element" in this.options) {
-            this.options["mute-element"].removeClass("not-muted");
-            this.options["mute-element"].addClass("muted");
+            this.options["mute-element"].classList.remove("not-muted");
+            this.options["mute-element"].classList.add("muted");
         }
         if (this.playerObject === null) {
             return;
@@ -976,8 +968,8 @@ class UPlayer {
         this.volume = this.oldVolume;
 
         if ("mute-element" in this.options) {
-            this.options["mute-element"].removeClass("muted");
-            this.options["mute-element"].addClass("not-muted");
+            this.options["mute-element"].classList.remove("muted");
+            this.options["mute-element"].classList.add("not-muted");
         }
         if (this.playerObject === null) {
             return;
@@ -1015,8 +1007,8 @@ class UPlayer {
                 navigator.mediaSession.playbackState = "paused";
             }
             if ("play-pause-element" in this.options) {
-                this.options["play-pause-element"].removeClass("playing");
-                this.options["play-pause-element"].addClass("paused");
+                this.options["play-pause-element"].classList.remove("playing");
+                this.options["play-pause-element"].classList.add("paused");
             }
         }
     }

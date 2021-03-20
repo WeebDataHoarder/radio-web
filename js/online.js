@@ -21,12 +21,9 @@ const searchTimeout = 500;
 let oldQuery = "";
 let socket = null;
 
-jQuery(document).ready(function () {
-    /*
-        When the window resizes, ensure the left and right side of the player
-        are equal.
-    */
-    jQuery(window).on('resize', function () {
+
+document.addEventListener("DOMContentLoaded", function() {
+    window.addEventListener('resize', function () {
         //adjustPlayerHeights();
     });
 
@@ -35,10 +32,10 @@ jQuery(document).ready(function () {
 
 function applyTagMeta(meta){
     if("dl-link-type" in meta){
-        jQuery("#np-download").addClass(meta["dl-link-type"]);
+        document.querySelector("#np-download").classList.add(meta["dl-link-type"]);
     }
     if("dl-link-href" in meta){
-        jQuery("#np-download").attr("href", meta["dl-link-href"]);
+        document.querySelector("#np-download").setAttribute("href", meta["dl-link-href"]);
     }
 }
 
@@ -49,52 +46,51 @@ const uplayer = new UPlayer({
     "streaming": true,
     "muted": false,
     "retry": true,
-    "play-pause-element": jQuery(".play-pause"),
-    //"progress-minutes-element": jQuery(".radio-current-minutes"),
-    //"progress-seconds-element": jQuery(".radio-current-seconds"),
-    //"duration-minutes-element": jQuery(".radio-duration-minutes"),
-    //"duration-seconds-element": jQuery(".radio-duration-seconds"),
-    //"progress-element": jQuery(".radio-song-played-progress"),
-    //"buffer-progress-element": jQuery(".radio-song-played-progress"),
-    "mute-element": jQuery(".mute"),
-    "volume-element": jQuery(".volume-slider"),
+    "play-pause-element": document.querySelector(".play-pause"),
+    //"progress-minutes-element": document.querySelector(".radio-current-minutes"),
+    //"progress-seconds-element": document.querySelector(".radio-current-seconds"),
+    //"duration-minutes-element": document.querySelector(".radio-duration-minutes"),
+    //"duration-seconds-element": document.querySelector(".radio-duration-seconds"),
+    //"progress-element": document.querySelector(".radio-song-played-progress"),
+    //"buffer-progress-element": document.querySelector(".radio-song-played-progress"),
+    "mute-element": document.querySelector(".mute"),
+    "volume-element": document.querySelector(".volume-slider"),
     "on-ready": function () {
-        jQuery(".play-pause").removeClass("hidden");
+        document.querySelector(".play-pause").classList.remove("hidden");
     }
 });
 
 let audioStream;
 
 function initWebsite() {
-    jQuery("#radio-quality").on('change', function () {
+    document.querySelector("#radio-quality").addEventListener('change', function () {
         const playing = uplayer.isPlaying();
 
         for (let i = 0; i < compatibleAudioStreams.length; ++i) {
-            if (compatibleAudioStreams[i].id == jQuery(this).val()) {
+            if (compatibleAudioStreams[i].id == this.value) {
                 audioStream = compatibleAudioStreams[i];
                 break;
             }
         }
 
-        window.localStorage.setItem("radio-stream-id", jQuery(this).val());
+        window.localStorage.setItem("radio-stream-id", this.value);
 
-        uplayer.init(document.getElementById("stream-" + jQuery(this).val()).href, [audioStream.format]);
+        uplayer.init(document.getElementById("stream-" + this.value).href, [audioStream.format]);
         if (playing) {
             uplayer.play();
         }
     });
 
-    jQuery("#api-key").on('keypress', function (e) {
+    document.querySelector("#api-key").addEventListener('keypress', function (e) {
         if (e.which === 13) {
-            apiKeyIdentify(jQuery(this).val());
+            apiKeyIdentify(this.value);
         }
     });
 
-    jQuery("#radio-skip").on('click', function () {
+    document.querySelector("#radio-skip").addEventListener('click', function () {
         if (listeners.num_listeners <= 2 || confirm("Are you sure you want to skip this track? You are (not) alone.")) {
-            jQuery.ajax({
-                type: "GET",
-                url: baseApiUrl + "/api/skip"
+            apiRequest("/api/skip").then(r => {
+
             });
         }
     });
@@ -110,127 +106,89 @@ function initWebsite() {
 
         const current = Math.max(0, Math.min(totalDuration, currentDuration));
 
-        jQuery(".np-seconds").text(("" + (current % 60)).padStart(2, "0"));
-        jQuery(".np-minutes").text(("" + Math.floor(current / 60)).padStart(2, "0"));
-        jQuery(".np-duration-seconds").text(("" + (totalDuration % 60)).padStart(2, "0"));
-        jQuery(".np-duration-minutes").text(("" + Math.floor(totalDuration / 60)).padStart(2, "0"));
-        jQuery("#song-played-progress").attr("value", current / totalDuration);
+        document.querySelectorAll(".np-seconds").forEach((e) => { e.textContent = ("" + (current % 60)).padStart(2, "0"); });
+        document.querySelectorAll(".np-minutes").forEach((e) => { e.textContent = ("" + Math.floor(current / 60)).padStart(2, "0"); });
+        document.querySelectorAll(".np-duration-seconds").forEach((e) => { e.textContent = ("" + (totalDuration % 60)).padStart(2, "0"); });
+        document.querySelectorAll(".np-duration-minutes").forEach((e) => { e.textContent = ("" + Math.floor(totalDuration / 60)).padStart(2, "0"); });
+        document.querySelector("#song-played-progress").value = current / totalDuration;
 
     }, 200);
 
     if ("Notification" in window) {
-        jQuery("#notify-check-group").css("display", "inline-block");
+        document.querySelector("#notify-check-group").style["display"] = "inline-block";
         if (Notification.permission === "granted" && window.localStorage.getItem("radio-notifications") == "on") {
-            jQuery("#notify-check").prop("checked", true);
+            document.querySelector("#notify-check").checked = true;
         }
 
-        jQuery("#notify-check").on("change", function () {
-            if (jQuery(this).prop("checked")) {
+        document.querySelector("#notify-check").addEventListener("change", function () {
+            if (this.checked) {
                 Notification.requestPermission().then(function (result) {
                     if (result !== "granted") {
-                        jQuery("#notify-check").prop("checked", false);
+                        document.querySelector("#notify-check").checked = false;
                     } else {
-                        window.localStorage.setItem("radio-notifications", jQuery("#notify-check").prop("checked") ? "on" : "off");
+                        window.localStorage.setItem("radio-notifications", document.querySelector("#notify-check").checked ? "on" : "off");
                     }
                 })
             } else {
-                jQuery(this).prop("checked", false);
+                this.checked = false;
                 window.localStorage.setItem("radio-notifications", "off");
             }
         });
     }
 
-    jQuery("#radio-player").on('click', ".song-favorite", function () {
-        const username = jQuery("#current-nick").text();
-        const thisElement = this;
-        if (username == "") {
-            return;
-        }
-
-        jQuery.ajax(baseApiUrl + "/api/favorites/" + username + "/" + jQuery(this).attr("data-track-hash"), {
-            method: jQuery(this).hasClass("favorited") ? "DELETE" : "PUT",
-            async: true
-        }).done(function (data, code, xhr) {
-            /*if(xhr.status == 200 || xhr.status == 201){
-                jQuery(thisElement).addClass("favorited");
-            }*/
-        });
-    });
-
-    jQuery("#search-results").on('mousedown', ".search-result-queue", function (a) {
-        const target = jQuery(a.target);
-        const songHash = jQuery(this).attr("data-track-hash");
-        if (a.ctrlKey || (a.which == 2 || a.button == 2)) {
-            window.open(baseApiUrl + "/player/hash/" + songHash, '_blank');
-            a.stopImmediatePropagation();
-            return;
-        }
-        if (target.hasClass("song-favorite")/* || target.hasClass("song-album") || target.hasClass("song-artist") || target.hasClass("song-title")*/) {
-            return;
-        }
-        const thisElement = this;
-        jQuery.ajax(baseApiUrl + "/api/request/" + songHash, {
-            method: "GET",
-            async: true
-        }).done(function (data) {
-            if (data.hash == songHash) {
-                jQuery(thisElement).hide(400);
+    document.querySelector("#radio-player").addEventListener('click', function (ev) {
+        if(ev.target.classList.contains("song-favorite")){
+            const username = document.querySelector("#current-nick").textContent.toLowerCase();
+            const thisElement = ev.target;
+            if (username === "") {
+                return;
             }
-        });
+
+            apiRequest("/api/favorites/" + username + "/" + thisElement.getAttribute("data-track-hash"), thisElement.classList.contains("favorited") ? "DELETE" : "PUT").then((data) => {
+                //thisElement.classList.add("favorited");
+            });
+        }
+
     });
 
-    /*
-     jQuery(".np-album").on('click', function(){
-         jQuery("#search-query").val(jQuery(this).text());
-         jQuery("#search-type").val("album");
-         runQuery();
-     });
+    document.querySelector("#search-results").addEventListener('mousedown',function (a) {
+        const thisElement = a.target.closest(".search-result-queue");
+        if(thisElement !== null){
+            const target = a.target;
+            const songHash = thisElement.getAttribute("data-track-hash");
+            if (a.ctrlKey || (a.which === 2 || a.button === 2)) {
+                window.open(baseApiUrl + "/player/hash/" + songHash, '_blank');
+                a.stopImmediatePropagation();
+                return;
+            }
+            if (target.classList.contains("song-favorite")/* || target.hasClass("song-album") || target.hasClass("song-artist") || target.hasClass("song-title")*/) {
+                return;
+            }
+            apiRequest("/api/request/" + songHash).then((data) => {
+                if (data.hash === songHash) {
+                    thisElement.style["display"] = "none"; //TODO animate
+                }
+            });
+        }
+    });
 
-     jQuery(".np-artist").on('click', function(){
-         jQuery("#search-query").val(jQuery(this).text());
-         jQuery("#search-type").val("artist");
-         runQuery();
-     });
-
-     jQuery(".np-song").on('click', function(){
-         jQuery("#search-query").val(jQuery(this).text());
-         jQuery("#search-type").val("title");
-         runQuery();
-     });
-
-     jQuery("#radio-player").on('click', ".song-album", function(){
-         jQuery("#search-query").val(jQuery(this).text());
-         jQuery("#search-type").val("album");
-         runQuery();
-     });
-
-     jQuery("#radio-player").on('click', ".song-artist", function(){
-         jQuery("#search-query").val(jQuery(this).text());
-         jQuery("#search-type").val("artist");
-         runQuery();
-     });
-
-     jQuery("#radio-player").on('click', ".song-title", function(){
-         jQuery("#search-query").val(jQuery(this).text());
-         jQuery("#search-type").val("title");
-         runQuery();
-     });
-*/
-
-    jQuery(".hash-area").on('click', function () {
-        const temp = jQuery("<input>");
-        jQuery("body").append(temp);
-        temp.val(jQuery(this).text()).select();
+    document.querySelector(".hash-area").addEventListener('click', function () {
+        const temp = document.createElement("input");
+        document.querySelector("body").append(temp);
+        temp.value = this.textContent;
+        temp.select();
         document.execCommand("copy");
         temp.remove();
     });
 
-    jQuery("#search-queryrandom").on('click', function () {
-        if (oldQuery == "") {
+    document.querySelector("#search-queryrandom").addEventListener('click', function () {
+        if (oldQuery === "") {
             return;
         }
 
-        jQuery.ajax(baseApiUrl + "/api/request/random?q=" + encodeURIComponent(oldQuery));
+        apiRequest("/api/request/random?q=" + encodeURIComponent(oldQuery)).then((data) => {
+
+        });
     });
 
 
@@ -296,83 +254,90 @@ function initWebSocket() {
                 currentQueue = [];
                 updateQueueData(currentQueue);
             }
-        } else if (data.type == 'playing') {
+        } else if (data.type === 'playing') {
             if(np != null){
                 nr = null;
             }
             np = data.data;
             updateTrackData(np);
             updateQueueData(currentQueue);
-        } else if (data.type == 'listeners') {
+        } else if (data.type === 'listeners') {
             listeners = data.data;
             if (listeners.num_listeners <= 2) {
-                jQuery("#radio-skip").show(400);
+                document.querySelector("#radio-skip").style.display = "";
             } else {
-                jQuery("#radio-skip").hide(400);
+                document.querySelector("#radio-skip").style.display = "none";
             }
-            //jQuery("#radio-listeners").first().innerHTML = data.data.num_listeners;
+
             if ("named_listeners" in data.data) {
-                jQuery("#listeners").text("Listeners: " + (data.data.num_listeners - data.data.named_listeners.length) + " guest(s), " + data.data.named_listeners.join(", "));
+                document.querySelector("#listeners").textContent = "Listeners: " + (data.data.num_listeners - data.data.named_listeners.length) + " guest(s), " + data.data.named_listeners.join(", ");
             } else {
-                jQuery("#listeners").text("Listeners: " + data.data.num_listeners + " guest(s)");
+                document.querySelector("#listeners").textContent = "Listeners: " + data.data.num_listeners + " guest(s)";
             }
-        } else if (data.type == 'favorite') {
-            const username = jQuery("#current-nick").text().toLowerCase();
-            const targetElement = jQuery(".song-favorite[data-track-hash=\"" + data.data.song.hash + "\"]");
-            if (targetElement.length === 0) {
-                //No target on screen
-            } else {
+        } else if (data.type === 'favorite') {
+            const username = document.querySelector("#current-nick").textContent.toLowerCase();
+            document.querySelectorAll(".song-favorite[data-track-hash=\"" + data.data.song.hash + "\"]").forEach((targetElement) => {
                 if (data.data.user.toLowerCase() === username) {
                     if (data.data.action === "add") {
-                        targetElement.addClass("favorited");
+                        targetElement.classList.add("favorited");
                     } else if (data.data.action === "remove") {
-                        targetElement.removeClass("favorited");
+                        targetElement.classList.remove("favorited");
                     }
                 }
-                targetElement.text(data.data.song.favored_by.length > 0 ? data.data.song.favored_by.length : "");
-                targetElement.addClass("shake").on('animationend webkitAnimationEnd oAnimationEnd', function () {
-                    targetElement.removeClass("shake");
+                targetElement.textContent = data.data.song.favored_by.length > 0 ? data.data.song.favored_by.length : "";
+                targetElement.classList.add("shake");
+                targetElement.addEventListener('animationend webkitAnimationEnd oAnimationEnd', function () {
+                    targetElement.classList.remove("shake");
                 });
-            }
+            });
         }
     };
 }
 
 function updateTrackData(data) {
     document.title = data.artist + " - " + data.title + " (" + data.album + ") :: anime(bits) #radio";
-    jQuery(".np-artist").text(data.artist);
-    jQuery(".np-album").text(data.album);
-    jQuery(".np-song").text(data.title);
+    document.querySelectorAll(".np-artist").forEach((e) => {
+        e.textContent = data.artist;
+    });
+    document.querySelectorAll(".np-album").forEach((e) => {
+        e.textContent = data.album;
+    });
+    document.querySelectorAll(".np-song").forEach((e) => {
+        e.textContent = data.title;
+    });
+
     if (data.hash) {
-        jQuery(".np-hash").text(data.hash);
-        jQuery("#radio-favorite").attr("data-track-hash", data.hash);
+        document.querySelector(".np-hash").textContent = data.hash;
+        document.querySelector("#radio-favorite").setAttribute("data-track-hash", data.hash);
     }
 
-    const username = jQuery("#current-nick").text();
-    if ('favored_by' in data && username != "") {
-        if (jQuery.inArray(username.toLowerCase(), data.favored_by) !== -1) {
-            jQuery("#radio-favorite").addClass("favorited");
+    const username = document.querySelector("#current-nick").textContent.toLowerCase();
+    if ('favored_by' in data && username !== "") {
+        if (data.favored_by.includes(username)) {
+            document.querySelector("#radio-favorite").classList.add("favorited");
         } else {
-            jQuery("#radio-favorite").removeClass("favorited");
+            document.querySelector("#radio-favorite").classList.remove("favorited");
         }
-        jQuery("#radio-favorite").text(data.favored_by.length > 0 ? data.favored_by.length : "");
+        document.querySelector("#radio-favorite").textContent = data.favored_by.length > 0 ? data.favored_by.length : "";
     }
-    jQuery("#np-download").removeClass("ab");
-    jQuery("#np-download").removeClass("jps");
-    jQuery("#np-download").removeClass("red");
-    jQuery("#np-download").removeClass("bbt");
-    jQuery("#np-tags.tag-area").html("");
+    document.querySelector("#np-download").classList.remove("ab");
+    document.querySelector("#np-download").classList.remove("jps");
+    document.querySelector("#np-download").classList.remove("red");
+    document.querySelector("#np-download").classList.remove("bbt");
+    document.querySelector("#np-tags.tag-area").innerHTML = "";
 
     let tagData = getTagEntries(data);
-    applyTagEntries(jQuery("#np-tags.tag-area").get(0), tagData.tags);
+    applyTagEntries(document.querySelector("#np-tags.tag-area"), tagData.tags);
     applyTagMeta(tagData.meta);
 
     if (data.hash) {
-        jQuery("#np-player").attr("href", baseApiUrl + "/player/hash/" + data.hash);
+        document.querySelector("#np-player").setAttribute( "href", baseApiUrl + "/player/hash/" + data.hash);
     }
-    let imageUrl;
-    jQuery(".np-image").attr("src", imageUrl = (data.cover !== null ? '/api/cover/' + data.cover + '/large' : '/img/no-cover.jpg'));
-    jQuery(".body-blur").css("background-image", "url("+ imageUrl +")");
+    let imageUrl = (data.cover !== null ? '/api/cover/' + data.cover + '/large' : '/img/no-cover.jpg');
+    document.querySelectorAll(".np-image").forEach((e) => {
+       e.setAttribute("src", imageUrl);
+    });
+    document.querySelector(".body-blur").style["background-image"] = "url("+ imageUrl +")";
 
 
     pushMediaSessionMetadata(data);
@@ -386,50 +351,161 @@ function updateTrackData(data) {
 }
 
 function createQueueEntry(data, startTime = null) {
-    const username = jQuery("#current-nick").text();
-    return '' +
-        '<div class="song radio-song-container">' +
-        '<div class="queue-fit"><img class="queue-cover" src="' + (data.cover !== null ? '/api/cover/' + data.cover + '/small' : '/img/no-cover.jpg') + '" loading=lazy/></div>' +
-        '<div class="song-now-playing-icon-container">' +
-        ("random" in data && data.random ? '<img class="now-playing" src="/img/shuffle-on.svg"/>' : '') +
-        ("random" in data && data.random ? '' : '<div class="now-playing song-favorite user-feature ' + ('favored_by' in data && jQuery.inArray(username.toLowerCase(), data.favored_by) !== -1 ? "favorited" : "") + '" data-track-hash="' + data.hash + '">' + ('favored_by' in data && data.favored_by.length > 0 ? data.favored_by.length : "") + '</div>') +
-        '</div>' +
-        '	<div class="song-meta-data">' +
-        '		<span class="song-title">' + htmlentities(data.title) + '</span>' +
-        '		<span class="song-artist">' + htmlentities(data.artist) + '</span>' +
-        '		<span class="song-album">' + htmlentities(data.album) + '</span>' +
-        '	</div>' +
-        '	<span class="song-duration">' + (startTime !== null ? "in&nbsp;~" + Math.ceil((startTime - (Date.now() / 1000)) / 60) + "m" : ("" + Math.floor(data.duration / 60)).padStart(2, "0") + ':' + ("" + (data.duration % 60)).padStart(2, "0")) + '</span>' +
-        '</div>';
+    const username = document.querySelector("#current-nick").textContent.toLowerCase();
+
+    const e = document.createElement("div");
+    e.classList.add("song", "radio-song-container");
+    {
+        const fit = document.createElement("div");
+        fit.classList.add("queue-fit");
+        const im = document.createElement("img");
+        im.classList.add("queue-cover");
+        im.setAttribute("src", data["cover"] !== null ? "/api/cover/" + data["cover"] + "/small" : "/img/no-cover.jpg");
+        im.setAttribute("loading", "lazy");
+        fit.append(im);
+
+        e.append(fit);
+    }
+    {
+        const c = document.createElement("div");
+        c.classList.add("song-now-playing-icon-container");
+        if("random" in data && data.random){
+            const im = document.createElement("img");
+            im.classList.add("now-playing");
+            im.src = "/img/shuffle-on.svg";
+            c.append(im);
+        }else{
+            const n = document.createElement("div");
+            n.classList.add("now-playing", "song-favorite", "user-feature");
+            if('favored_by' in data && data.favored_by.includes(username) ){
+                n.classList.add("favorited");
+            }
+            if('favored_by' in data && data.favored_by.length > 0){
+                n.textContent = data.favored_by.length;
+            }
+            n.setAttribute("data-track-hash", data.hash);
+            c.append(n);
+        }
+
+        e.append(c);
+    }
+    {
+        const c = document.createElement("div");
+        c.classList.add("song-meta-data");
+
+        const title = document.createElement("span");
+        title.classList.add("song-title");
+        title.textContent = data["title"];
+        c.append(title);
+
+        const artist = document.createElement("span");
+        artist.classList.add("song-artist");
+        artist.textContent = data["artist"];
+        c.append(artist);
+
+        const album = document.createElement("span");
+        album.classList.add("song-album");
+        album.textContent = data["album"];
+        c.append(album);
+
+        e.append(c);
+    }
+    {
+        const duration = document.createElement("span");
+        duration.classList.add("song-duration");
+        duration.textContent = (startTime !== null ? "in" + String.fromCharCode(160) + "~" + Math.ceil((startTime - (Date.now() / 1000)) / 60) + "m" : ("" + Math.floor(data.duration / 60)).padStart(2, "0") + ':' + ("" + (data.duration % 60)).padStart(2, "0"));
+        e.append(duration);
+    }
+
+    return e;
 }
 
 function createResultsEntry(data) {
-    const username = jQuery("#current-nick").text();
-    return '' +
-        '<div class="song radio-song-container search-result-queue" data-track-hash="' + data.hash + '">' +
-        '<img class="queue-add" src="/img/add.svg"/>' +
-        '<div class="queue-fit"><img class="queue-cover" src="' + (data.cover !== null ? '/api/cover/' + data.cover + '/small' : '/img/no-cover.jpg') + '" loading=lazy/></div>' +
-        '<div class="song-now-playing-icon-container">' +
-        '<div class="now-playing song-favorite user-feature ' + (jQuery.inArray(username.toLowerCase(), data.favored_by) !== -1 ? "favorited" : "") + '" data-track-hash="' + data.hash + '">' + (data.favored_by.length > 0 ? data.favored_by.length : "") + '</div>' +
-        '</div>' +
-        '	<div class="song-meta-data">' +
-        '		<span class="song-title">' + htmlentities(data.title) + '</span>' +
-        '		<span class="song-artist">' + htmlentities(data.artist) + '</span>' +
-        '		<span class="song-album">' + htmlentities(data.album) + '</span>' +
-        '	</div>' +
-        '	<span class="song-duration">' + ("" + Math.floor(data.duration / 60)).padStart(2, "0") + ':' + ("" + (data.duration % 60)).padStart(2, "0") + '</span>' +
-        '</div>';
+    const username = document.querySelector("#current-nick").textContent.toLowerCase();
+
+    const e = document.createElement("div");
+    e.classList.add("song", "radio-song-container", "search-result-queue");
+    e.setAttribute("data-track-hash", data.hash);
+    {
+        const im = document.createElement("img");
+        im.classList.add("queue-add");
+        im.src = "/img/add.svg";
+        e.append(im);
+    }
+    {
+        const fit = document.createElement("div");
+        fit.classList.add("queue-fit");
+        const im = document.createElement("img");
+        im.classList.add("queue-cover");
+        im.setAttribute("src", data["cover"] !== null ? "/api/cover/" + data["cover"] + "/small" : "/img/no-cover.jpg");
+        im.setAttribute("loading", "lazy");
+        fit.append(im);
+
+        e.append(fit);
+    }
+    {
+        const c = document.createElement("div");
+        c.classList.add("song-now-playing-icon-container");
+        if("random" in data && data.random){
+            const im = document.createElement("img");
+            im.classList.add("now-playing");
+            im.src = "/img/shuffle-on.svg";
+            c.append(im);
+        }else{
+            const n = document.createElement("div");
+            n.classList.add("now-playing", "song-favorite", "user-feature");
+            if('favored_by' in data && data.favored_by.includes(username) ){
+                n.classList.add("favorited");
+            }
+            if('favored_by' in data && data.favored_by.length > 0){
+                n.textContent = data.favored_by.length;
+            }
+            n.setAttribute("data-track-hash", data.hash);
+            c.append(n);
+        }
+
+        e.append(c);
+    }
+    {
+        const c = document.createElement("div");
+        c.classList.add("song-meta-data");
+
+        const title = document.createElement("span");
+        title.classList.add("song-title");
+        title.textContent = data["title"];
+        c.append(title);
+
+        const artist = document.createElement("span");
+        artist.classList.add("song-artist");
+        artist.textContent = data["artist"];
+        c.append(artist);
+
+        const album = document.createElement("span");
+        album.classList.add("song-album");
+        album.textContent = data["album"];
+        c.append(album);
+
+        e.append(c);
+    }
+    {
+        const duration = document.createElement("span");
+        duration.classList.add("song-duration");
+        duration.textContent = ("" + Math.floor(data.duration / 60)).padStart(2, "0") + ':' + ("" + (data.duration % 60)).padStart(2, "0");
+        e.append(duration);
+    }
+
+    return e;
 }
 
 function updateQueueData(res) {
     let queueDuration = np && 'started' in np ? np.started + np.duration : null;
     if (res.length == 0) {
-        jQuery("#radio-queue").html("");
+        document.querySelector("#radio-queue").innerHTML = "";
         if (nr !== null) {
             if (currentQueue.length != 0 || np.id == nr.id) {
                 return;
             }
-            jQuery("#radio-queue").append(createQueueEntry({
+            document.querySelector("#radio-queue").append(createQueueEntry({
                 "title": nr.title,
                 "artist": nr.artist,
                 "album": nr.album,
@@ -440,7 +516,7 @@ function updateQueueData(res) {
             }, queueDuration));
         } else {
 
-            jQuery("#radio-queue").append(createQueueEntry({
+            document.querySelector("#radio-queue").append(createQueueEntry({
                 "title": "Random playback",
                 "artist": "UP NEXT",
                 "album": "???",
@@ -451,9 +527,9 @@ function updateQueueData(res) {
             }, queueDuration));
         }
     } else {
-        jQuery("#radio-queue").html("");
+        document.querySelector("#radio-queue").innerHTML = "";
         for (let i = 0; i < res.length; i++) {
-            jQuery("#radio-queue").append(createQueueEntry(res[i], queueDuration));
+            document.querySelector("#radio-queue").append(createQueueEntry(res[i], queueDuration));
             if (queueDuration !== null) {
                 queueDuration += res[i].duration;
             }
@@ -461,51 +537,81 @@ function updateQueueData(res) {
     }
 }
 
+function apiRequest(url, method = "GET", abortSignal = null){
+    return new Promise(((resolve, reject) => {
+        const options = {
+            method: method
+        };
+        if(apiKey !== null){
+            options.headers = {
+                "Authorization": apiKey
+            }
+            options.mode = "cors";
+            options.credentials = "include";
+        }
+        if(abortSignal !== null){
+            options.signal = abortSignal;
+        }
+        fetch(baseApiUrl + url, options).then((response) => {
+            if(!response.ok){
+                reject();
+                return;
+            }
+
+            const contentType = response.headers.get("content-type");
+            if (contentType && contentType.indexOf("/json") !== -1) {
+                return response.json().then(data => {
+                   resolve(data);
+                }).catch(reject);
+            } else {
+                return response.text().then(text => {
+                    resolve(text);
+                }).catch(reject);
+            }
+        }).catch(reject);
+    }))
+}
+
 function apiKeyIdentify(key) {
     apiKey = key;
-    $.ajaxSetup({
-        headers: {
-            "Authorization": apiKey
-        }
-    });
-    jQuery.ajax(baseApiUrl + "/api/user/info").done(function (data) {
+    apiRequest("/api/user/info").then((data) => {
         if (data.user) {
             docCookies.setItem("radio-apikey", apiKey, Infinity, "/", window.location.hostname, true);
             nickIdentify(data.user);
             initWebSocket();
         } else {
-            $.ajaxSetup({});
             apiKey = null;
             docCookies.removeItem("radio-apikey");
             initWebSocket();
             alert("Invalid API key, might be expired");
         }
-    }).fail(function (state) {
-        if (state.readyState == 4 && state.status == 403) {
-            $.ajaxSetup({});
-            apiKey = null;
-            docCookies.removeItem("radio-apikey");
-            initWebSocket();
-            alert("Invalid API key, might be expired");
-        }
+    }).catch(() => {
+        apiKey = null;
+        docCookies.removeItem("radio-apikey");
+        initWebSocket();
+        alert("Invalid API key, might be expired");
     });
 }
 
 function nickIdentify(username) {
     username = username.trim();
-    if (username == "") {
+    if (username === "") {
         return;
     }
-    jQuery(".non-auth").addClass("auth").removeClass("non-auth");
-    jQuery("#current-nick").text(username).attr("href", baseApiUrl + "/player/favorites/" + username);
-    jQuery("#user-login").css("display", "none");
-    jQuery("#radio-favorite").css("display", "inline-block");
+    document.querySelectorAll(".non-auth").forEach((e) => {
+        e.classList.add("auth");
+        e.classList.remove("non-auth");
+    });
+    document.querySelector("#current-nick").textContent = username;
+    document.querySelector("#current-nick").setAttribute("href", baseApiUrl + "/player/favorites/" + username);
+    document.querySelector("#user-login").style["display"] = "none";
+    document.querySelector("#radio-favorite").style["display"] = "inline-block";
 
 
-    jQuery(".stream-link").each(function () {
-        const url = new URL(jQuery(this).attr("href"), location.protocol + '//' + document.domain + ':' + location.port + '/');
+    document.querySelectorAll(".stream-link").forEach((e) => {
+        const url = new URL(e.getAttribute("href"), location.protocol + '//' + document.domain + ':' + location.port + '/');
         url.searchParams.set("apikey", apiKey);
-        jQuery(this).attr("href", url.href);
+        e.setAttribute("href", url.href);
     });
 
     const playing = !uplayer.isPaused();
@@ -524,15 +630,16 @@ function nickIdentify(username) {
 }
 
 function initSearch() {
-    jQuery("#search-query").on("keyup", function () {
+    document.querySelector("#search-query").addEventListener("keyup", function () {
         clearTimeout(searchTimer);
         searchTimer = setTimeout(runQuery, searchTimeout);
-    }).on("keydown", function () {
+    })
+    document.querySelector("#search-query").addEventListener("keydown", function () {
         clearTimeout(searchTimer);
     });
 
-    jQuery("#search-type").on("change", function () {
-        if (jQuery(this).val == "raw") {
+    document.querySelector("#search-type").addEventListener("change", function () {
+        if (this.value === "raw") {
             //u("#search-docs").first().style.display = "";
         } else {
             //u("#search-docs").first().style.display = "none";
@@ -545,35 +652,35 @@ function initSearch() {
 function runQuery(force) {
     clearTimeout(searchTimer);
 
-    const username = jQuery("#current-nick").text();
+    const username = document.querySelector("#current-nick").textContent.toLowerCase();
 
     if (username === "") {
         return;
     }
 
-    let query = jQuery("#search-query").val().trim();
+    let query = document.querySelector("#search-query").value.trim();
 
-    const results = jQuery("#search-results");
+    const results = document.querySelector("#search-results");
 
-    const type = jQuery("#search-type").val();
+    const type = document.querySelector("#search-type").value;
 
     if (query == "" && type != "favorites" && type != "history") {
         //TODO: clear list
         oldQuery = query;
-        results.html("");
+        results.innerHTML = "";
         return;
     }
 
     let orderType = 'orderBy=score&orderDirection=desc&';
-    if(type == 'album'){
+    if(type === 'album'){
         orderType = 'orderBy=albumPath&orderDirection=asc&'
     }
 
-    if (type != "raw" && type != "history" && type != "favorites") {
+    if (type !== "raw" && type !== "history" && type !== "favorites") {
         query = type + "~\"" + query.replace(/[\\"']/g, '\\$&').replace(/\u0000/g, '\\0') + "\"";
     }
 
-    if (query == oldQuery && force !== true) {
+    if (query === oldQuery && force !== true) {
         return;
     }
     oldQuery = query;
@@ -583,55 +690,43 @@ function runQuery(force) {
     }
 
     let requestUrl = null;
-    if (type == "favorites" && query != "") {
+    if (type === "favorites" && query !== "") {
         requestUrl = "/api/search?orderBy=score&orderDirection=desc&q=" + encodeURIComponent("fav:\"" + username + "\" AND (" + query + ")");
-    } else if (type == "favorites") {
+    } else if (type === "favorites") {
         requestUrl = "/api/favorites/" + username;
-    } else if (type == "history") {
+    } else if (type === "history") {
         requestUrl = "/api/history?limit=20";
     } else {
         requestUrl = "/api/search?"+ orderType + "q=" + encodeURIComponent(query) + "&limit=100";
     }
 
-
-    searchRequest = jQuery.ajax(baseApiUrl + requestUrl, {
-        method: "GET",
-        async: true
-    }).done(function (data, status, xhr) {
-        if (xhr.status >= 200 && xhr.status < 300) {
-            results.html("");
-            for (let i = 0; i < data.length; i++) {
-                let entry = data[i];
-                if (type == "history") {
-                    entry = entry["song"];
-                }
-                results.append(createResultsEntry(entry));
+    searchRequest = new AbortController();
+    const currentType = type;
+    apiRequest(requestUrl, "GET", searchRequest.signal).then((data) => {
+        results.innerHTML = "";
+        for (let i = 0; i < data.length; i++) {
+            let entry = data[i];
+            if (currentType === "history") {
+                entry = entry["song"];
             }
-            if (data.length == 0) {
-                if (query.match(/[\u3000-\u303f\u3040-\u309f\u30a0-\u30ff\uff00-\uff9f\u4e00-\u9faf\u3400-\u4dbf]/) === null) {
-                    results.html("No results. Did you try searching in Japanese?");
-                } else {
-                    results.html("No results. Did you try searching in Romanji?");
-                }
+            results.append(createResultsEntry(entry));
+        }
+        if (data.length === 0) {
+            if (query.match(/[\u3000-\u303f\u3040-\u309f\u30a0-\u30ff\uff00-\uff9f\u4e00-\u9faf\u3400-\u4dbf]/) === null) {
+                results.textContent = "No results. Did you try searching in Japanese?";
+            } else {
+                results.textContent = "No results. Did you try searching in Romanji?";
             }
-
-            results.append('<hr/>');
-            searchRequest = null;
         }
-    }.bind(type));
 
-    /*if(res.length == 0){
-        if(query.match(/[\u3000-\u303f\u3040-\u309f\u30a0-\u30ff\uff00-\uff9f\u4e00-\u9faf\u3400-\u4dbf]/) === null){
-            results.innerHTML = "No results. Did you try searching in Japanese?";
-        }else{
-            results.innerHTML = "No results. Did you try searching in Romanji?";
-        }
-    }*/
+        results.append(document.createElement("hr"));
+        searchRequest = null;
+    });
 }
 
 
-jQuery(".volume-slider").on("change", function () {
-    window.localStorage.setItem("radio-volume", jQuery(this).val());
+document.querySelector(".volume-slider").addEventListener("change", function () {
+    window.localStorage.setItem("radio-volume", this.value);
 });
 
 
@@ -668,16 +763,30 @@ if (window.localStorage.getItem("radio-stream-id") !== null) {
 let stream;
 for (i = 0; i < compatibleAudioStreams.length; ++i) {
     stream = compatibleAudioStreams[i];
-    let element = jQuery("#radio-quality-group-" + stream.quality);
-    if (element.length == 0) {
-        element = jQuery("#radio-quality");
+    let element = document.querySelector("#radio-quality-group-" + stream.quality);
+    if (element.length === 0) {
+        element = document.querySelector("#radio-quality");
     }
-    element.append('<option value="' + stream.id + '" ' + (stream.id == audioStream.id ? " selected" : "") + '>' + (stream.info.playbackType == "codec" ? stream.name + " (via codec" + (stream.info.powerEfficient ? "" : ", power-hungry") + ")" : stream.name + (stream.info.powerEfficient ? "" : ", power-hungry")) + '</option>');
+
+    const o = document.createElement("option");
+    o.setAttribute("href", (new URL(stream.url, baseApiUrl)).href);
+    o.value = stream.id;
+    if(stream.id === audioStream.id){
+        o.selected = true;
+    }
+    o.textContent = (stream.info.playbackType === "codec" ? stream.name + " (via codec" + (stream.info.powerEfficient ? "" : ", power-hungry") + ")" : stream.name + (stream.info.powerEfficient ? "" : ", power-hungry"));
+    element.append(o);
 }
 
 for (i = 0; i < audioStreams.length; ++i) {
     stream = audioStreams[i];
-    jQuery("#streams-" + stream.quality).append('<a href="' + (new URL(stream.url, baseApiUrl)).href + '" id="stream-' + stream.id + '" class="stream-link button">' + stream.name + '</a>');
+
+    const a = document.createElement("a");
+    a.setAttribute("href", (new URL(stream.url, baseApiUrl)).href);
+    a.id = "stream-" + stream.id;
+    a.classList.add("stream-link", "button");
+    a.textContent = stream.name;
+    document.querySelector("#streams-" + stream.quality).append(a);
 }
 
 console.log("Playing " + audioStream.quality + " - " + audioStream.name);
@@ -700,14 +809,14 @@ window.addEventListener('beforeinstallprompt', (e) => {
         return;
     }
 
-    jQuery("#install-webapp").removeClass("hidden");
+    document.querySelector("#install-webapp").classList.remove("hidden");
 });
 
-jQuery("#install-webapp").on("click", function () {
+document.querySelector("#install-webapp").addEventListener("click", function () {
     if (deferredPrompt === null) {
         return;
     }
-    jQuery("#install-webapp").addClass("hidden");
+    document.querySelector("#install-webapp").classList.add("hidden");
     deferredPrompt.prompt();
     deferredPrompt.userChoice.then(function (choiceResult) {
         if (choiceResult.outcome === 'accepted') {

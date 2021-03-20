@@ -50,7 +50,7 @@ let index;
 let currentPlaylistIndex;
 let repeat;
 let shuffle;
-const seekElement = jQuery(".radio-song-slider");
+const seekElement = document.querySelector(".radio-song-slider");
 const uplayer = new UPlayer({
     "volume": window.localStorage.getItem("radio-volume") !== null ? window.localStorage.getItem("radio-volume") / 100 : 1.0,
     "preload": true,
@@ -59,16 +59,16 @@ const uplayer = new UPlayer({
     "muted": false,
     "retry": false,
     "limitCodecs": limitCodecs,
-    "play-pause-element": jQuery(".play-pause"),
-    "progress-minutes-element": jQuery(".radio-current-minutes"),
-    "progress-seconds-element": jQuery(".radio-current-seconds"),
-    "duration-minutes-element": jQuery(".radio-duration-minutes"),
-    "duration-seconds-element": jQuery(".radio-duration-seconds"),
-    "progress-element": jQuery(".radio-song-played-progress"),
+    "play-pause-element": document.querySelector(".play-pause"),
+    "progress-minutes-element": document.querySelector(".radio-current-minutes"),
+    "progress-seconds-element": document.querySelector(".radio-current-seconds"),
+    "duration-minutes-element": document.querySelector(".radio-duration-minutes"),
+    "duration-seconds-element": document.querySelector(".radio-duration-seconds"),
+    "progress-element": document.querySelector(".radio-song-played-progress"),
     "seek-element": seekElement,
-    "buffer-progress-element": jQuery(".radio-buffered-progress"),
-    "mute-element": jQuery(".mute"),
-    "volume-element": jQuery(".volume-slider"),
+    "buffer-progress-element": document.querySelector(".radio-buffered-progress"),
+    "mute-element": document.querySelector(".mute"),
+    "volume-element": document.querySelector(".volume-slider"),
     "on-end": function () {
         ++currentPlaylistIndex;
         if (currentPlaylistIndex >= songPlaylist.length) {
@@ -123,11 +123,11 @@ const uplayer = new UPlayer({
 });
 
 
-jQuery(".volume-slider").on("change", function () {
-    window.localStorage.setItem("radio-volume", jQuery(this).val());
+document.querySelector(".volume-slider").addEventListener("change", function () {
+    window.localStorage.setItem("radio-volume", this.value);
 });
 
-jQuery("#lyrics-area").on("click", () => {
+document.querySelector("#lyrics-area").addEventListener("click", () => {
     showOriginalLyrics = !showOriginalLyrics;
     window.localStorage.setItem("lyrics-original", showOriginalLyrics ? 1 : 0);
     if(currentLyrics !== null){
@@ -140,7 +140,7 @@ jQuery("#lyrics-area").on("click", () => {
 });
 
 
-const songElement = jQuery("div#radio-right").clone();
+const songElement = document.querySelector("div#radio-right").cloneNode(false);
 let prevData = null;
 
 for (index = 0; index < songPlaylist.length; ++index) {
@@ -167,28 +167,76 @@ for (index = 0; index < songPlaylist.length; ++index) {
     }
     if (doSplitPlayer && (index === 0 || songPlaylist[index - 1]["album"] !== data["album"])) {
         if(index > 0){
-            songElement.append("<hr/>");
+            songElement.append(document.createElement("hr"));
         }
 
-        songElement.append('<div class="album-header">' + data["album"] + '</div>');
+        const e = document.createElement("div");
+        e.classList.add("album-header");
+        e.textContent = data["album"];
+
+        songElement.append(e);
     }
-    songElement.append('<div class="song radio-song-container" data-song-index="' + index + '" data-song-hash="' + data["hash"] + '">' +
-        '<div class="queue-fit"><img data-src="' + (data["cover"] !== null ? "/api/cover/" + data["cover"] + "/small" : "/img/no-cover.jpg") + '" class="queue-cover"/></div>' +
-        '<div class="song-now-playing-icon-container">' +
-        '<div class="play-button-container">' +
-        '</div>' +
-        '<img class="now-playing" src="/img/now-playing.svg"/>' +
-        '</div>' +
-        '<div class="song-meta-data">' +
-        '<span class="song-title">' + document.createTextNode(data["title"]).data + '</span>' +
-        '<span class="song-artist">' + document.createTextNode(data["artist"]).data + '</span>' +
-        '<span class="song-album">' + document.createTextNode(data["album"]).data + '</span>' +
-        '</div>' +
-        '<span class="song-duration">' + uplayer.zeroPad(Math.floor(data["duration"] / 60), 2) + ':' + uplayer.zeroPad(data["duration"] % 60, 2) + '</span>' +
-        '</div>');
+
+    const e = document.createElement("div");
+    e.classList.add("song", "radio-song-container");
+    e.setAttribute("data-song-index", index);
+    e.setAttribute("data-song-hash", data["hash"]);
+    {
+        const fit = document.createElement("div");
+        fit.classList.add("queue-fit");
+        const im = document.createElement("img");
+        im.classList.add("queue-cover");
+        im.setAttribute("data-src", data["cover"] !== null ? "/api/cover/" + data["cover"] + "/small" : "/img/no-cover.jpg");
+        fit.append(im);
+
+        e.append(fit);
+    }
+    {
+        const c = document.createElement("div");
+        c.classList.add("song-now-playing-icon-container");
+        const p = document.createElement("div");
+        p.classList.add("play-button-container");
+        c.append(p);
+        const im = document.createElement("img");
+        im.classList.add("now-playing");
+        im.src = "/img/now-playing.svg";
+        c.append(im);
+
+        e.append(c);
+    }
+    {
+        const c = document.createElement("div");
+        c.classList.add("song-meta-data");
+
+        const title = document.createElement("span");
+        title.classList.add("song-title");
+        title.textContent = data["title"];
+        c.append(title);
+
+        const artist = document.createElement("span");
+        artist.classList.add("song-artist");
+        artist.textContent = data["artist"];
+        c.append(artist);
+
+        const album = document.createElement("span");
+        album.classList.add("song-album");
+        album.textContent = data["album"];
+        c.append(album);
+
+        e.append(c);
+    }
+    {
+        const duration = document.createElement("span");
+        duration.classList.add("song-duration");
+        duration.textContent = uplayer.zeroPad(Math.floor(data["duration"] / 60), 2) + ':' + uplayer.zeroPad(data["duration"] % 60, 2);
+        e.append(duration);
+    }
+
+    songElement.append(e);
+
     prevData = data;
 }
-jQuery("div#radio-right").replaceWith(songElement);
+document.querySelector("div#radio-right").replaceWith(songElement);
 
 document.addEventListener("DOMContentLoaded", function() {
     const lazyImages = [].slice.call(document.querySelectorAll(".queue-cover"));
@@ -223,39 +271,40 @@ function shuffleArray(array) {
 currentPlaylistIndex = 0;
 repeat = false;
 shuffle = false;
-jQuery(".radio-repeat").addClass("repeat-off");
-jQuery(".radio-shuffle").addClass("shuffle-off");
+document.querySelector(".radio-repeat").classList.add("repeat-off");
+document.querySelector(".radio-shuffle").classList.add("shuffle-off");
 
-jQuery(".radio-repeat").on("click", function () {
+document.querySelector(".radio-repeat").addEventListener("click", function () {
     if (repeat) {
         repeat = false;
-        jQuery(".radio-repeat").removeClass("repeat-on");
-        jQuery(".radio-repeat").addClass("repeat-off");
+        document.querySelector(".radio-repeat").classList.remove("repeat-on");
+        document.querySelector(".radio-repeat").classList.add("repeat-off");
     } else {
         repeat = true;
-        jQuery(".radio-repeat").removeClass("repeat-off");
-        jQuery(".radio-repeat").addClass("repeat-on");
+        document.querySelector(".radio-repeat").classList.remove("repeat-off");
+        document.querySelector(".radio-repeat").classList.add("repeat-on");
     }
 });
 
-jQuery(".radio-shuffle").on("click", function () {
+document.querySelector(".radio-shuffle").addEventListener("click", function () {
     if (shuffle) {
         shuffle = false;
-        jQuery(".radio-shuffle").removeClass("shuffle-on");
-        jQuery(".radio-shuffle").addClass("shuffle-off");
+        document.querySelector(".radio-shuffle").classList.remove("shuffle-on");
+        document.querySelector(".radio-shuffle").classList.add("shuffle-off");
     } else {
         shuffle = true;
-        jQuery(".radio-shuffle").removeClass("shuffle-off");
-        jQuery(".radio-shuffle").addClass("shuffle-on");
+        document.querySelector(".radio-shuffle").classList.remove("shuffle-off");
+        document.querySelector(".radio-shuffle").classList.add("shuffle-on");
         shuffledPlaylist = songPlaylist.slice();
         shuffleArray(shuffledPlaylist);
     }
 });
 
-jQuery(".hash-area").on('click', function () {
-    const temp = jQuery("<input>");
-    jQuery("body").append(temp);
-    temp.val(jQuery(this).text()).select();
+document.querySelector(".hash-area").addEventListener('click', function () {
+    const temp = document.createElement("input");
+    document.querySelector("body").append(temp);
+    temp.value = this.textContent;
+    temp.select();
     document.execCommand("copy");
     temp.remove();
 });
@@ -285,21 +334,24 @@ function previousSong() {
     }
 }
 
-jQuery(".radio-next").on("click", nextSong);
-jQuery(".radio-prev").on("click", previousSong);
+document.querySelector(".radio-next").addEventListener("click", nextSong);
+document.querySelector(".radio-prev").addEventListener("click", previousSong);
 
 try{
     if ('mediaSession' in navigator) {
         navigator.mediaSession.setActionHandler('nexttrack', nextSong);
         navigator.mediaSession.setActionHandler('previoustrack', previousSong);
         navigator.mediaSession.setActionHandler('seekbackward', (details) => {
-            seekElement.val((Math.min(uplayer.totalDuration, Math.max(0, uplayer.currentProgress * uplayer.totalDuration - (details.seekOffset || 30))) / uplayer.totalDuration) * 100).trigger("change");
+            seekElement.value = (Math.min(uplayer.totalDuration, Math.max(0, uplayer.currentProgress * uplayer.totalDuration - (details.seekOffset || 30))) / uplayer.totalDuration) * 100;
+            seekElement.dispatchEvent(new Event("change"));
         });
         navigator.mediaSession.setActionHandler('seekforward', (details) => {
-            seekElement.val((Math.min(uplayer.totalDuration, Math.max(0, uplayer.currentProgress * uplayer.totalDuration + (details.seekOffset || 30))) / uplayer.totalDuration) * 100).trigger("change");
+            seekElement.value = (Math.min(uplayer.totalDuration, Math.max(0, uplayer.currentProgress * uplayer.totalDuration + (details.seekOffset || 30))) / uplayer.totalDuration) * 100;
+            seekElement.dispatchEvent(new Event("change"));
         });
         navigator.mediaSession.setActionHandler('seekto', (details) => {
-            seekElement.val((Math.min(uplayer.totalDuration, Math.max(0, details.seekTime)) / uplayer.totalDuration) * 100).trigger("change");
+            seekElement.value = (Math.min(uplayer.totalDuration, Math.max(0, details.seekTime)) / uplayer.totalDuration) * 100;
+            seekElement.dispatchEvent(new Event("change"));
         });
     }
 }catch (e){
@@ -307,10 +359,12 @@ try{
 }
 
 
-jQuery(".radio-song-container").on("click", function () {
-    currentPlaylistIndex = parseInt($(this).attr("data-song-index"));
-    playThisSong(songPlaylist[currentPlaylistIndex]);
-});
+document.querySelectorAll(".radio-song-container").forEach((e) => {
+    e.addEventListener("click", function () {
+        currentPlaylistIndex = parseInt(this.getAttribute("data-song-index"));
+        playThisSong(songPlaylist[currentPlaylistIndex]);
+    });
+})
 
 
 function preloadThisSong(song, isPlaying = null) {
@@ -765,7 +819,8 @@ function tryLoadLyrics(song){
                         subtitles = null;
                     }
 
-                    jQuery("#lyrics-area").css("height", "0px").css("top", "-0px");
+                    document.querySelector("#lyrics-area").style["height"] = "0px";
+                    document.querySelector("#lyrics-area").style["top"] = "-0px";
                 });
                 return;
             }
@@ -783,7 +838,8 @@ function tryLoadLyrics(song){
         subtitles = null;
     }
 
-    jQuery("#lyrics-area").css("height", "0px").css("top", "-0px");
+    document.querySelector("#lyrics-area").style["height"] = "0px";
+    document.querySelector("#lyrics-area").style["top"] = "-0px";
 
 }
 
@@ -795,12 +851,12 @@ function playThisSong(song, isPlaying = null) {
     }
 
     uplayer.init(song["url"], [song["mime"]]);
-    const oldActiveElement = jQuery(".active-song-container");
-    const newActiveElement = jQuery(".song[data-song-hash=\"" + song["hash"] + "\"]");
-    if (oldActiveElement.length > 0 && newActiveElement.length > 0) {
-        const oldBounds = oldActiveElement[0].getBoundingClientRect();
+    const oldActiveElement = document.querySelector(".active-song-container");
+    const newActiveElement = document.querySelector(".song[data-song-hash=\"" + song["hash"] + "\"]");
+    if (oldActiveElement && newActiveElement) {
+        const oldBounds = oldActiveElement.getBoundingClientRect();
         if ((oldBounds.top >= 0 && oldBounds.bottom <= window.innerHeight) || (oldBounds.top < window.innerHeight && oldBounds.bottom >= 0)) {
-            let newBounds = newActiveElement[0].getBoundingClientRect();
+            let newBounds = newActiveElement.getBoundingClientRect();
             if (!(newBounds.top >= 0 && newBounds.bottom <= window.innerHeight)) {
                 const yCoordinate = newBounds.top + window.pageYOffset;
                 const yOffset = -40;
@@ -811,23 +867,27 @@ function playThisSong(song, isPlaying = null) {
             }
         }
     }
-    oldActiveElement.removeClass("active-song-container");
-    newActiveElement.addClass("active-song-container");
+    if(oldActiveElement){
+        oldActiveElement.classList.remove("active-song-container");
+    }
+    if(newActiveElement){
+        newActiveElement.classList.add("active-song-container");
+    }
     let imageUrl;
-    jQuery(".main-cover").attr("src", imageUrl = song["cover"] !== null ? "/api/cover/" + song["cover"] + "/large" : "/img/no-cover.jpg");
-    jQuery(".body-blur").css("background-image", "url("+ imageUrl +")");
+    document.querySelector(".main-cover").src = (imageUrl = song["cover"] !== null ? "/api/cover/" + song["cover"] + "/large" : "/img/no-cover.jpg");
+    document.querySelector(".body-blur").style["background-image"] = "url("+ imageUrl +")";
 
-    jQuery("#meta-container .song-name").html(song["title"]);
-    jQuery("#meta-container .song-album").html(song["album"]);
-    jQuery("#meta-container .song-artist").html(song["artist"]);
-    jQuery(".np-hash").text(song["hash"]);
+    document.querySelector("#meta-container .song-name").textContent = song["title"];
+    document.querySelector("#meta-container .song-album").textContent = song["album"];
+    document.querySelector("#meta-container .song-artist").textContent = song["artist"];
+    document.querySelector(".np-hash").textContent = song["hash"];
 
-    jQuery("#np-tags.tag-area").html("");
+    document.querySelector("#np-tags.tag-area").innerHTML = "";
 
     tryLoadLyrics(song);
 
     let tagData = getTagEntries(song);
-    applyTagEntries(jQuery("#np-tags.tag-area").get(0), tagData.tags);
+    applyTagEntries(document.querySelector("#np-tags.tag-area"), tagData.tags);
 
     pushMediaSessionMetadata(song);
 

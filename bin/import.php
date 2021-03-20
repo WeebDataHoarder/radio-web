@@ -31,8 +31,6 @@ if ($user === null) {
     <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
     <title>anime(bits) #radio :: Import favorites</title>
 
-    <script type="text/javascript" src="/js/jquery.js?<?php echo VERSION_HASH; ?>"
-            nonce="<?php echo SCRIPT_NONCE; ?>"></script>
     <script type="text/javascript" src="/js/player/aurora.js?<?php echo VERSION_HASH; ?>"
             nonce="<?php echo SCRIPT_NONCE; ?>"></script>
     <script type="text/javascript" src="/js/player/codecs/aac.js?<?php echo VERSION_HASH; ?>"
@@ -174,184 +172,186 @@ It also supports JSON favorite extracts from listen.moe.
     var username = <?php echo json_encode($user["name"]); ?>;
 
     function addTrackToFavorites() {
-        var thisElement = this;
-        jQuery.ajax("/api/favorites/" + username + "/" + jQuery(this).attr("data-track-hash"), {
+        const thisElement = this;
+        fetch("/api/favorites/" + username + "/" + this.getAttribute("data-track-hash"), {
             method: "PUT",
-            async: true
-        }).done(function (data, code, xhr) {
-            if (xhr.status == 200 || xhr.status == 201) {
-                jQuery(thisElement).hide(400);
+            mode: "cors",
+            credentials: "include"
+        }).then((response) => {
+            if(response.ok){
+                thisElement.style.display = "none"; //TODO: animate this
             }
+
         });
     }
 
     function createTrackEntry(i) {
         var trackEntry = document.createElement("div");
         trackEntries[i].element = trackEntry;
-        $(trackEntry).attr("id", "track-" + i);
-        $(trackEntry).addClass("track-entry");
+        trackEntry.setAttribute("id", "track-" + i);
+        trackEntry.classList.add("track-entry");
 
         var coverArea = document.createElement("div");
-        $(coverArea).addClass("metadata-cover-area");
-        $(trackEntry).append(coverArea);
+        coverArea.classList.add("metadata-cover-area");
+        trackEntry.append(coverArea);
 
         var metaArea = document.createElement("div");
-        $(metaArea).addClass("metadata-meta-area");
-        $(trackEntry).append(metaArea);
+        metaArea.classList.add("metadata-meta-area");
+        trackEntry.append(metaArea);
 
         var hashEntry = document.createElement("a");
-        $(hashEntry).addClass("hash-entry");
-        $(metaArea).append(hashEntry);
-        $(metaArea).append("::");
+        hashEntry.classList.add("hash-entry");
+        metaArea.append(hashEntry);
+        metaArea.append("::");
 
         var pathEntry = document.createElement("code");
-        $(pathEntry).addClass("path-entry");
-        $(metaArea).append(pathEntry);
-        $(metaArea).append("<br/>");
+        pathEntry.classList.add("path-entry");
+        metaArea.append(pathEntry);
+        metaArea.append(document.createElement("br"));
 
         var metadataEntry = document.createElement("div");
-        $(metadataEntry).addClass("metadata-entry");
-        $(metaArea).append(metadataEntry);
-        $(metaArea).append("<br/>");
+        metadataEntry.classList.add("metadata-entry");
+        metaArea.append(metadataEntry);
+        metaArea.append(document.createElement("br"));
 
         var titleEntry = document.createElement("span");
-        $(titleEntry).addClass("metadata-title-entry");
-        $(metadataEntry).append(titleEntry);
-        $(metadataEntry).append(" from ");
+        titleEntry.classList.add("metadata-title-entry");
+        metadataEntry.append(titleEntry);
+        metadataEntry.append(" from ");
 
         var albumEntry = document.createElement("span");
-        $(albumEntry).addClass("metadata-album-entry");
-        $(metadataEntry).append(albumEntry);
-        $(metadataEntry).append(" by ");
+        albumEntry.classList.add("metadata-album-entry");
+        metadataEntry.append(albumEntry);
+        metadataEntry.append(" by ");
 
         var artistEntry = document.createElement("span");
-        $(artistEntry).addClass("metadata-artist-entry");
-        $(metadataEntry).append(artistEntry);
+        artistEntry.classList.add("metadata-artist-entry");
+        metadataEntry.append(artistEntry);
 
-        $(metadataEntry).append(" - ");
+        metadataEntry.append(" - ");
 
         var durationEntry = document.createElement("span");
-        $(durationEntry).addClass("metadata-duration-entry");
-        $(metadataEntry).append(durationEntry);
+        durationEntry.classList.add("metadata-duration-entry");
+        metadataEntry.append(durationEntry);
 
         var resultsEntry = document.createElement("ul");
-        $(resultsEntry).addClass("results-entry");
-        $(trackEntry).append(resultsEntry);
+        resultsEntry.classList.add("results-entry");
+        trackEntry.append(resultsEntry);
 
         updateTrackEntry(i);
 
-        $("#tracks-list").append(trackEntry);
+        document.querySelector("#tracks-list").append(trackEntry);
     }
 
     function createResultEntry(i, song) {
         var resultEntry = document.createElement("li");
-        $(resultEntry).addClass("track-entry");
-        $(resultEntry).attr("data-track-hash", song.hash);
+        resultEntry.classList.add("track-entry");
+        resultEntry.setAttribute("data-track-hash", song.hash);
         if (!song.favored_by.includes(username)) {
-            $(resultEntry).on("click", addTrackToFavorites);
+            resultEntry.addEventListener("click", addTrackToFavorites);
         } else {
-            $(resultEntry).addClass("track-favorited");
+            resultEntry.classList.add("track-favorited");
         }
 
         var coverArea = document.createElement("div");
-        $(coverArea).addClass("metadata-cover-area");
+        coverArea.classList.add("metadata-cover-area");
         if (song.cover !== null) {
-            $(coverArea).css("background-image", "url(/api/cover/" + song.cover + "/small)");
+            coverArea.style["background-image"] = "url(/api/cover/" + song.cover + "/small)";
         }
-        $(resultEntry).append(coverArea);
+        resultEntry.append(coverArea);
 
         var metaArea = document.createElement("div");
-        $(metaArea).addClass("metadata-meta-area");
-        $(resultEntry).append(metaArea);
+        metaArea.classList.add("metadata-meta-area");
+        resultEntry.append(metaArea);
 
         var hashEntry = document.createElement("code");
-        $(hashEntry).addClass("hash-entry");
-        $(hashEntry).text(song.hash.substring(0, 12));
-        $(metaArea).append(hashEntry);
-        $(metaArea).append("::");
+        hashEntry.classList.add("hash-entry");
+        hashEntry.textContent = song.hash.substring(0, 12);
+        metaArea.append(hashEntry);
+        metaArea.append("::");
 
         var pathEntry = document.createElement("code");
-        $(pathEntry).addClass("path-entry");
-        $(pathEntry).text(song.path.substr(song.path.lastIndexOf('/') + 1));
-        $(metaArea).append(pathEntry);
+        pathEntry.classList.add("path-entry");
+        pathEntry.textContent = song.path.substr(song.path.lastIndexOf('/') + 1);
+        metaArea.append(pathEntry);
 
         var metadataEntry = document.createElement("div");
-        $(metadataEntry).addClass("metadata-entry");
-        $(metaArea).append(metadataEntry);
+        metadataEntry.classList.add("metadata-entry");
+        metaArea.append(metadataEntry);
 
         var titleEntry = document.createElement("span");
-        $(titleEntry).addClass("metadata-title-entry");
-        $(titleEntry).text(song.title);
+        titleEntry.classList.add("metadata-title-entry");
+        titleEntry.textContent = song.title;
         if (song.favored_by.length > 0) {
-            $(titleEntry).text(song.favored_by.length + " ❤︎ :: " + song.title);
+            titleEntry.textContent = song.favored_by.length + " ❤︎ :: " + song.title;
         } else {
-            $(titleEntry).text(song.title);
+            titleEntry.textContent = song.title;
         }
-        $(metadataEntry).append(titleEntry);
-        $(metadataEntry).append(" from ");
+        metadataEntry.append(titleEntry);
+        metadataEntry.append(" from ");
 
         var albumEntry = document.createElement("span");
-        $(albumEntry).addClass("metadata-album-entry");
-        $(albumEntry).text(song.album);
-        $(metadataEntry).append(albumEntry);
-        $(metadataEntry).append(" by ");
+        albumEntry.classList.add("metadata-album-entry");
+        albumEntry.textContent = song.album;
+        metadataEntry.append(albumEntry);
+        metadataEntry.append(" by ");
 
         var artistEntry = document.createElement("span");
-        $(artistEntry).addClass("metadata-artist-entry");
-        $(artistEntry).text(song.artist);
-        $(metadataEntry).append(artistEntry);
+        artistEntry.classList.add("metadata-artist-entry");
+        artistEntry.textContent = song.artist;
+        metadataEntry.append(artistEntry);
 
-        $(metadataEntry).append(" ");
+        metadataEntry.append(" ");
 
         var durationEntry = document.createElement("span");
-        $(durationEntry).addClass("metadata-duration-entry");
+        durationEntry.classList.add("metadata-duration-entry");
         var seconds = ("" + (song.duration % 60)).padStart(2, "0");
         var minutes = ("" + Math.floor(song.duration / 60)).padStart(2, "0");
-        $(durationEntry).text("[" + minutes + ":" + seconds + "]");
-        $(metadataEntry).append(durationEntry);
+        durationEntry.textContent = "[" + minutes + ":" + seconds + "]";
+        metadataEntry.append(durationEntry);
 
 
-        $(trackEntries[i].element).find(".results-entry").append(resultEntry);
+        trackEntries[i].element.querySelector(".results-entry").append(resultEntry);
     }
 
     function updateTrackEntry(i) {
         var trackEntry = trackEntries[i];
         if (trackEntry.hash !== null) {
-            $(trackEntry.element).find(".hash-entry").text(trackEntry.hash.substring(0, 12));
+            trackEntry.element.querySelector(".hash-entry").textContent = trackEntry.hash.substring(0, 12);
         }
         if (trackEntry.path !== null) {
-            $(trackEntry.element).find(".path-entry").text(trackEntry.path);
+            trackEntry.element.querySelector(".path-entry").textContent = trackEntry.path;
         }
         if (trackEntry.coverArt !== null) {
-            $(trackEntry.element).find(".metadata-cover-area").css("background-image", "url(" + trackEntry.coverArt + ")");
+            trackEntry.element.querySelector(".metadata-cover-area").style["background-image"] = "url(" + trackEntry.coverArt + ")";
         }
         if (trackEntry.title !== null) {
-            $(trackEntry.element).find(".metadata-title-entry").text(trackEntry.title);
+            trackEntry.element.querySelector(".metadata-title-entry").textContent = trackEntry.title;
         }
         if (trackEntry.album !== null) {
-            $(trackEntry.element).find(".metadata-album-entry").text(trackEntry.album);
+            trackEntry.element.querySelector(".metadata-album-entry").textContent = trackEntry.album;
         }
         if (trackEntry.artist !== null) {
-            $(trackEntry.element).find(".metadata-artist-entry").text(trackEntry.artist);
+            trackEntry.element.querySelector(".metadata-artist-entry").textContent = trackEntry.artist;
         }
         if (trackEntry.duration !== null) {
             var seconds = ("" + (trackEntry.duration % 60)).padStart(2, "0");
             var minutes = ("" + Math.floor(trackEntry.duration / 60)).padStart(2, "0");
-            $(trackEntry.element).find(".metadata-duration-entry").text("[" + minutes + ":" + seconds + "]");
+            trackEntry.element.querySelector(".metadata-duration-entry").textContent = "[" + minutes + ":" + seconds + "]";
         }
     }
 
     function resetSearch() {
-        $("#tracks-list").html("");
+        document.querySelector("#tracks-list").innerHTML = "";
         trackEntries = [];
     }
 
     function doHashCheck() {
-        return $("#do-hash").prop("checked");
+        return document.querySelector("#do-hash").checked;
     }
 
     function doMetadataCheck() {
-        return $("#do-metadata").prop("checked");
+        return document.querySelector("#do-metadata").checked;
     }
 
     function addFileToList(file) {
@@ -757,44 +757,44 @@ It also supports JSON favorite extracts from listen.moe.
         var index = entriesToSearch.shift();
         doSearchOperations(index).then((results) => {
             searching--;
-            $(trackEntries[index].element).removeClass("progress-search");
+            trackEntries[index].element.classList.remove("progress-search");
             console.log(results);
             for (var j = 0; j < results.length; ++j) {
                 createResultEntry(index, results[j]);
             }
             if (results.length === 0) {
-                $(trackEntries[index].element).find(".results-entry").append("No results.");
-                $(trackEntries[index].element).addClass("progress-error");
+                trackEntries[index].element.querySelector(".results-entry").append("No results.");
+                trackEntries[index].element.classList.add("progress-error");
             } else {
-                $(trackEntries[index].element).addClass("progress-success");
+                trackEntries[index].element.classList.add("progress-success");
             }
             tryToSearch();
         }).catch((e) => {
             searching--;
             console.log(e);
-            $(trackEntries[index].element).addClass("progress-error");
-            $(trackEntries[index].element).find(".results-entry").append("An error ocurred: " + e);
+            trackEntries[index].element.classList.add("progress-error");
+            trackEntries[index].element.querySelector(".results-entry").append("An error ocurred: " + e);
             tryToSearch();
         });
     }
 
-    $("#tracks-input").on("change", function () {
+    document.querySelector("#tracks-input").addEventListener("change", function () {
         resetSearch();
 
         for (var i = 0; i < this.files.length; ++i) {
             addFileToList(this.files[i]).then((index) => {
-                $(trackEntries[index].element).addClass("progress-search");
+                trackEntries[index].element.classList.add("progress-search");
                 entriesToSearch.push(index);
                 tryToSearch();
             }).catch((index, e) => {
                 console.log(e);
-                $(trackEntries[index].element).addClass("progress-error");
-                $(trackEntries[index].element).find(".results-entry").append("An error ocurred: " + e);
+                trackEntries[index].element.classList.add("progress-error");
+                trackEntries[index].element.querySelector(".results-entry").append("An error ocurred: " + e);
             });
         }
     });
 
-    $("#tracks-text").on("change", function () {
+    document.querySelector("#tracks-text").addEventListener("change", function () {
         resetSearch();
 
         for (var i = 0; i < this.files.length; ++i) {
@@ -812,13 +812,13 @@ It also supports JSON favorite extracts from listen.moe.
                             entry[dataset.fields[k]] = dataset.records[j][k];
                         }
                         addRawEntryToList(entry).then((index) => {
-                            $(trackEntries[index].element).addClass("progress-search");
+                            trackEntries[index].element.classList.add("progress-search");
                             entriesToSearch.push(index);
                             tryToSearch();
                         }).catch((index, e) => {
                             console.log(e);
-                            $(trackEntries[index].element).addClass("progress-error");
-                            $(trackEntries[index].element).find(".results-entry").append("An error ocurred: " + e);
+                            trackEntries[index].element.classList.add("progress-error");
+                            trackEntries[index].element.querySelector(".results-entry").append("An error ocurred: " + e);
                         });
                     }
                 });
@@ -840,25 +840,25 @@ It also supports JSON favorite extracts from listen.moe.
                             };
 
                             addRawEntryToList(entry).then((index) => {
-                                $(trackEntries[index].element).addClass("progress-search");
+                                trackEntries[index].element.classList.add("progress-search");
                                 entriesToSearch.push(index);
                                 tryToSearch();
                             }).catch((index, e) => {
                                 console.log(e);
-                                $(trackEntries[index].element).addClass("progress-error");
-                                $(trackEntries[index].element).find(".results-entry").append("An error ocurred: " + e);
+                                trackEntries[index].element.classList.add("progress-error");
+                                trackEntries[index].element.querySelector(".results-entry").append("An error ocurred: " + e);
                             });
                         }
                     } else {
                         for (let j = 0; j < dataset.length; ++j) {
                             addRawEntryToList(dataset[j]).then((index) => {
-                                $(trackEntries[index].element).addClass("progress-search");
+                                trackEntries[index].element.classList.add("progress-search");
                                 entriesToSearch.push(index);
                                 tryToSearch();
                             }).catch((index, e) => {
                                 console.log(e);
-                                $(trackEntries[index].element).addClass("progress-error");
-                                $(trackEntries[index].element).find(".results-entry").append("An error ocurred: " + e);
+                                trackEntries[index].element.classList.add("progress-error");
+                                trackEntries[index].element.querySelector(".results-entry").append("An error ocurred: " + e);
                             });
                         }
                     }

@@ -3,7 +3,6 @@ require_once("common.php");
 
 header("Link: </css/foundation.min.css?".VERSION_HASH.">; rel=preload; as=style", false);
 header("Link: </css/app.css?".VERSION_HASH."; rel=preload; as=style", false);
-header("Link: </js/jquery.js?".VERSION_HASH."; rel=preload; as=script", false);
 header("Link: </js/player/aurora.js?".VERSION_HASH."; rel=preload; as=script", false);
 header("Link: </js/player/player.js?".VERSION_HASH."; rel=preload; as=script", false);
 header("Link: </js/cookies.js?".VERSION_HASH."; rel=preload; as=script", false);
@@ -234,7 +233,6 @@ header("Link: </js/online.js?".VERSION_HASH."; rel=preload; as=script", false);
 		</div>
 	</div>
 </body>
-<script type="text/javascript" src="/js/jquery.js?<?php echo VERSION_HASH; ?>" nonce="<?php echo SCRIPT_NONCE; ?>"></script>
 <script type="text/javascript" src="/js/player/aurora.js?<?php echo VERSION_HASH; ?>" nonce="<?php echo SCRIPT_NONCE; ?>"></script>
 <script type="text/javascript" src="/js/player/player.js?<?php echo VERSION_HASH; ?>" nonce="<?php echo SCRIPT_NONCE; ?>"></script>
 <script type="text/javascript" src="/js/cookies.js?<?php echo VERSION_HASH; ?>" nonce="<?php echo SCRIPT_NONCE; ?>"></script>
