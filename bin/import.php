@@ -45,8 +45,6 @@ if ($user === null) {
             nonce="<?php echo SCRIPT_NONCE; ?>" async></script>
     <script type="text/javascript" src="/js/player/codecs/opus.js?<?php echo VERSION_HASH; ?>"
             nonce="<?php echo SCRIPT_NONCE; ?>" async></script>
-    <script type="text/javascript" src="/js/player/codecs/vorbis.js?<?php echo VERSION_HASH; ?>"
-            nonce="<?php echo SCRIPT_NONCE; ?>" async></script>
     <script type="text/javascript" src="/js/player/codecs/tta.js?<?php echo VERSION_HASH; ?>"
             nonce="<?php echo SCRIPT_NONCE; ?>" async></script>
     <script type="text/javascript" src="/js/csv.min.js?<?php echo VERSION_HASH; ?>" nonce="<?php echo SCRIPT_NONCE; ?>"
@@ -159,7 +157,7 @@ if ($user === null) {
     <li><b>duration</b>: Track duration (in seconds).</li>
 </ul>
 <br>
-It also supports JSON favorite extracts from listen.moe.
+It also supports JSON favorite extracts from listen.moe and r-a-d.io.
 <br>
 <label>Tracks to search (.csv, .json) <input type="file" id="tracks-text" accept=".csv,.json,.js,.txt"/></label>
 </p>
@@ -168,8 +166,8 @@ It also supports JSON favorite extracts from listen.moe.
 </body>
 <script type="text/javascript" nonce="<?php echo SCRIPT_NONCE; ?>">
 
-    window.trackEntries = [];
-    var username = <?php echo json_encode($user["name"]); ?>;
+    const trackEntries = [];
+    const username = <?php echo json_encode($user["name"]); ?>;
 
     function addTrackToFavorites() {
         const thisElement = this;
@@ -186,55 +184,55 @@ It also supports JSON favorite extracts from listen.moe.
     }
 
     function createTrackEntry(i) {
-        var trackEntry = document.createElement("div");
+        const trackEntry = document.createElement("div");
         trackEntries[i].element = trackEntry;
         trackEntry.setAttribute("id", "track-" + i);
         trackEntry.classList.add("track-entry");
 
-        var coverArea = document.createElement("div");
+        const coverArea = document.createElement("div");
         coverArea.classList.add("metadata-cover-area");
         trackEntry.append(coverArea);
 
-        var metaArea = document.createElement("div");
+        const metaArea = document.createElement("div");
         metaArea.classList.add("metadata-meta-area");
         trackEntry.append(metaArea);
 
-        var hashEntry = document.createElement("a");
+        const hashEntry = document.createElement("a");
         hashEntry.classList.add("hash-entry");
         metaArea.append(hashEntry);
         metaArea.append("::");
 
-        var pathEntry = document.createElement("code");
+        const pathEntry = document.createElement("code");
         pathEntry.classList.add("path-entry");
         metaArea.append(pathEntry);
         metaArea.append(document.createElement("br"));
 
-        var metadataEntry = document.createElement("div");
+        const metadataEntry = document.createElement("div");
         metadataEntry.classList.add("metadata-entry");
         metaArea.append(metadataEntry);
         metaArea.append(document.createElement("br"));
 
-        var titleEntry = document.createElement("span");
+        const titleEntry = document.createElement("span");
         titleEntry.classList.add("metadata-title-entry");
         metadataEntry.append(titleEntry);
         metadataEntry.append(" from ");
 
-        var albumEntry = document.createElement("span");
+        const albumEntry = document.createElement("span");
         albumEntry.classList.add("metadata-album-entry");
         metadataEntry.append(albumEntry);
         metadataEntry.append(" by ");
 
-        var artistEntry = document.createElement("span");
+        const artistEntry = document.createElement("span");
         artistEntry.classList.add("metadata-artist-entry");
         metadataEntry.append(artistEntry);
 
         metadataEntry.append(" - ");
 
-        var durationEntry = document.createElement("span");
+        const durationEntry = document.createElement("span");
         durationEntry.classList.add("metadata-duration-entry");
         metadataEntry.append(durationEntry);
 
-        var resultsEntry = document.createElement("ul");
+        const resultsEntry = document.createElement("ul");
         resultsEntry.classList.add("results-entry");
         trackEntry.append(resultsEntry);
 
@@ -244,7 +242,7 @@ It also supports JSON favorite extracts from listen.moe.
     }
 
     function createResultEntry(i, song) {
-        var resultEntry = document.createElement("li");
+        const resultEntry = document.createElement("li");
         resultEntry.classList.add("track-entry");
         resultEntry.setAttribute("data-track-hash", song.hash);
         if (!song.favored_by.includes(username)) {
@@ -253,33 +251,33 @@ It also supports JSON favorite extracts from listen.moe.
             resultEntry.classList.add("track-favorited");
         }
 
-        var coverArea = document.createElement("div");
+        const coverArea = document.createElement("div");
         coverArea.classList.add("metadata-cover-area");
         if (song.cover !== null) {
             coverArea.style["background-image"] = "url(/api/cover/" + song.cover + "/small)";
         }
         resultEntry.append(coverArea);
 
-        var metaArea = document.createElement("div");
+        const metaArea = document.createElement("div");
         metaArea.classList.add("metadata-meta-area");
         resultEntry.append(metaArea);
 
-        var hashEntry = document.createElement("code");
+        const hashEntry = document.createElement("code");
         hashEntry.classList.add("hash-entry");
         hashEntry.textContent = song.hash.substring(0, 12);
         metaArea.append(hashEntry);
         metaArea.append("::");
 
-        var pathEntry = document.createElement("code");
+        const pathEntry = document.createElement("code");
         pathEntry.classList.add("path-entry");
         pathEntry.textContent = song.path.substr(song.path.lastIndexOf('/') + 1);
         metaArea.append(pathEntry);
 
-        var metadataEntry = document.createElement("div");
+        const metadataEntry = document.createElement("div");
         metadataEntry.classList.add("metadata-entry");
         metaArea.append(metadataEntry);
 
-        var titleEntry = document.createElement("span");
+        const titleEntry = document.createElement("span");
         titleEntry.classList.add("metadata-title-entry");
         titleEntry.textContent = song.title;
         if (song.favored_by.length > 0) {
@@ -290,23 +288,23 @@ It also supports JSON favorite extracts from listen.moe.
         metadataEntry.append(titleEntry);
         metadataEntry.append(" from ");
 
-        var albumEntry = document.createElement("span");
+        const albumEntry = document.createElement("span");
         albumEntry.classList.add("metadata-album-entry");
         albumEntry.textContent = song.album;
         metadataEntry.append(albumEntry);
         metadataEntry.append(" by ");
 
-        var artistEntry = document.createElement("span");
+        const artistEntry = document.createElement("span");
         artistEntry.classList.add("metadata-artist-entry");
         artistEntry.textContent = song.artist;
         metadataEntry.append(artistEntry);
 
         metadataEntry.append(" ");
 
-        var durationEntry = document.createElement("span");
+        const durationEntry = document.createElement("span");
         durationEntry.classList.add("metadata-duration-entry");
-        var seconds = ("" + (song.duration % 60)).padStart(2, "0");
-        var minutes = ("" + Math.floor(song.duration / 60)).padStart(2, "0");
+        const seconds = ("" + (song.duration % 60)).padStart(2, "0");
+        const minutes = ("" + Math.floor(song.duration / 60)).padStart(2, "0");
         durationEntry.textContent = "[" + minutes + ":" + seconds + "]";
         metadataEntry.append(durationEntry);
 
@@ -315,7 +313,7 @@ It also supports JSON favorite extracts from listen.moe.
     }
 
     function updateTrackEntry(i) {
-        var trackEntry = trackEntries[i];
+        const trackEntry = trackEntries[i];
         if (trackEntry.hash !== null) {
             trackEntry.element.querySelector(".hash-entry").textContent = trackEntry.hash.substring(0, 12);
         }
@@ -335,15 +333,15 @@ It also supports JSON favorite extracts from listen.moe.
             trackEntry.element.querySelector(".metadata-artist-entry").textContent = trackEntry.artist;
         }
         if (trackEntry.duration !== null) {
-            var seconds = ("" + (trackEntry.duration % 60)).padStart(2, "0");
-            var minutes = ("" + Math.floor(trackEntry.duration / 60)).padStart(2, "0");
+            const seconds = ("" + (trackEntry.duration % 60)).padStart(2, "0");
+            const minutes = ("" + Math.floor(trackEntry.duration / 60)).padStart(2, "0");
             trackEntry.element.querySelector(".metadata-duration-entry").textContent = "[" + minutes + ":" + seconds + "]";
         }
     }
 
     function resetSearch() {
         document.querySelector("#tracks-list").innerHTML = "";
-        trackEntries = [];
+        trackEntries.length = 0;
     }
 
     function doHashCheck() {
@@ -356,7 +354,7 @@ It also supports JSON favorite extracts from listen.moe.
 
     function addFileToList(file) {
         return new Promise((resolve, reject) => {
-            var index = trackEntries.push({
+            const index = trackEntries.push({
                 "hash": null,
                 "file": file,
                 "path": file.name.substr(file.name.lastIndexOf('/') + 1),
@@ -379,7 +377,7 @@ It also supports JSON favorite extracts from listen.moe.
 
     function addRawEntryToList(entry) {
         return new Promise((resolve, reject) => {
-            var index = trackEntries.push({
+            const index = trackEntries.push({
                 "hash": entry.hash ? entry.hash : null,
                 "file": null,
                 "path": entry.path ? entry.path.substr(entry.path.lastIndexOf('/') + 1) : null,
@@ -436,12 +434,12 @@ It also supports JSON favorite extracts from listen.moe.
 
     function loadFileMetadata(index) {
         return new Promise((resolve, reject) => {
-            var trackEntry = trackEntries[index];
+            const trackEntry = trackEntries[index];
             if (trackEntry.file === null) {
                 resolve();
                 return;
             }
-            var asset = AV.Asset.fromFile(trackEntry.file);
+            const asset = AV.Asset.fromFile(trackEntry.file);
             asset.get("duration", function (duration) {
                 trackEntry.duration = Math.floor(duration / 1000);
                 updateTrackEntry(index);
@@ -504,7 +502,7 @@ It also supports JSON favorite extracts from listen.moe.
 
     function doSearchOperations(index) {
         return new Promise((resolve, reject) => {
-            var trackEntry = trackEntries[index];
+            const trackEntry = trackEntries[index];
             let queryGroups = [];
             if (doHashCheck() && trackEntry.hash !== null && /^[a-f0-9]{32}$/.test(trackEntry.hash)) {
                 queryGroups.push("hash=\"" + trackEntry.hash + "\"");
@@ -587,11 +585,11 @@ It also supports JSON favorite extracts from listen.moe.
     function handleSearch(resolve, reject, trackEntry, queryGroups, currentIndex) {
         doSearch(queryGroups[currentIndex]).then((data) => {
             let results = [];
-            var title1 = clearNameForMatch(trackEntry.title);
-            var album1 = clearNameForMatch(trackEntry.album);
-            var artist1 = clearNameForMatch(trackEntry.artist);
-            var album_artist1 = clearNameForMatch(trackEntry.album_artist);
-            var path1 = clearNameForMatch(trackEntry.path);
+            const title1 = clearNameForMatch(trackEntry.title);
+            const album1 = clearNameForMatch(trackEntry.album);
+            const artist1 = clearNameForMatch(trackEntry.artist);
+            const album_artist1 = clearNameForMatch(trackEntry.album_artist);
+            const path1 = clearNameForMatch(trackEntry.path);
 
             for (let i = 0; i < data.length; ++i) {
                 let t = data[i];
@@ -599,10 +597,10 @@ It also supports JSON favorite extracts from listen.moe.
                     results.unshift(t);
                     break;
                 }
-                var title2 = clearNameForMatch(t.title);
-                var album2 = clearNameForMatch(t.album);
-                var artist2 = clearNameForMatch(t.artist);
-                var path2 = t.path.substr(t.path.lastIndexOf('/') + 1);
+                const title2 = clearNameForMatch(t.title);
+                const album2 = clearNameForMatch(t.album);
+                const artist2 = clearNameForMatch(t.artist);
+                const path2 = t.path.substr(t.path.lastIndexOf('/') + 1);
                 if (
                     album1 === album2
                     || artist1 === artist2
@@ -656,7 +654,7 @@ It also supports JSON favorite extracts from listen.moe.
 
     function hashFile(index) {
         return new Promise((resolve, reject) => {
-            var trackEntry = trackEntries[index];
+            const trackEntry = trackEntries[index];
             if (trackEntry.file === null) {
                 resolve(null);
                 return;
@@ -664,15 +662,17 @@ It also supports JSON favorite extracts from listen.moe.
             trackEntry.hash = "hashing 0%";
             updateTrackEntry(index);
 
-            var fileSize = trackEntry.file.size;
-            var chunkSize = 0x10000; // bytes
-            var md5_ctx = md5_init();
-            var offset = 0;
-            var self = this; // we need a reference to the current object
-            var chunkReaderBlock = null;
-            var lastProgress = 0;
+            const fileSize = trackEntry.file.size;
+            const chunkSize = 0x10000; // bytes
+            let md5_ctx = md5_init();
+            let offset = 0;
+            const self = this; // we need a reference to the current object
+            let chunkReaderBlock = null;
+            let lastProgress = 0;
 
-            var readEventHandler = function (evt) {
+            const readEventHandler = function (evt) {
+                let dataHeap;
+                let dataPtr;
                 if (md5_ctx === null) {
                     reject();
                     //????
@@ -680,8 +680,8 @@ It also supports JSON favorite extracts from listen.moe.
                 }
                 if (evt.target.error == null) {
                     offset += evt.target.result.byteLength;
-                    var dataPtr = MD5Module._malloc(evt.target.result.byteLength);
-                    var dataHeap = new Uint8Array(MD5Module.HEAPU8.buffer, dataPtr, evt.target.result.byteLength);
+                    dataPtr = MD5Module._malloc(evt.target.result.byteLength);
+                    dataHeap = new Uint8Array(MD5Module.HEAPU8.buffer, dataPtr, evt.target.result.byteLength);
                     dataHeap.set(new Uint8Array(evt.target.result));
                     try {
                         md5_update(md5_ctx, dataHeap.byteOffset, dataHeap.byteLength);
@@ -712,13 +712,13 @@ It also supports JSON favorite extracts from listen.moe.
                     return;
                 }
                 if (offset >= fileSize) {
-                    var resultSize = 16;
-                    var dataPtr = MD5Module._malloc(resultSize);
-                    var dataHeap = new Uint8Array(MD5Module.HEAPU8.buffer, dataPtr, resultSize);
+                    const resultSize = 16;
+                    dataPtr = MD5Module._malloc(resultSize);
+                    dataHeap = new Uint8Array(MD5Module.HEAPU8.buffer, dataPtr, resultSize);
                     md5_final(md5_ctx, dataHeap.byteOffset);
                     md5_free(md5_ctx);
                     md5_ctx = null;
-                    var hash = '';
+                    let hash = '';
                     for (let i = 0; i < 16; ++i) {
                         hash += dataHeap[i].toString(16).toLowerCase().padStart(2, '0');
                     }
@@ -731,11 +731,11 @@ It also supports JSON favorite extracts from listen.moe.
 
                 // of to the next chunk
                 chunkReaderBlock(offset, chunkSize, trackEntry.file);
-            }
+            };
 
             chunkReaderBlock = function (_offset, length, _file) {
-                var r = new FileReader();
-                var blob = _file.slice(_offset, length + _offset);
+                const r = new FileReader();
+                const blob = _file.slice(_offset, length + _offset);
                 r.onload = readEventHandler;
                 r.readAsArrayBuffer(blob);
             }
@@ -746,15 +746,15 @@ It also supports JSON favorite extracts from listen.moe.
 
     }
 
-    var entriesToSearch = [];
-    var searching = 0;
+    const entriesToSearch = [];
+    let searching = 0;
 
     function tryToSearch() {
         if (searching >= 3 || entriesToSearch.length === 0) {
             return;
         }
         searching++;
-        var index = entriesToSearch.shift();
+        const index = entriesToSearch.shift();
         doSearchOperations(index).then((results) => {
             searching--;
             trackEntries[index].element.classList.remove("progress-search");
@@ -781,8 +781,9 @@ It also supports JSON favorite extracts from listen.moe.
     document.querySelector("#tracks-input").addEventListener("change", function () {
         resetSearch();
 
-        for (var i = 0; i < this.files.length; ++i) {
-            addFileToList(this.files[i]).then((index) => {
+        for (let i = 0; i < this.files.length; ++i) {
+            const file = this.files[i];
+            addFileToList(file).then((index) => {
                 trackEntries[index].element.classList.add("progress-search");
                 entriesToSearch.push(index);
                 tryToSearch();
@@ -797,9 +798,9 @@ It also supports JSON favorite extracts from listen.moe.
     document.querySelector("#tracks-text").addEventListener("change", function () {
         resetSearch();
 
-        for (var i = 0; i < this.files.length; ++i) {
-            var file = this.files[i];
-            var extension = file.name.substr(file.name.lastIndexOf('.') + 1).toLowerCase();
+        for (let i = 0; i < this.files.length; ++i) {
+            const file = this.files[i];
+            const extension = file.name.substr(file.name.lastIndexOf('.') + 1).toLowerCase();
             if (extension === 'csv' || extension === 'txt') {
                 CSV.fetch({
                         file: file,
@@ -807,7 +808,7 @@ It also supports JSON favorite extracts from listen.moe.
                     }
                 ).done(function (dataset) {
                     for (let j = 0; j < dataset.records.length; ++j) {
-                        var entry = {};
+                        const entry = {};
                         for (let k = 0; k < dataset.records[j].length; ++k) {
                             entry[dataset.fields[k]] = dataset.records[j][k];
                         }
@@ -822,15 +823,14 @@ It also supports JSON favorite extracts from listen.moe.
                         });
                     }
                 });
-            } else if (extension === 'json' || extension === '.js') {
-                var reader = new FileReader();
+            } else if (extension === 'json' || extension === 'js') {
+                const reader = new FileReader();
                 reader.onload = function (event) {
-                    var dataset = JSON.parse(event.target.result);
-                    if ('message' in dataset && 'favorites' in dataset) {
+                    const dataset = JSON.parse(event.target.result);
+                    if (('message' in dataset) && ('favorites' in dataset)) {
                         //Assume listen.moe format
-                        for (let j = 0; j < dataset.favorites.length; ++j) {
-                            var data = dataset.favorites[j];
-                            var entry = {
+                        dataset.favorites.forEach((data) => {
+                            const entry = {
                                 title: data.title,
                                 duration: data.duration,
                                 artist: data.artists.length > 0 ? data.artists[0].name : null,
@@ -848,10 +848,36 @@ It also supports JSON favorite extracts from listen.moe.
                                 trackEntries[index].element.classList.add("progress-error");
                                 trackEntries[index].element.querySelector(".results-entry").append("An error ocurred: " + e);
                             });
-                        }
+                        });
+                    } else if (Array.isArray(dataset) && dataset.length > 0 && ('tracks_id' in dataset[0]) && ('meta' in dataset[0])) {
+                        //Assume r-a-d.io format
+                        dataset.forEach((data) => {
+                            const matches = data.meta.match(/^(?<artist>[^\-]*)- (?<title>.+)$/);
+                            if(matches !== null){
+                                const entry = {
+                                    title: matches.groups.title,
+                                    duration: null,
+                                    artist: matches.groups.artist.length > 0 ? matches.groups.artist : null,
+                                    album_artist: matches.groups.artist.length > 0 ? matches.groups.artist : null,
+                                    album: null,
+                                    coverArt: null
+                                };
+
+                                addRawEntryToList(entry).then((index) => {
+                                    trackEntries[index].element.classList.add("progress-search");
+                                    entriesToSearch.push(index);
+                                    tryToSearch();
+                                }).catch((index, e) => {
+                                    console.log(e);
+                                    trackEntries[index].element.classList.add("progress-error");
+                                    trackEntries[index].element.querySelector(".results-entry").append("An error ocurred: " + e);
+                                });
+                            }
+
+                        });
                     } else {
-                        for (let j = 0; j < dataset.length; ++j) {
-                            addRawEntryToList(dataset[j]).then((index) => {
+                        dataset.forEach((entry) => {
+                            addRawEntryToList(entry).then((index) => {
                                 trackEntries[index].element.classList.add("progress-search");
                                 entriesToSearch.push(index);
                                 tryToSearch();
@@ -860,7 +886,7 @@ It also supports JSON favorite extracts from listen.moe.
                                 trackEntries[index].element.classList.add("progress-error");
                                 trackEntries[index].element.querySelector(".results-entry").append("An error ocurred: " + e);
                             });
-                        }
+                        });
                     }
                 }
                 reader.readAsText(file);
