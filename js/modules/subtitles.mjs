@@ -32,7 +32,6 @@ class Subtitles {
          * @type {SubtitlesOctopus}
          */
         this.octopus = null;
-        this.octopusReady = false;
 
         this.timer = null;
 
@@ -119,7 +118,7 @@ class Subtitles {
     setCurrentTime(time){
         this.currentTime = time;
 
-        if(this.octopus !== null && this.octopusReady){
+        if(this.octopus !== null){
             this.octopus.setCurrentTime(this.currentTime);
         }
     }
@@ -143,7 +142,6 @@ class Subtitles {
             options.subContent = data.content;
             //renderAhead: 30,
             options.onReady = () => {
-                this.octopusReady = true;
                 this.octopus.setCurrentTime(this.currentTime);
                 this.resizeToMatchCanvas();
             };
@@ -182,7 +180,6 @@ class Subtitles {
             this.octopus.dispose();
             this.octopus = null;
         }
-        this.octopusReady = false;
     }
 
     hideSubtitles(){
