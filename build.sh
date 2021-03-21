@@ -87,8 +87,9 @@ popd
 
 pushd JavascriptSubtitlesOctopus
 docker build -t radio/javascriptsubtitlesoctopus .
-docker run -it --rm -v "$(pwd)":/code radio/javascriptsubtitlesoctopus:latest
+docker run -it --rm -v "$(pwd)":/code radio/javascriptsubtitlesoctopus:latest make clean-dist
+docker run -it --rm -v "$(pwd)":/code radio/javascriptsubtitlesoctopus:latest make dist
 
-rm -rvf ../../js/subtitles/*
-cp -rvf dist/js/* ../../js/subtitles/
+rm -rvf ../../js/modules/subtitles/*
+cp -rvf dist/js/* ../../js/modules/subtitles/
 popd

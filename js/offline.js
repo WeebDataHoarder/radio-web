@@ -1,47 +1,32 @@
-let kuroshiro = null;
-let kuroshiroInit = null;
-
-let subtitles = null;
-let subtitlesTimer = null;
-
 let shuffledPlaylist = [];
-
-function resizeSubtitlesToMatchCanvas(timeout = true){
-    if(subtitles === null){
-        return;
-    }
-    const canvas = document.getElementById("lyrics-area");
-    const ar = canvas.getAttribute("aspect-ratio");
-    const canvasStyles = window.getComputedStyle(canvas);
-    const width = canvasStyles.width.replace(/px$/, "");
-    let height = canvasStyles.height.replace(/px$/, "");
-    if(ar){
-        const newHeight = String(Math.ceil(width / parseFloat(ar)));
-        if(newHeight !== height){
-            canvas.style.top = "-" + newHeight + "px";
-            canvas.style.height = newHeight + "px";
-            height = newHeight;
-        }
-    }
-
-    const pixelRatio = "devicePixelRatio" in window ? window.devicePixelRatio : 1;
-    subtitles.resize(width * pixelRatio, height * pixelRatio, 0, 0);
-
-}
-
-document.addEventListener("fullscreenchange", resizeSubtitlesToMatchCanvas, false);
-document.addEventListener("mozfullscreenchange", resizeSubtitlesToMatchCanvas, false);
-document.addEventListener("webkitfullscreenchange", resizeSubtitlesToMatchCanvas, false);
-document.addEventListener("msfullscreenchange", resizeSubtitlesToMatchCanvas, false);
-window.addEventListener("resize", resizeSubtitlesToMatchCanvas, false);
 
 
 const baseApiUrl = window.localStorage.getItem("radio-api-url") != null ? window.localStorage.getItem("radio-api-url") : location.protocol + '//' + document.domain + ':' + location.port;
-let currentLyrics = null;
 
 let showOriginalLyrics = !!(window.localStorage.getItem("lyrics-original") !== null ? parseInt(window.localStorage.getItem("lyrics-original")) : 0);
 const loadLyrics = !!(window.localStorage.getItem("lyrics-show") !== null ? parseInt(window.localStorage.getItem("lyrics-show")) : 1);
 const lyricsAnimationLevel = (window.localStorage.getItem("lyrics-animations") !== null ? parseInt(window.localStorage.getItem("lyrics-animations")) : 1); // 0 = no, 1 = all, 2 = only fade in/out
+
+let subtitles = new Promise((resolve, reject) => {
+    import("./modules/subtitles.mjs").then((module) => {
+        resolve(new module.default(document.getElementById("lyrics-area"), {
+            displaySettings: {
+                showOriginal: showOriginalLyrics,
+                fadeTransition: lyricsAnimationLevel > 0,
+                karaoke: {
+                    animate: lyricsAnimationLevel === 1
+                }
+            },
+            currentTimeCallback: () => {
+                if(uplayer.nativePlayback){
+                    return uplayer.playerObject.currentTime;
+                }else{
+                    return uplayer.playerObject.currentTime / 1000;
+                }
+            }
+        }));
+    });
+});
 
 let playing = false;
 const urlParams = new URLSearchParams(window.location.search);
@@ -50,6 +35,7 @@ let index;
 let currentPlaylistIndex;
 let repeat;
 let shuffle;
+let currentLyrics = null;
 const seekElement = document.querySelector(".radio-song-slider");
 const uplayer = new UPlayer({
     "volume": window.localStorage.getItem("radio-volume") !== null ? window.localStorage.getItem("radio-volume") / 100 : 1.0,
@@ -109,9 +95,10 @@ const uplayer = new UPlayer({
     },
     "on-progress": function () {
         const currentTime = uplayer.currentProgress * uplayer.totalDuration;
-        if (subtitles !== null) {
-            subtitles.setCurrentTime(currentTime);
-        }
+        subtitles.then((s)=> {
+            s.setCurrentTime(currentTime)
+        });
+
         if ('mediaSession' in navigator) {
             navigator.mediaSession.setPositionState({
                 duration: uplayer.totalDuration,
@@ -129,12 +116,25 @@ document.querySelector(".volume-slider").addEventListener("change", function () 
 
 document.querySelector("#lyrics-area").addEventListener("click", () => {
     showOriginalLyrics = !showOriginalLyrics;
-    window.localStorage.setItem("lyrics-original", showOriginalLyrics ? 1 : 0);
+    window.localStorage.setItem("lyrics-original", showOriginalLyrics ? "1" : "0");
     if(currentLyrics !== null){
-        if(currentLyrics.type === "timed"){
-            createSubtitleFromEntries(currentLyrics.entries);
-        }else if(currentLyrics.type === "ass"){
 
+
+        if("entries" in currentLyrics){
+            currentLyrics.type = "entries";
+            subtitles.then((s) => {
+                s.loadSubtitles(currentLyrics, {
+                    displaySettings: {
+                        showOriginal: showOriginalLyrics,
+                        fadeTransition: lyricsAnimationLevel > 0,
+                        karaoke: {
+                            animate: lyricsAnimationLevel === 1
+                        }
+                    },
+                }).then(() => {
+
+                });
+            });
         }
     }
 });
@@ -378,408 +378,11 @@ function preloadThisSong(song, isPlaying = null) {
     });
 }
 
-function loadKuroshiro(){
-    if(kuroshiro === null){
-        kuroshiro = new Kuroshiro();
-        return kuroshiroInit = kuroshiro.init(new KuromojiAnalyzer({
-            dictPath: "/dict/"
-        }));
-    }else{
-        return kuroshiroInit;
-    }
-}
-
-function loadLRCLyrics(data){
-    resizeSubtitlesToMatchCanvas();
-
+async function tryLoadLyrics(song){
     currentLyrics = null;
-
-    const lyricEntries = [];
-
-    let lines = data.split("\n");
-    let currentOffset = 0;
-    let previousEntry = null;
-    lines.forEach((line) => {
-        let matches = line.match(/\[(offset):([^\]]+)\]/);
-        if(matches !== null){
-            const type = matches[1].toLowerCase();
-            const content = matches[2].trim();
-            if(type === "offset"){
-                currentOffset = parseFloat(content) / 1000;
-            }
-        }else{
-            matches = line.match(/\[([^\]]+)\](.*)/);
-            if(matches !== null){
-                const text = matches[2].trim();
-                const timeUnits = matches[1].split(":");
-                let time = parseFloat(timeUnits.pop()) || 0;
-                time += (parseFloat(timeUnits.pop()) * 60) || 0;
-                time += (parseFloat(timeUnits.pop()) * 3600) || 0;
-                time += currentOffset;
-
-                if(text.match(/^(作词|作曲|编曲|曲|歌|词)[ \t]*[：∶:]/)){
-                    return;
-                }
-
-                /*if(previousEntry === null && text === ""){
-                    continue;
-                }else */if(previousEntry !== null && !previousEntry.end){
-                    if(previousEntry.text === "" && text === ""){
-                        return;
-                    }
-                    previousEntry.end = time;
-                }
-
-                const subEntries = [];
-
-                const regex = /<([0-9:. ]+)>([^<]*)/g;
-                let result;
-                let prevSubEntry = null;
-                while((result = regex.exec(text)) !== null){
-                    const subText = result[2];
-                    const subTimeUnits = result[1].split(":");
-                    let subTime = parseFloat(String(subTimeUnits.pop()).trim()) || 0;
-                    subTime += (parseFloat(String(subTimeUnits.pop()).trim()) * 60) || 0;
-                    subTime += (parseFloat(String(subTimeUnits.pop()).trim()) * 3600) || 0;
-                    subTime += currentOffset;
-
-                    if(prevSubEntry !== null && !prevSubEntry.end){
-                        prevSubEntry.end = subTime;
-                    }
-
-                    subEntries.push(prevSubEntry = {
-                        text: subText,
-                        start: subTime
-                    });
-
-                }
-
-                lyricEntries.push(previousEntry = {
-                    text: text.replace(/<[^>]+>/g, ""),
-                    start: time
-                });
-                if(subEntries.length > 0){
-                    previousEntry.entries = subEntries;
-                }
-            }
-        }
+    subtitles.then((s) => {
+        s.stopSubtitles();
     });
-
-    const promises = [];
-
-    lyricEntries.forEach((lyricEntry) => {
-        if(Kuroshiro.Util.hasJapanese(lyricEntry.text)){
-            const currentObject = lyricEntry;
-            if(currentObject.entries){
-                for(let k = 0; k < currentObject.entries.length; ++k){
-                    const currentObjectIndex = k;
-                    promises.push(convertJapaneseToRomaji(currentObject.entries[currentObjectIndex].text).then((result) => {
-                        currentObject.entries[currentObjectIndex].originalText = currentObject.entries[currentObjectIndex].text;
-                        currentObject.entries[currentObjectIndex].text = result + " ";
-                    }));
-                }
-            }
-
-            promises.push(convertJapaneseToRomaji(currentObject.text).then((result) => {
-                currentObject.originalText = currentObject.text;
-                currentObject.text = result;
-            }));
-        }
-    })
-
-    Promise.all(promises).then(() => {
-        currentLyrics = {
-            type: "timed",
-            entries: lyricEntries
-        }
-
-        createSubtitleFromEntries(lyricEntries);
-    });
-}
-
-function convertJapaneseToRomaji(text){
-    return new Promise((resolve, reject) => {
-        loadKuroshiro().then(() => {
-            kuroshiro.convert(text, {
-                to: "romaji",
-                mode: "spaced",
-                romajiSystem: "hepburn"
-            }).then((result) => {
-                resolve(result)
-            }).catch((e) => {
-                console.log(e);
-                resolve(text)
-            });
-        });
-    })
-}
-
-function decodeASSEntry(input){
-    let output = new Uint8Array(input.length);
-    let grouping = new Uint8Array(4);
-
-    let offset = 0;
-    let arrayOffset = 0;
-    let writeOffset = 0;
-    let charCode;
-    while (offset < input.length){
-        charCode = input.charCodeAt(offset++);
-        if(charCode >= 0x21 && charCode <= 0x60){
-            grouping[arrayOffset++] = charCode - 33;
-            if(arrayOffset === 4){
-                output[writeOffset++] = (grouping[0] << 2) | (grouping[1] >> 4);
-                output[writeOffset++] = ((grouping[1] & 0xf) << 4) | (grouping[2] >> 2);
-                output[writeOffset++] = ((grouping[2] & 0x3) << 6) | (grouping[3]);
-                //charCode = (grouping[0] << 18) | (grouping[1] << 12) | (grouping[2] << 6) | grouping[3];
-                //output[writeOffset++] = (charCode >> 16) & 0xff;
-                //output[writeOffset++] = (charCode >> 8) & 0xff;
-                //output[writeOffset++] = charCode & 0xff;
-                arrayOffset = 0;
-            }
-        }
-    }
-
-    //Handle ASS special padding
-    if(arrayOffset > 0){
-        if(arrayOffset === 2){
-            output[writeOffset++] = ((grouping[0] << 6) | grouping[1]) >> 4;
-        }else if(arrayOffset === 3){
-            let ix = ((grouping[0] << 12) | (grouping[1] << 6) | grouping[2]) >> 2;
-            output[writeOffset++] = ix >> 8;
-            output[writeOffset++] = ix & 0xff;
-        }
-    }
-
-    return output.slice(0, writeOffset);
-}
-
-function createSubtitlesInstance(subsContent){
-    if(subtitles !== null){
-        subtitles.dispose();
-        subtitles = null;
-    }
-
-    const fonts = {
-        "open sans": "/fonts/OpenSans-Regular.ttf",
-        "open sans regular": "/fonts/OpenSans-Regular.ttf",
-
-        "open sans semibold": "/fonts/OpenSans-SemiBold.ttf",
-
-        "noto sans": "/fonts/NotoSansCJK-Regular.ttc",
-        "noto sans cjk": "/fonts/NotoSansCJK-Regular.ttc",
-        "noto sans cjk jp": "/fonts/NotoSansCJK-Regular.ttc",
-        "noto sans regular": "/fonts/NotoSansCJK-Regular.ttc",
-        "noto sans cjk regular": "/fonts/NotoSansCJK-Regular.ttc",
-
-        "noto sans bold": "/fonts/NotoSansCJK-Bold.ttc",
-        "noto sans cjk bold": "/fonts/NotoSansCJK-Bold.ttc",
-
-        "arial": "/fonts/arial.ttf",
-        "arial regular": "/fonts/arial.ttf",
-
-        "arial bold": "/fonts/arialbd.ttf",
-
-        "arial rounded mt bold": "/fonts/ARLRDBD.TTF",
-
-        "dfkai-sb": "/fonts/kaiu.ttf",
-
-        "franklin gothic book": "/fonts/frabk.ttf",
-        "franklin gothic book regular": "/fonts/frabk.ttf"
-    };
-
-    const promises = [];
-
-    let regex = /^fontnamev2:[ \t]*([^_]+)_([^,]*)\.([a-z0-9]{3,5}),[ \t]*(.+)$/mg;
-    let result;
-    while((result = regex.exec(subsContent)) !== null){
-        const fontName = result[1];
-        const fontProperties = result[2];
-        const fontExtension = result[3];
-        fonts[fontName.toLowerCase()] = result[4];
-    }
-
-    regex = /^fontname:[ \t]*([^_]+)_([^$]*)\.([a-z0-9]{3,5})((?:\r?\n[\x21-\x60]+)+)/mg;
-    while((result = regex.exec(subsContent)) !== null){
-        const currentResult = result;
-        promises.push(new Promise(((resolve, reject) => {
-            const fontName = currentResult[1];
-            const fontProperties = currentResult[2];
-            const fontExtension = currentResult[3];
-            const blob = new Blob([decodeASSEntry(currentResult[4])], {type: "application/font-" + fontExtension.toLowerCase()});
-            const reader = new FileReader();
-            reader.readAsDataURL(blob);
-            reader.addEventListener("load", function () {
-                fonts[fontName.toLowerCase()] = reader.result;
-                resolve();
-            }, false);
-        })));
-    }
-
-    Promise.all(promises).then(() => {
-        const canvas = document.getElementById("lyrics-area");
-
-        const resolutionInformation = {
-            aspectRatio: 10.6666667//1.777778
-        };
-        result = subsContent.match(/^PlayResX:[ \t]*([0-9]+)$/m);
-        if(result !== null){
-            resolutionInformation.x = parseInt(result[1]);
-        }
-        result = subsContent.match(/^PlayResY:[ \t]*([0-9]+)$/m);
-        if(result !== null){
-            resolutionInformation.y = parseInt(result[1]);
-        }
-        if(resolutionInformation.x && resolutionInformation.y){
-            resolutionInformation.aspectRatio = resolutionInformation.x / resolutionInformation.y;
-        }
-
-        canvas.setAttribute("aspect-ratio", resolutionInformation.aspectRatio);
-        result = subsContent.match(/^CanvasBackground:[ \t]*&H([0-9A-F]{2})([0-9A-F]{2})([0-9A-F]{2})([0-9A-F]{2})$/m);
-
-        let alpha = 0.4;
-        let blue = 0;
-        let green = 0;
-        let red = 0;
-
-        if(result !== null){
-            alpha = parseInt(result[1], 16) / 255;
-            blue = parseInt(result[2], 16) / 255;
-            green = parseInt(result[3], 16) / 255;
-            red = parseInt(result[4], 16) / 255;
-        }
-        canvas.style["background-color"] = "rgba("+red+", "+green+", "+blue+", "+alpha+")";
-
-        if(subtitles !== null){
-            subtitles.dispose();
-        }
-        subtitles = new SubtitlesOctopus({
-            canvas: canvas,
-            renderMode: typeof createImageBitmap !== 'undefined' ? "fast" : "normal",
-            //renderMode: "blend",
-            workerUrl: "/js/subtitles/subtitles-octopus-worker.js",
-            legacyWorkerUrl: "/js/subtitles/subtitles-octopus-worker-legacy.js",
-            availableFonts: fonts,
-            subContent: subsContent,
-            targetFps: 30,
-            resizeVariation: 0.1,
-            libassMemoryLimit: 40,
-            libassGlyphLimit: 40,
-            //renderAhead: 30,
-            dropAllAnimations: lyricsAnimationLevel == 0,
-            onReady: () => {
-                resizeSubtitlesToMatchCanvas(false);
-            }
-        });
-        if(uplayer.playerObject !== null){
-            if(uplayer.nativePlayback){
-                subtitles.setCurrentTime(uplayer.playerObject.currentTime);
-            }else{
-                subtitles.setCurrentTime(uplayer.playerObject.currentTime / 1000);
-            }
-        }else{
-            subtitles.setCurrentTime(0);
-        }
-
-
-        const updateFps = 30;
-
-        if(subtitlesTimer !== null){
-            clearInterval(subtitlesTimer);
-        }
-        subtitlesTimer = setInterval(() => {
-            if(subtitles !== null && currentLyrics !== null && uplayer.isPlaying()){
-                if(uplayer.nativePlayback){
-                    subtitles.setCurrentTime(uplayer.playerObject.currentTime);
-                }else{
-                    subtitles.setCurrentTime(uplayer.playerObject.currentTime / 1000);
-                }
-            }
-        }, Math.floor(1 / updateFps * 1000));
-        resizeSubtitlesToMatchCanvas(false);
-    });
-}
-
-function createSubtitleFromEntries(lyricEntries){
-    let subtitleFile = '[Script Info]\n' +
-        'Title: Lyrics\n' +
-        'ScriptType: v4.00+\n' +
-        'Collisions: Normal\n' +
-        'WrapStyle: 0\n' +
-        'ScaledBorderAndShadow: yes\n' +
-        'YCbCr Matrix: None\n' +
-        'PlayResX: 512\n' +
-        'PlayResY: 52\n' +
-        'Timer: 100.0000\n' +
-        'PlayDepth: 0\n' +
-        'CanvasBackground: &H66000000\n' +
-        '\n' +
-        '[Aegisub Project Garbage]\n' +
-        'Last Style Storage: Default\n' +
-        'Video File: ?dummy:23.976000:40000:512:52:47:163:254:\n' +
-        'Video AR Value: 5.000000\n' +
-        '\n' +
-        '[V4+ Styles]\n' +
-        'Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding\n' +
-        'Style: Current,Open Sans,24,&H00FFFFFF,&H00B1B1B1,&H00000000,&H00000000,1,0,0,0,100,100,0,0,1,1,0,5,5,5,0,1\n' +
-        '\n' +
-        '[Events]\n' +
-        'Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n';
-    const previousEntry = {
-        text: "",
-        start: 0,
-        end: lyricEntries[0] ? lyricEntries[0].start : 0
-    };
-
-    const timeToStamp = (time) => {
-        time = Math.max(time, 0);
-        const hours = Math.floor(time / 3600);
-        time = time - hours * 3600;
-        const minutes = Math.floor(time / 60);
-        const seconds = time - minutes * 60;
-
-        function str_pad_left(string, pad, length) {
-            return (new Array(length + 1).join(pad) + string).slice(-length);
-        }
-
-        return hours + ":" + str_pad_left(minutes, '0', 2) + ':' + str_pad_left(Math.floor(seconds), '0', 2) + "." + str_pad_left(Math.round((seconds - Math.floor(seconds)) * 100), '0', 2);
-    };
-
-    const pickText = (ob) => {
-        return ((showOriginalLyrics && ob.originalText) ? ob.originalText : ob.text).replace(/[ ]+/g, ' ');
-    };
-
-    subtitleFile += 'Dialogue: 0,0:00:00.00,0:00:05.00,Current,,0,0,0,,{\\pos(1,1)\\alpha&FF}WARMUP\n'; //Do this to "pre-render"
-    subtitleFile += 'Dialogue: 0,0:00:05.00,0:00:15.00,Current,,0,0,0,,{\\pos(1,1)\\alpha&FF}WARMUP\n'; //Do this to "pre-render"
-
-    for(let i = 0; i < lyricEntries.length; ++i){
-        const line = lyricEntries[i];
-        //TODO: secondary line
-
-        let entryLine = 'Dialogue: 1,' + timeToStamp(line.start) + ', ' + timeToStamp(line.end !== undefined ? line.end : line.start + 5) + ',Current,,0,0,0,,';
-        const lineDuration = Math.max(1, Math.floor(((line.end !== undefined ? line.end : line.start + 5) - line.start) * 100));
-        if(line.entries && line.entries.length > 0){
-            entryLine += ((lyricsAnimationLevel > 0 && lineDuration > 50) ? '{\\fade(50,250)}' : '');
-            for(let k = 0; k < line.entries.length; ++k){
-                const entry = line.entries[k];
-                const entryDuration = Math.max(1, Math.floor(((entry.end !== undefined ? Math.min(line.end !== undefined ? line.end : entry.end, entry.end) : (line.end !== undefined ? line.end : line.start + 5)) - entry.start) * 100));
-                entryLine += (lyricsAnimationLevel > 0 ? (lyricsAnimationLevel === 1 ? '{\\kf'+entryDuration+'}' : '{\\k'+entryDuration+'}') : '') + pickText(entry);
-            }
-        }else{
-            const txt = pickText(line);
-            if(txt.trim() === ""){
-                continue;
-            }
-            entryLine += '{'+(lineDuration > 50 ? '\\fade(50,250)' : '')+  (lyricsAnimationLevel > 0 ? (lyricsAnimationLevel === 1 ? '\\kf' + lineDuration : '\\k' + lineDuration) : '') + '}' + txt;
-        }
-
-        subtitleFile += entryLine + '\n';
-    }
-    createSubtitlesInstance(subtitleFile);
-
-    return subtitleFile;
-}
-
-function tryLoadLyrics(song){
     if(loadLyrics){
         const preferredLyrics = ["ass", "timed"];
         let subtitleEntry = null;
@@ -788,60 +391,55 @@ function tryLoadLyrics(song){
             if('lyrics' in song && song.lyrics.includes(preferredLyrics[index])){
                 subtitleEntry = preferredLyrics[index];
 
-                fetch(baseApiUrl + "/api/lyrics/" + song.hash + "/" + subtitleEntry, {
+                const response = await fetch(baseApiUrl + "/api/lyrics/" + song.hash + "/" + subtitleEntry, {
                     method: "GET",
                     mode: "cors",
                     credentials: "omit"
-                }).then((response) => {
-                    if(!response.ok){
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-
-                    return response.text().then((data) => {
-                        if(subtitleEntry === "timed"){
-                            loadLRCLyrics(data);
-                        }else if(subtitleEntry === "ass"){
-                            currentLyrics = {
-                                type: "ass",
-                                entries: data
-                            }
-                            createSubtitlesInstance(data);
-                        }
-                    });
-                }).catch((e) => {
-                    console.log(e);
-                    if(subtitlesTimer !== null){
-                        clearInterval(subtitlesTimer);
-                        subtitlesTimer = null;
-                    }
-
-                    if(subtitles !== null){
-                        subtitles.dispose();
-                        subtitles = null;
-                    }
-
-                    document.querySelector("#lyrics-area").style["height"] = "0px";
-                    document.querySelector("#lyrics-area").style["top"] = "-0px";
                 });
-                return;
+                if(!response.ok){
+                    s.stopSubtitles();
+                    s.hideSubtitles();
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.text();
+                if(subtitleEntry === "timed"){
+                        await (await subtitles).loadSubtitles(currentLyrics = {
+                            type: "lrc",
+                            content: data
+                        }, {
+                            displaySettings: {
+                                showOriginal: showOriginalLyrics,
+                                fadeTransition: lyricsAnimationLevel > 0,
+                                karaoke: {
+                                    animate: lyricsAnimationLevel === 1
+                                }
+                            },
+                        });
+                        return;
+                }else if(subtitleEntry === "ass"){
+                    await (await subtitles).loadSubtitles(currentLyrics = {
+                        type: "ass",
+                        content: data
+                    }, {
+                        displaySettings: {
+                            showOriginal: showOriginalLyrics,
+                            fadeTransition: lyricsAnimationLevel > 0,
+                            karaoke: {
+                                animate: lyricsAnimationLevel === 1
+                            }
+                        },
+                    });
+                    return;
+                }
+
             }
         }
+    }else{
+        subtitles.then((s) => {
+            s.hideSubtitles();
+        });
     }
-
-
-    if(subtitlesTimer !== null){
-        clearInterval(subtitlesTimer);
-        subtitlesTimer = null;
-    }
-
-    if(subtitles !== null){
-        subtitles.dispose();
-        subtitles = null;
-    }
-
-    document.querySelector("#lyrics-area").style["height"] = "0px";
-    document.querySelector("#lyrics-area").style["top"] = "-0px";
-
 }
 
 function playThisSong(song, isPlaying = null) {
@@ -885,7 +483,15 @@ function playThisSong(song, isPlaying = null) {
 
     document.querySelector("#np-tags.tag-area").innerHTML = "";
 
-    tryLoadLyrics(song);
+    tryLoadLyrics(song).then(() => {
+        const np = shuffle ? shuffledPlaylist[currentPlaylistIndex] : songPlaylist[currentPlaylistIndex];
+        if(!("lyrics" in np)){
+            subtitles.then((s) => {
+                s.stopSubtitles();
+                s.hideSubtitles();
+            })
+        }
+    });
 
     let tagData = getTagEntries(song);
     applyTagEntries(document.querySelector("#np-tags.tag-area"), tagData.tags);

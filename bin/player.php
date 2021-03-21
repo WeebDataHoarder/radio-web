@@ -443,9 +443,8 @@ if($playlistFormat === null){
     header("Link: </js/player/aurora.js?".VERSION_HASH.">; rel=preload; as=script", false);
     header("Link: </js/player/player.js?".VERSION_HASH.">; rel=preload; as=script", false);
     header("Link: </js/utils.js?".VERSION_HASH.">; rel=preload; as=script", false);
+    //header("Link: </js/subtitles.mjs?".VERSION_HASH.">; rel=preload; as=module", false);
     header("Link: </js/offline.js?".VERSION_HASH.">; rel=preload; as=script", false);
-    header("Link: </js/kuroshiro-analyzer-kuromoji.min.js?".VERSION_HASH.">; rel=preload; as=script", false);
-    header("Link: </js/subtitles/subtitles-octopus.js?".VERSION_HASH.">; rel=preload; as=script", false);
     flush();
 }
 
@@ -573,26 +572,6 @@ foreach ($songs as $k => $data) {
     $songs[$k]["mimeType"] = $mimeType;
     @$covers[(int)$data["cover"]]++;
     $favorited += count($data["favored_by"]);
-
-    /*
-    if(!isRequestTheLounge()){
-
-        ?>
-        <meta property="music:song" content="https://radio.animebits.moe/player/hash/<?php echo $data["hash"]; ?>">
-        <meta property="music:artist" content="<?php echo htmlspecialchars($data["artist"], ENT_QUOTES | ENT_HTML5, "UTF-8"); ?>">
-        <meta property="music:album" content="<?php echo htmlspecialchars($data["album"], ENT_QUOTES | ENT_HTML5, "UTF-8"); ?>">
-        <meta property="og:audio" content="https://radio.animebits.moe/api/download/<?php echo $data["hash"]; ?>">
-        <meta property="og:audio:type" content="<?php echo $mimeType; ?>">
-        <?php
-
-    }
-    ?>
-    <meta property="og:image" content="https://radio.animebits.moe<?php echo ($data["cover"] !== null ? "/api/cover/" . $data["cover"] : "/img/no-cover.jpg"); ?>">
-    <meta property="og:image:type" content="image/jpeg">
-    <meta property="og:image:width" content="512">
-    <meta property="og:image:height" content="512">
-    <?php
-    */
 }
 
 reset($songs);
@@ -609,6 +588,18 @@ flush();
     <title><?php echo $title ?> :: anime(bits)</title>
     <meta name="google" content="notranslate"/>
     <meta property="og:site_name" content="anime(bits)">
+    <?php
+    if(count($songs) > 1){
+        ?>
+        <meta property="og:type" content="<?php echo $albumView ? "music.album" : "music.playlist" ?>">
+        <?php
+    }else{
+        ?>
+        <meta property="og:type" content="music.song">
+        <meta property="music:duration" content="<?php echo current($songs)["duration"]; ?>">
+        <?php
+    }
+    ?>
     <meta property="og:type" content="<?php echo count($songs) > 1 ? "music.playlist" : "music.song"; ?>">
     <meta property="og:rich_attachment" content="true">
     <meta property="og:title" content="<?php echo $title; ?>">
@@ -812,12 +803,6 @@ flush();
 <script type="text/javascript" src="/js/player/aurora.js?<?php echo VERSION_HASH; ?>"
         nonce="<?php echo SCRIPT_NONCE; ?>"></script>
 <script type="text/javascript" src="/js/player/player.js?<?php echo VERSION_HASH; ?>"
-        nonce="<?php echo SCRIPT_NONCE; ?>"></script>
-<script type="text/javascript" src="/js/kuroshiro.min.js?<?php echo VERSION_HASH; ?>"
-        nonce="<?php echo SCRIPT_NONCE; ?>"></script>
-<script type="text/javascript" src="/js/kuroshiro-analyzer-kuromoji.min.js?<?php echo VERSION_HASH; ?>"
-        nonce="<?php echo SCRIPT_NONCE; ?>"></script>
-<script type="text/javascript" src="/js/subtitles/subtitles-octopus.js?<?php echo VERSION_HASH; ?>"
         nonce="<?php echo SCRIPT_NONCE; ?>"></script>
 <script type="text/javascript" src="/js/utils.js?<?php echo VERSION_HASH; ?>"
         nonce="<?php echo SCRIPT_NONCE; ?>"></script>
