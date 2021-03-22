@@ -77,8 +77,8 @@ const uplayer = new UPlayer({
         //$(".play-pause").removeClass("hidden");
     },
     "on-progress": function () {
+        currentTime = uplayer.currentProgress * uplayer.totalDuration;
         subtitles.then((s)=> {
-            currentTime = uplayer.currentProgress * uplayer.totalDuration;
             s.setCurrentTime(currentTime)
         });
 
