@@ -76,7 +76,7 @@ if (preg_match("#^/service/encode/(?P<hash>[a-fA-F0-9]{8,32})(|/(?P<codec>(m4a|a
             case "mp3":
                 // MP3 can't handle 192 kHz, so encode at 44.1
                 $cmd .= " -ar 44100 -c:a libmp3lame -q:a 0 -f mp3 -write_xing 0 -id3v2_version 0";
-            header("Content-Type: audio/mpeg;codecs=mp3");
+                header("Content-Type: audio/mpeg;codecs=mp3");
                 break;
             case "opus":
                 // OPUS only supports 48kHz sample rates

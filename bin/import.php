@@ -4,7 +4,7 @@ require_once("common.php");
 
 $key = getAuthenticationKey();
 if ($key === null) {
-    header('HTTP/1.1 403 Forbidden');
+    http_response_code(403);
     echo("You need to authenticate on main page before using the Favorite Import service");
     exit();
 }
@@ -16,7 +16,7 @@ if ($dbconn === null) {
 
 $user = checkAuthenticationKey($dbconn, $key);
 if ($user === null) {
-    header('HTTP/1.1 403 Forbidden');
+    http_response_code(403);
     echo("You need to authenticate on main page before using the Favorite Import service");
     exit();
 }
@@ -126,7 +126,7 @@ if ($user === null) {
 <body>
 <h1>anime(bits) #radio :: Import favorites</h1>
 <p>In this page you can search for files you have, and find and import them into your favorites.</p>
-<p>Current containers supported: .flac, .ogg (Opus / Vorbis). .m4a (AAC, ALAC), .mp3, .wav, .tta and other(s).</p>
+<p>Current containers supported: .flac, .ogg (Opus, FLAC), .opus, .m4a (AAC, ALAC), .mp3, .wav, .tta and other(s).</p>
 <p>It will try to find matches using direct hashing, filename and size, or direct metadata embedded on file.</p>
 <p>No file data is uploaded and they are only processed locally on your browser. It will then use the search API
     directly to find matches. Results will be listed when finished, click an entry to add it to your favorites.</p>

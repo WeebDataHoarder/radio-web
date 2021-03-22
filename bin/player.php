@@ -443,8 +443,8 @@ if($playlistFormat === null){
     header("Link: </js/player/aurora.js?".VERSION_HASH.">; rel=preload; as=script", false);
     header("Link: </js/player/player.js?".VERSION_HASH.">; rel=preload; as=script", false);
     header("Link: </js/utils.js?".VERSION_HASH.">; rel=preload; as=script", false);
-    //header("Link: </js/subtitles.mjs?".VERSION_HASH.">; rel=preload; as=module", false);
     header("Link: </js/offline.js?".VERSION_HASH.">; rel=preload; as=script", false);
+    header("Link: </js/subtitles.mjs?".VERSION_HASH.">; rel=modulepreload", false);
     flush();
 }
 
@@ -639,89 +639,86 @@ flush();
     <link rel="search" type="application/opensearchdescription+xml" title="anime(bits)" href="/search.xml"/>
     <link rel="search" type="application/opensearchdescription+xml" title="anime(bits) Album" href="/search-album.xml"/>
     <link rel="search" type="application/opensearchdescription+xml" title="anime(bits) Artist" href="/search-artist.xml"/>
+
+    <style type="text/css">
     <?php
     if (count($covers) <= 1) {
         ?>
-        <style type="text/css">
-            div.song img.queue-cover {
-                display: none !important;
-            }
+        div.song img.queue-cover {
+            display: none !important;
+        }
 
-            div#radio-right div.song div.song-meta-data{
-                max-width: calc(100% - 44px - 10px - 20px - 10px - 60px);
-            }
-        </style>
+        div#radio-right div.song div.song-meta-data{
+            max-width: calc(100% - 44px - 10px - 20px - 10px - 60px);
+        }
         <?php
     }
 
     if($albumView){
         ?>
-        <style type="text/css">
-            div#radio-right div.song div.song-meta-data span.song-album {
-                display: none;
-            }
+        div#radio-right div.song div.song-meta-data span.song-album {
+            display: none;
+        }
 
-            div#radio-right div.song .queue-fit {
-                height: 42px;
-                width: 42px;
-            }
+        div#radio-right div.song .queue-fit {
+            height: 42px;
+            width: 42px;
+        }
 
-            div#radio-right div.song {
-                height: 42px;
-            }
+        div#radio-right div.song {
+            height: 42px;
+        }
 
-            div#radio-right div.song span.song-duration {
-                line-height: 39px;
-            }
+        div#radio-right div.song span.song-duration {
+            line-height: 39px;
+        }
 
-            div#radio-right div.song div.song-meta-data span.song-artist {
-                padding-left: 4ch;
-            }
+        div#radio-right div.song div.song-meta-data span.song-artist {
+            padding-left: 4ch;
+        }
 
-            div#radio-right div.album-header {
-                display: flex;
-                align-items: center;
-                text-align: center;
+        div#radio-right div.album-header {
+            display: flex;
+            align-items: center;
+            text-align: center;
 
-                width: 100%;
-                padding: 5px;
-                margin-top: 20px;
-                font-weight: bold;
-                text-transform: uppercase;
-                color: #999999;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-            }
+            width: 100%;
+            padding: 5px;
+            margin-top: 20px;
+            font-weight: bold;
+            text-transform: uppercase;
+            color: #999999;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
 
-            div#radio-right div.album-header::before, div#radio-right div.album-header::after {
-                content: '';
-                flex: 1;
-                border-bottom: 2px solid #999999;
-            }
-            div#radio-right div.album-header::before {
-                margin-right: .25em;
-            }
-            div#radio-right div.album-header::after {
-                margin-left: .25em;
-            }
-            div#radio-right hr {
-                display: none;
-            }
+        div#radio-right div.album-header::before, div#radio-right div.album-header::after {
+            content: '';
+            flex: 1;
+            border-bottom: 2px solid #999999;
+        }
+        div#radio-right div.album-header::before {
+            margin-right: .25em;
+        }
+        div#radio-right div.album-header::after {
+            margin-left: .25em;
+        }
+        div#radio-right hr {
+            display: none;
+        }
 
-        </style>
         <?php
     }else{
         ?>
-        <style type="text/css">
-            div#radio-right div.album-header {
-                display: none;
-            }
-        </style>
+        div#radio-right div.album-header {
+            display: none;
+        }
         <?php
     }
 
     ?>
+    </style>
 </head>
 <body>
 <div class="body-blur" style="background-image: url(<?php echo current($songs)["cover"] !== null ? "/api/cover/" . current($songs)["cover"] . "/large" : "/img/no-cover.jpg"; ?>)"></div>
@@ -794,7 +791,7 @@ flush();
                 </div>
             </div>
             <div class="large-6 medium-6 small-12 cell<?php echo (count($songs) > 1) ? "" : " single-player"; ?>" id="radio-right">
-                <div class="album-header">Loading track list...</div>
+                <div class="album-header" style="display: block">Loading track list...</div>
             </div>
         </div>
     </div>
@@ -841,6 +838,7 @@ flush();
     const songPlaylist = <?php echo json_encode($songPlaylist, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_NUMERIC_CHECK); ?>;
     const limitCodecs = <?php echo json_encode(array_values($neededMimeTypes), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_NUMERIC_CHECK); ?>;
     const doSplitPlayer = <?php echo ($doSplit ? "true" : "false"); ?>;
+    const VERSION_HASH = "<?php echo VERSION_HASH; ?>";
 
 </script>
 <script type="text/javascript" src="/js/offline.js?<?php echo VERSION_HASH; ?>"

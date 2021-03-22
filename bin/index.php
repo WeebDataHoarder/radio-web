@@ -241,6 +241,8 @@ header("Link: </js/online.js?".VERSION_HASH."; rel=preload; as=script", false);
 <script type="text/javascript" src="/js/online.js?<?php echo VERSION_HASH; ?>" nonce="<?php echo SCRIPT_NONCE; ?>"></script>
 <script type="text/javascript" nonce="<?php echo SCRIPT_NONCE; ?>">
 
+    const VERSION_HASH = "<?php echo VERSION_HASH; ?>";
+
 	if ('serviceWorker' in navigator) {
 
 		if(true /*window.localStorage.getItem("radio-skip-worker") === "yes" || navigator.userAgent.indexOf("iPhone") > -1 || navigator.userAgent.indexOf("iPad") > -1 || navigator.userAgent.indexOf("Firefox/") > -1*/){
