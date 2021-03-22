@@ -7,7 +7,6 @@ if ($dbconn === null) {
     exit();
 }
 
-
 function sanitizeAlbumName($name, $indexMatch){
     return trim(preg_replace("#(part|cd|disc|disk|box)[ _\t\\-]*?0*$indexMatch#ui", "", $name), " \t:-");
 }
@@ -435,6 +434,9 @@ if (count($songs) === 0) {
     http_response_code(404);
     exit();
 }
+
+
+header("Vary: User-Agent");
 
 if($playlistFormat === null){
     header("Link: </css/foundation.min.css?".VERSION_HASH.">; rel=preload; as=style", false);
