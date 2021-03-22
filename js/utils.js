@@ -229,3 +229,34 @@ function pushMediaSessionMetadata(song){
         });
     }
 }
+
+
+
+async function apiRequest(url, method = "GET", abortSignal = null){
+    const options = {
+        method: method
+    };
+    if(typeof apiKey !== 'undefined' && apiKey !== null){
+        options.headers = {
+            "Authorization": apiKey
+        }
+        options.mode = "cors";
+        options.credentials = "include";
+    }
+    if(abortSignal !== null){
+        options.signal = abortSignal;
+    }
+    const response = await fetch(baseApiUrl + url, options)
+    if(!response.ok){
+        throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const contentType = response.headers.get("content-type");
+    if (contentType && contentType.indexOf("/json") !== -1) {
+        return await response.json();
+    } else if (contentType && contentType.indexOf("text/") !== -1) {
+        return await response.text();
+    } else {
+        return await response.blob();
+    }
+}

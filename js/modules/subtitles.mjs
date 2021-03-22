@@ -4,7 +4,7 @@ async function require(path, global = null) {
     const _module = window.module;
     window.module = {};
     window.module = {};
-    await import(path);
+    await import(path + "?" + VERSION_HASH);
     let exports;
     if(global !== null){
         exports = window[global];
@@ -82,6 +82,7 @@ class Subtitles {
             }
         }
         this.currentTime = 0.0;
+        this.lastPreciseStamp = 0;
 
         document.addEventListener("fullscreenchange", this.resizeToMatchCanvas.bind(this));
         document.addEventListener("mozfullscreenchange", this.resizeToMatchCanvas.bind(this));
@@ -117,6 +118,7 @@ class Subtitles {
      */
     setCurrentTime(time){
         this.currentTime = time;
+        this.lastPreciseStamp = performance.now();
 
         if(this.octopus !== null){
             this.octopus.setCurrentTime(this.currentTime);
@@ -155,7 +157,14 @@ class Subtitles {
                 }
                 const callback = options.currentTimeCallback;
                 this.timer = setInterval(() => {
-                    this.setCurrentTime(callback());
+                    const timeData = callback();
+                    if(timeData.precise){
+                        this.setCurrentTime(timeData.time);
+                    }else{
+                        if(this.octopus !== null){
+                            this.octopus.setCurrentTime(this.currentTime + (performance.now() - this.lastPreciseStamp) / 1000);
+                        }
+                    }
                 }, Math.floor(1 / options.targetFps * 1000));
             }
             this.resizeToMatchCanvas();
@@ -180,6 +189,8 @@ class Subtitles {
             this.octopus.dispose();
             this.octopus = null;
         }
+
+        this.canvas.getContext('2d').clearRect(0, 0, this.canvas.width, this.canvas.height);
     }
 
     hideSubtitles(){

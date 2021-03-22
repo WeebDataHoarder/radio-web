@@ -537,41 +537,6 @@ function updateQueueData(res) {
     }
 }
 
-function apiRequest(url, method = "GET", abortSignal = null){
-    return new Promise(((resolve, reject) => {
-        const options = {
-            method: method
-        };
-        if(apiKey !== null){
-            options.headers = {
-                "Authorization": apiKey
-            }
-            options.mode = "cors";
-            options.credentials = "include";
-        }
-        if(abortSignal !== null){
-            options.signal = abortSignal;
-        }
-        fetch(baseApiUrl + url, options).then((response) => {
-            if(!response.ok){
-                reject();
-                return;
-            }
-
-            const contentType = response.headers.get("content-type");
-            if (contentType && contentType.indexOf("/json") !== -1) {
-                return response.json().then(data => {
-                   resolve(data);
-                }).catch(reject);
-            } else {
-                return response.text().then(text => {
-                    resolve(text);
-                }).catch(reject);
-            }
-        }).catch(reject);
-    }))
-}
-
 function apiKeyIdentify(key) {
     apiKey = key;
     apiRequest("/api/user/info").then((data) => {

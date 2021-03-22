@@ -7,27 +7,6 @@ let showOriginalLyrics = !!(window.localStorage.getItem("lyrics-original") !== n
 const loadLyrics = !!(window.localStorage.getItem("lyrics-show") !== null ? parseInt(window.localStorage.getItem("lyrics-show")) : 1);
 const lyricsAnimationLevel = (window.localStorage.getItem("lyrics-animations") !== null ? parseInt(window.localStorage.getItem("lyrics-animations")) : 1); // 0 = no, 1 = all, 2 = only fade in/out
 
-let subtitles = new Promise((resolve, reject) => {
-    import("./modules/subtitles.mjs").then((module) => {
-        resolve(new module.default(document.getElementById("lyrics-area"), {
-            displaySettings: {
-                showOriginal: showOriginalLyrics,
-                fadeTransition: lyricsAnimationLevel > 0,
-                karaoke: {
-                    animate: lyricsAnimationLevel === 1
-                }
-            },
-            currentTimeCallback: () => {
-                if(uplayer.nativePlayback){
-                    return uplayer.playerObject.currentTime;
-                }else{
-                    return uplayer.playerObject.currentTime / 1000;
-                }
-            }
-        }));
-    });
-});
-
 let playing = false;
 const urlParams = new URLSearchParams(window.location.search);
 
@@ -37,6 +16,9 @@ let repeat;
 let shuffle;
 let currentLyrics = null;
 const seekElement = document.querySelector(".radio-song-slider");
+
+let currentTime = 0;
+
 const uplayer = new UPlayer({
     "volume": window.localStorage.getItem("radio-volume") !== null ? window.localStorage.getItem("radio-volume") / 100 : 1.0,
     "preload": true,
@@ -56,6 +38,7 @@ const uplayer = new UPlayer({
     "mute-element": document.querySelector(".mute"),
     "volume-element": document.querySelector(".volume-slider"),
     "on-end": function () {
+        currentTime = 0;
         ++currentPlaylistIndex;
         if (currentPlaylistIndex >= songPlaylist.length) {
             if (repeat) {
@@ -94,8 +77,8 @@ const uplayer = new UPlayer({
         //$(".play-pause").removeClass("hidden");
     },
     "on-progress": function () {
-        const currentTime = uplayer.currentProgress * uplayer.totalDuration;
         subtitles.then((s)=> {
+            currentTime = uplayer.currentProgress * uplayer.totalDuration;
             s.setCurrentTime(currentTime)
         });
 
@@ -107,6 +90,35 @@ const uplayer = new UPlayer({
             });
         }
     }
+});
+
+const navigatorHasImprecisePlaybackTime = navigator.userAgent.match(/(AppleWebKit)((?!Chrom(ium|e)\/).)*$/) !== null;
+
+let subtitles = new Promise((resolve, reject) => {
+    import("./modules/subtitles.mjs?" + VERSION_HASH).then((module) => {
+        resolve(new module.default(document.getElementById("lyrics-area"), {
+            displaySettings: {
+                showOriginal: showOriginalLyrics,
+                fadeTransition: lyricsAnimationLevel > 0,
+                karaoke: lyricsAnimationLevel === 0 ? false : {
+                    animate: lyricsAnimationLevel === 1
+                }
+            },
+            currentTimeCallback: () => {
+                if(navigatorHasImprecisePlaybackTime){
+                    return {
+                        precise: !uplayer.isPlaying(),
+                        time: currentTime
+                    }
+                }else{
+                    return {
+                        precise: true,
+                        time: uplayer.nativePlayback ? uplayer.playerObject.currentTime : uplayer.playerObject.currentTime / 1000
+                    }
+                }
+            }
+        }));
+    });
 });
 
 
@@ -127,7 +139,7 @@ document.querySelector("#lyrics-area").addEventListener("click", () => {
                     displaySettings: {
                         showOriginal: showOriginalLyrics,
                         fadeTransition: lyricsAnimationLevel > 0,
-                        karaoke: {
+                        karaoke: lyricsAnimationLevel === 0 ? false : {
                             animate: lyricsAnimationLevel === 1
                         }
                     },
@@ -380,9 +392,8 @@ function preloadThisSong(song, isPlaying = null) {
 
 async function tryLoadLyrics(song){
     currentLyrics = null;
-    subtitles.then((s) => {
-        s.stopSubtitles();
-    });
+    let s = await subtitles;
+    s.stopSubtitles();
     if(loadLyrics){
         const preferredLyrics = ["ass", "timed"];
         let subtitleEntry = null;
@@ -391,54 +402,46 @@ async function tryLoadLyrics(song){
             if('lyrics' in song && song.lyrics.includes(preferredLyrics[index])){
                 subtitleEntry = preferredLyrics[index];
 
-                const response = await fetch(baseApiUrl + "/api/lyrics/" + song.hash + "/" + subtitleEntry, {
-                    method: "GET",
-                    mode: "cors",
-                    credentials: "omit"
-                });
-                if(!response.ok){
-                    s.stopSubtitles();
-                    s.hideSubtitles();
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                const data = await response.text();
-                if(subtitleEntry === "timed"){
-                        await (await subtitles).loadSubtitles(currentLyrics = {
+                try{
+                    const data = await apiRequest("/api/lyrics/" + song.hash + "/" + subtitleEntry);
+                    if(subtitleEntry === "timed"){
+                        await s.loadSubtitles(currentLyrics = {
                             type: "lrc",
                             content: data
                         }, {
                             displaySettings: {
                                 showOriginal: showOriginalLyrics,
                                 fadeTransition: lyricsAnimationLevel > 0,
-                                karaoke: {
+                                karaoke: lyricsAnimationLevel === 0 ? false : {
                                     animate: lyricsAnimationLevel === 1
                                 }
                             },
                         });
                         return;
-                }else if(subtitleEntry === "ass"){
-                    await (await subtitles).loadSubtitles(currentLyrics = {
-                        type: "ass",
-                        content: data
-                    }, {
-                        displaySettings: {
-                            showOriginal: showOriginalLyrics,
-                            fadeTransition: lyricsAnimationLevel > 0,
-                            karaoke: {
-                                animate: lyricsAnimationLevel === 1
-                            }
-                        },
-                    });
-                    return;
+                    }else if(subtitleEntry === "ass"){
+                        await s.loadSubtitles(currentLyrics = {
+                            type: "ass",
+                            content: data
+                        }, {
+                            displaySettings: {
+                                showOriginal: showOriginalLyrics,
+                                fadeTransition: lyricsAnimationLevel > 0,
+                                karaoke: lyricsAnimationLevel === 0 ? false : {
+                                    animate: lyricsAnimationLevel === 1
+                                }
+                            },
+                        });
+                        return;
+                    }
+                }catch (e){
+                    console.log(e);
+                    s.stopSubtitles();
+                    s.hideSubtitles();
                 }
-
             }
         }
     }else{
-        subtitles.then((s) => {
-            s.hideSubtitles();
-        });
+        s.hideSubtitles();
     }
 }
 
