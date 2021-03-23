@@ -82,7 +82,7 @@ function processAlbumResults($result){
             $data["originalTitle"] = $data["title"];
             $data["title"] = str_pad($data["index"], 2, "0", STR_PAD_LEFT) . ". " . $data["title"];
         }
-        if(isset($data["parentIndex"])){
+        if($discNumber > 1 and isset($data["parentIndex"])){
             $data["originalAlbum"] = $data["album"];
             $data["album"] = $data["album"] . " - Disc " . str_pad($data["parentIndex"], 2, "0", STR_PAD_LEFT);
         }
