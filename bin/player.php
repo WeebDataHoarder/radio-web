@@ -63,13 +63,13 @@ function processAlbumResults($result){
 
     $regex = array_keys($bestMatches, max($bestMatches))[0];
 
-    foreach ($result as &$data){
+    foreach ($result as $i => $data){
         if(preg_match($regex, $data["path"], $matches) > 0){
             $matchFunctions[$regex]($matches, $data, $album);
         }else{
             //TODO: handle these errors?
             $data["parentIndex"] = 1;
-            $data["sortTitle"] = basename($data->path);
+            $data["sortTitle"] = basename($data["path"]);
         }
 
         if ($data["parentIndex"] > $discNumber) {
@@ -78,6 +78,7 @@ function processAlbumResults($result){
 
         $album = $data["album"];
         $duration += $data["duration"];
+        $result[$i] = $data;
     }
 
     foreach ($result as $data){
