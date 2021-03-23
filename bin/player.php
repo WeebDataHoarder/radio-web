@@ -63,7 +63,7 @@ function processAlbumResults($result){
 
     $regex = array_keys($bestMatches, max($bestMatches))[0];
 
-    foreach ($result as $data){
+    foreach ($result as &$data){
         if(preg_match($regex, $data["path"], $matches) > 0){
             $matchFunctions[$regex]($matches, $data, $album);
         }else{
@@ -77,7 +77,10 @@ function processAlbumResults($result){
         }
 
         $album = $data["album"];
+        $duration += $data["duration"];
+    }
 
+    foreach ($result as $data){
         if(isset($data["index"])){
             $data["originalTitle"] = $data["title"];
             $data["title"] = str_pad($data["index"], 2, "0", STR_PAD_LEFT) . ". " . $data["title"];
@@ -86,10 +89,7 @@ function processAlbumResults($result){
             $data["originalAlbum"] = $data["album"];
             $data["album"] = $data["album"] . " - Disc " . str_pad($data["parentIndex"], 2, "0", STR_PAD_LEFT);
         }
-
-        $duration += $data["duration"];
         $songs[] = $data;
-
     }
 
     usort($songs, function($a, $b){
