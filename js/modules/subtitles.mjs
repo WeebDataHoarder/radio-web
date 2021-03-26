@@ -34,6 +34,10 @@ class Subtitles {
         this.octopus = null;
 
         this.timer = null;
+        this.timerCallback = null;
+        this.timerFrameTime = 0;
+        this.timerLastStamp = 0;
+        this.timerLastTime = 0;
 
         this.options = options;
         for(const [key, value] of Object.entries({
@@ -115,10 +119,11 @@ class Subtitles {
     /**
      * Sets the current time in seconds
      * @param time
+     * @param highRes
      */
-    setCurrentTime(time){
+    setCurrentTime(time, highRes = null){
         this.currentTime = time;
-        this.lastPreciseStamp = performance.now();
+        this.lastPreciseStamp = highRes !== null ? highRes : performance.now();
 
         if(this.octopus !== null){
             this.octopus.setCurrentTime(this.currentTime);
@@ -142,7 +147,7 @@ class Subtitles {
             //renderMode: "blend",
             options.availableFonts = Object.assign(Object.assign({}, options.availableFonts), displayInformation.embeddedFonts);
             options.subContent = data.content;
-            //renderAhead: 30,
+            //renderAhead: options.targetFps,
             options.onReady = () => {
                 this.octopus.setCurrentTime(this.currentTime);
                 this.resizeToMatchCanvas();
@@ -152,20 +157,12 @@ class Subtitles {
             this.octopus.setCurrentTime(this.currentTime);
             if(options.currentTimeCallback !== null){
                 if(this.timer !== null){
-                    clearInterval(this.timer);
+                    cancelAnimationFrame(this.timer);
                     this.timer = null;
                 }
-                const callback = options.currentTimeCallback;
-                this.timer = setInterval(() => {
-                    const timeData = callback();
-                    if(timeData.precise){
-                        this.setCurrentTime(timeData.time);
-                    }else{
-                        if(this.octopus !== null){
-                            this.octopus.setCurrentTime(this.currentTime + (performance.now() - this.lastPreciseStamp) / 1000);
-                        }
-                    }
-                }, Math.floor(1 / options.targetFps * 1000));
+                this.timerCallback = options.currentTimeCallback;
+                this.timerFrameTime = 1000 / options.targetFps;
+                this.timer = requestAnimationFrame(this._animationFrameTimer.bind(this));
             }
             this.resizeToMatchCanvas();
         }else if (data.type === "entries"){
@@ -182,9 +179,10 @@ class Subtitles {
 
     stopSubtitles(){
         if(this.timer !== null){
-            clearInterval(this.timer);
+            cancelAnimationFrame(this.timer);
             this.timer = null;
         }
+
         if(this.octopus !== null){
             this.octopus.dispose();
             this.octopus = null;
@@ -196,6 +194,34 @@ class Subtitles {
     hideSubtitles(){
         this.canvas.style["height"] = "0px";
         this.canvas.style["top"] = "-0px";
+    }
+
+    _animationFrameTimer(highResolutionTimestamp){
+        if(this.timer === null){
+            return;
+        }
+
+        if(highResolutionTimestamp - this.timerLastStamp < this.timerFrameTime){
+            this.timer = requestAnimationFrame(this._animationFrameTimer.bind(this));
+            return;
+        }
+
+        this.timerLastStamp = highResolutionTimestamp;
+
+        const timeData = this.timerCallback();
+        if(timeData.precise){
+            const t = timeData.time;
+            if(this.timerLastTime !== t){
+                this.setCurrentTime(this.timerLastTime = t, highResolutionTimestamp);
+            }
+        }else{
+            const t = this.currentTime + (highResolutionTimestamp - this.lastPreciseStamp) / 1000;
+            if(this.octopus !== null && this.timerLastTime !== t){
+                this.octopus.setCurrentTime(this.timerLastTime = t);
+            }
+        }
+
+        this.timer = requestAnimationFrame(this._animationFrameTimer.bind(this));
     }
 
     async _processASSSubtitles(file){
@@ -230,7 +256,7 @@ class Subtitles {
                         }));
                     }
                 }
-                Promise.all(promises).then(resolve).catch(reject);
+                ("allSettled" in Promise ? Promise.allSettled.bind(Promise) : Promise.all.bind(Promise))(promises).then(resolve).catch(reject);
             }));
             promises.push(new Promise((resolve, reject) => {
                 let result;
@@ -260,7 +286,7 @@ class Subtitles {
                 resolve();
             }));
 
-            await Promise.all(promises);
+            await ("allSettled" in Promise ? Promise.allSettled.bind(Promise) : Promise.all.bind(Promise))(promises);
             if(displayInformation.resolution.x && displayInformation.resolution.y){
                 displayInformation.resolution.aspectRatio = displayInformation.resolution.x / displayInformation.resolution.y;
             }
@@ -398,7 +424,7 @@ class Subtitles {
                 }));
             }
         });
-        await Promise.all(promises);
+        await ("allSettled" in Promise ? Promise.allSettled.bind(Promise) : Promise.all.bind(Promise))(promises);
 
         return lyricEntries;
     }

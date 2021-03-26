@@ -94,32 +94,31 @@ const uplayer = new UPlayer({
 
 const navigatorHasImprecisePlaybackTime = navigator.userAgent.match(/(AppleWebKit)((?!Chrom(ium|e)\/).)*$/) !== null;
 
-let subtitles = new Promise((resolve, reject) => {
-    import("./modules/subtitles.mjs?" + VERSION_HASH).then((module) => {
-        resolve(new module.default(document.getElementById("lyrics-area"), {
-            displaySettings: {
-                showOriginal: showOriginalLyrics,
-                fadeTransition: lyricsAnimationLevel > 0,
-                karaoke: lyricsAnimationLevel === 0 ? false : {
-                    animate: lyricsAnimationLevel === 1
+let subtitles = (async () => {
+    const module = await import("./modules/subtitles.mjs?" + VERSION_HASH);
+    return new module.default(document.getElementById("lyrics-area"), {
+        displaySettings: {
+            showOriginal: showOriginalLyrics,
+            fadeTransition: lyricsAnimationLevel > 0,
+            karaoke: lyricsAnimationLevel === 0 ? false : {
+                animate: lyricsAnimationLevel === 1
+            }
+        },
+        currentTimeCallback: () => {
+            if(navigatorHasImprecisePlaybackTime){
+                return {
+                    precise: !uplayer.isPlaying(),
+                    time: currentTime
                 }
-            },
-            currentTimeCallback: () => {
-                if(navigatorHasImprecisePlaybackTime){
-                    return {
-                        precise: !uplayer.isPlaying(),
-                        time: currentTime
-                    }
-                }else{
-                    return {
-                        precise: true,
-                        time: uplayer.nativePlayback ? uplayer.playerObject.currentTime : uplayer.playerObject.currentTime / 1000
-                    }
+            }else{
+                return {
+                    precise: true,
+                    time: uplayer.nativePlayback ? uplayer.playerObject.currentTime : uplayer.playerObject.currentTime / 1000
                 }
             }
-        }));
+        }
     });
-});
+})();
 
 
 document.querySelector(".volume-slider").addEventListener("change", function () {
@@ -134,8 +133,8 @@ document.querySelector("#lyrics-area").addEventListener("click", () => {
 
         if("entries" in currentLyrics){
             currentLyrics.type = "entries";
-            subtitles.then((s) => {
-                s.loadSubtitles(currentLyrics, {
+            subtitles.then(async (s) => {
+                await s.loadSubtitles(currentLyrics, {
                     displaySettings: {
                         showOriginal: showOriginalLyrics,
                         fadeTransition: lyricsAnimationLevel > 0,
@@ -143,8 +142,6 @@ document.querySelector("#lyrics-area").addEventListener("click", () => {
                             animate: lyricsAnimationLevel === 1
                         }
                     },
-                }).then(() => {
-
                 });
             });
         }
@@ -486,13 +483,12 @@ function playThisSong(song, isPlaying = null) {
 
     document.querySelector("#np-tags.tag-area").innerHTML = "";
 
-    tryLoadLyrics(song).then(() => {
+    tryLoadLyrics(song).then(async () => {
         const np = shuffle ? shuffledPlaylist[currentPlaylistIndex] : songPlaylist[currentPlaylistIndex];
         if(!("lyrics" in np)){
-            subtitles.then((s) => {
-                s.stopSubtitles();
-                s.hideSubtitles();
-            })
+            const s = (await subtitles);
+            s.stopSubtitles();
+            s.hideSubtitles();
         }
     });
 
