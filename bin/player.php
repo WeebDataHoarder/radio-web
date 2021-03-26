@@ -447,7 +447,7 @@ if($playlistFormat === null){
     header("Link: </js/player/player.js?".VERSION_HASH.">; rel=preload; as=script", false);
     header("Link: </js/utils.js?".VERSION_HASH.">; rel=preload; as=script", false);
     header("Link: </js/offline.js?".VERSION_HASH.">; rel=preload; as=script", false);
-    header("Link: </js/subtitles.mjs?".VERSION_HASH.">; rel=modulepreload", false);
+    header("Link: </js/modules/subtitles.mjs?".VERSION_HASH.">; rel=modulepreload", false);
     flush();
 }
 
