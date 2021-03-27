@@ -845,6 +845,25 @@ flush();
     const doSplitPlayer = <?php echo ($doSplit ? "true" : "false"); ?>;
     const VERSION_HASH = "<?php echo VERSION_HASH; ?>";
 
+    if ('serviceWorker' in navigator) {
+        if(window.localStorage.getItem("radio-skip-worker") === "yes"){
+            navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                for(let registration of registrations) {
+                    registration.unregister();
+                }
+            });
+        }else{
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/service-worker.js?<?php echo VERSION_HASH; ?>').then(function(registration) {
+                    console.log('registered service worker');
+                    registration.update();
+                }, function(err) {
+                    console.log('registration failed: ', err);
+                });
+            });
+        }
+    }
+
 </script>
 <script type="text/javascript" src="/js/offline.js?<?php echo VERSION_HASH; ?>"
         nonce="<?php echo SCRIPT_NONCE; ?>"></script>

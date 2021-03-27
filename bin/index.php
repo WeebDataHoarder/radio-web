@@ -245,7 +245,7 @@ header("Link: </js/online.js?".VERSION_HASH."; rel=preload; as=script", false);
 
 	if ('serviceWorker' in navigator) {
 
-		if(window.localStorage.getItem("radio-skip-worker") === "yes" || navigator.userAgent.indexOf("iPhone") > -1 || navigator.userAgent.indexOf("iPad") > -1 || navigator.userAgent.indexOf("Firefox/") > -1){
+		if(window.localStorage.getItem("radio-skip-worker") === "yes"){
 			navigator.serviceWorker.getRegistrations().then(function(registrations) {
 				for(let registration of registrations) {
 				 registration.unregister();
