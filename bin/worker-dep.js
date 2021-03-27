@@ -66,14 +66,13 @@ self.addEventListener("activate", function (event) {
 self.addEventListener('fetch', (event) => {
     const url = event.request.url;
     const scope = self.registration.scope;
-    console.log("[ServiceWorker] fetch " + url + ", path " + url.pathname + ", scope " + self.registration.scope);
+    const path = (new URL(url)).pathname;
+    console.log("[ServiceWorker] fetch " + url + ", path " + path + ", scope " + self.registration.scope);
 
     // Skip cross-origin requests
     if (!url.startsWith(scope)) {
         return;
     }
-
-    const path = url.pathname;
 
     if (/^\/(stream|service)\//.test(path)) {
         return;
