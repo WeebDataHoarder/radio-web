@@ -67,10 +67,19 @@ self.addEventListener('fetch', (event) => {
     const url = event.request.url;
     const scope = self.registration.scope;
     const path = (new URL(url)).pathname;
-    console.log("[ServiceWorker] fetch " + url + ", path " + path + ", scope " + self.registration.scope);
+
+    if (event.request.headers.has('range')) {
+        return;
+    }
 
     // Skip cross-origin requests
     if (!url.startsWith(scope)) {
+        return;
+    }
+
+    console.log("[ServiceWorker] fetch " + url + ", path " + path + ", scope " + self.registration.scope);
+    // Skip range requests
+    if (event.request.headers.has('range')) {
         return;
     }
 
