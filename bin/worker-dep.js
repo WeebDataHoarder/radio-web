@@ -4,7 +4,7 @@
  * @param request
  * @returns {Promise<Response>}
  */
-async function tryToCache(request){
+self.tryToCache = async (request) => {
     const r = await caches.match(request);
     if(r){
         console.log("[ServiceWorker] returned from cache " + request.url + ", scope " + self.registration.scope);
@@ -88,7 +88,7 @@ self.addEventListener('fetch', (event) => {
     }
 
     if (/^\/api\/(cover|download|lyrics)\//.test(path)) { // Parts of API that can be cached
-        event.respondWith(tryToCache(event.request)());
+        event.respondWith(self.tryToCache(event.request)());
         return;
     }
 
@@ -97,7 +97,7 @@ self.addEventListener('fetch', (event) => {
     }
 
     if (/^\/(js|css|img|fonts|dict)\//.test(path)) { //Static files
-        event.respondWith(tryToCache(event.request)());
+        event.respondWith(self.tryToCache(event.request)());
         return;
     }
 
@@ -105,7 +105,7 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    event.respondWith(tryToCache(event.request)()); //Cache everything else
+    event.respondWith(self.tryToCache(event.request)()); //Cache everything else
 });
 
 self.addEventListener("message", function (event) {
