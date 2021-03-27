@@ -364,7 +364,6 @@ It also supports JSON favorite extracts from listen.moe and r-a-d.io.
                 "album_artist": null,
                 "album": null,
                 "duration": null,
-                "progress": 0,
                 "coverArt": null,
             }) - 1;
             prepareEntry(index).then(function () {
@@ -386,48 +385,32 @@ It also supports JSON favorite extracts from listen.moe and r-a-d.io.
             "album_artist": entry.album_artist ? entry.album_artist : null,
             "album": entry.album ? entry.album : null,
             "duration": entry.duration ? entry.duration : null,
-            "progress": 0,
             "coverArt": null
         }) - 1;
-        await createTrackEntry(index);
+        createTrackEntry(index);
 
         return index;
     }
 
-    function prepareEntry(index) {
-        return new Promise((resolve, reject) => {
-            createTrackEntry(index);
+    async function prepareEntry(index) {
+        createTrackEntry(index);
 
-            if (doHashCheck()) {
-                trackEntries[index].progress |= 0x01;
-                hashFile(index).then(e => {
-                    trackEntries[index].progress &= ~0x01;
-                    if (trackEntries[index].progress === 0) {
-                        resolve();
-                    }
-                }).catch(e => {
-                    trackEntries[index].progress &= ~0x01;
-                    trackEntries[index].hash = null;
-                    reject(e);
-                });
+        if (doHashCheck()) {
+            try{
+                await hashFile(index);
+            }catch(e){
+                trackEntries[index].hash = null;
+                throw e;
             }
-            if (doMetadataCheck()) {
-                trackEntries[index].progress |= 0x02;
-                loadFileMetadata(index).then(e => {
-                    trackEntries[index].progress &= ~0x02;
-                    if (trackEntries[index].progress === 0) {
-                        resolve();
-                    }
-                }).catch(e => {
-                    trackEntries[index].progress &= ~0x02;
-                    reject(e);
-                });
+        }
+        if (doMetadataCheck()) {
+            try{
+                await loadFileMetadata(index);
+            }catch(e){
+                throw e;
             }
+        }
 
-            if (trackEntries[index].progress === 0) {
-                resolve();
-            }
-        });
     }
 
     function loadFileMetadata(index) {
@@ -459,8 +442,7 @@ It also supports JSON favorite extracts from listen.moe and r-a-d.io.
                     trackEntry.title = metadata.title.replace(/\u0000/g, '');
                 }
                 if (metadata.coverArt) {
-                    var blob = new Blob([metadata.coverArt.data], {type: 'image/jpeg'});
-                    trackEntry.coverArt = URL.createObjectURL(blob);
+                    trackEntry.coverArt = URL.createObjectURL(new Blob([metadata.coverArt.data], {type: 'image/jpeg'}));
                 }
                 updateTrackEntry(index);
                 if (trackEntry.duration !== null) {
@@ -474,7 +456,7 @@ It also supports JSON favorite extracts from listen.moe and r-a-d.io.
     }
 
     async function doSearch(query) {
-        let url = new URL("/api/search", document.location.origin);
+        const url = new URL("/api/search", document.location.origin);
         url.searchParams.append("q", query);
         url.searchParams.append("limit", 500);
         url.searchParams.append("orderBy", "score");
@@ -488,81 +470,76 @@ It also supports JSON favorite extracts from listen.moe and r-a-d.io.
         return await response.json();
     }
 
-    function doSearchOperations(index) {
-        return new Promise((resolve, reject) => {
-            const trackEntry = trackEntries[index];
-            let queryGroups = [];
-            if (doHashCheck() && trackEntry.hash !== null && /^[a-f0-9]{32}$/.test(trackEntry.hash)) {
-                queryGroups.push("hash=\"" + trackEntry.hash + "\"");
-            }
-            /*
-            if(trackEntry.duration !== null && trackEntry.title !== null && trackEntry.path !== null){
-                queryGroups.push("duration<"+(trackEntry.duration + 1)+" AND duration>"+(trackEntry.duration - 1)+" AND (title=\""+escapeQuotes(trackEntry.title)+"\" OR path=\"%/"+escapeQuotes(trackEntry.path)+"\")");
-            }else if(trackEntry.duration !== null && trackEntry.path !== null){
-                queryGroups.push("duration<"+(trackEntry.duration + 1)+" AND duration>"+(trackEntry.duration - 1)+" AND (path=\"%/"+escapeQuotes(trackEntry.path)+"\")");
-            }else if(trackEntry.duration !== null && trackEntry.title !== null){
-                queryGroups.push("duration<"+(trackEntry.duration + 1)+" AND duration>"+(trackEntry.duration - 1)+" AND (title=\""+escapeQuotes(trackEntry.title)+"\")");
-            }*/
-            if (doMetadataCheck()) {
-                if (trackEntry.duration !== null) {
-                    queryGroups.push(
-                        "duration<" + (trackEntry.duration + 3) + " AND duration>" + (trackEntry.duration - 3) +
-                        " AND (title=\"" + escapeQuotes(trackEntry.title !== null ? trackEntry.title : "[Unknown Title]") + "\"" +
-                        " OR path:\"/" + escapeQuotes(trackEntry.path !== null ? trackEntry.path : "[Unknown Path]") + "\"" +
-                        " OR artist=\"" + escapeQuotes(trackEntry.artist !== null ? trackEntry.artist : "[Unknown Artist]") + "\"" +
-                        " OR artist=\"" + escapeQuotes((trackEntry.album_artist !== null && trackEntry.album_artist !== trackEntry.artist) ? trackEntry.album_artist : "[Unknown Artist]") + "\"" +
-                        " OR album=\"" + escapeQuotes(trackEntry.album !== null ? trackEntry.album : "[Unknown Album]") + "\"" +
-                        ")"
-                    );
-                    queryGroups.push(
-                        "duration<" + (trackEntry.duration + 3) + " AND duration>" + (trackEntry.duration - 3) +
-                        " AND (title:\"" + escapeQuotes(trackEntry.title !== null ? trackEntry.title : "[Unknown Title]") + "\"" +
-                        " OR path:\"/" + escapeQuotes(trackEntry.path !== null ? trackEntry.path : "[Unknown Path]") + "\"" +
-                        " OR artist:\"" + escapeQuotes(trackEntry.artist !== null ? trackEntry.artist : "[Unknown Artist]") + "\"" +
-                        " OR artist:\"" + escapeQuotes((trackEntry.album_artist !== null && trackEntry.album_artist !== trackEntry.artist) ? trackEntry.album_artist : "[Unknown Artist]") + "\"" +
-                        " OR artist~\"" + escapeQuotes(trackEntry.artist !== null ? trackEntry.artist : "[Unknown Artist]") + "\"" +
-                        " OR artist~\"" + escapeQuotes((trackEntry.album_artist !== null && trackEntry.album_artist !== trackEntry.artist) ? trackEntry.album_artist : "[Unknown Artist]") + "\"" +
-                        " OR album:\"" + escapeQuotes(trackEntry.album !== null ? trackEntry.album : "[Unknown Album]") + "\"" +
-                        ")"
-                    );
-                    queryGroups.push(
-                        "duration<" + (trackEntry.duration + 4) + " AND duration>" + (trackEntry.duration - 4) +
-                        " AND (" +
-                        (trackEntry.title !== null ? "(" + escapeParenthesis(trackEntry.title) + ") OR " : "") +
-                        (trackEntry.artist !== null ? "(" + escapeParenthesis(trackEntry.artist) + ") OR " : "") +
-                        ((trackEntry.album_artist !== null && trackEntry.album_artist !== trackEntry.artist) ? "(" + escapeParenthesis(trackEntry.album_artist) + ") OR " : "") +
-                        (trackEntry.album !== null ? "(" + escapeParenthesis(trackEntry.album) + ") OR " : "") +
-                        "hash=00000000000000000000000000000000)" +
-                        ")"
-                    );
-                } else if (trackEntry.title !== null) {
-                    queryGroups.push(
-                        "(title=\"" + escapeQuotes(trackEntry.title) + "\"" +
-                        (trackEntry.path !== null ? " AND path:\"/" + escapeQuotes(trackEntry.path) + "\"" : "") +
-                        (trackEntry.artist !== null ? " AND artist=\"" + escapeQuotes(trackEntry.artist) + "\"" : "") +
-                        (trackEntry.artist !== null ? " AND artist=\"" + escapeQuotes(trackEntry.artist) + "\"" : "") +
-                        (trackEntry.album !== null ? " AND album=\"" + escapeQuotes(trackEntry.album) + "\"" : "") +
-                        ")"
-                    );
+    async function doSearchOperations(index) {
+        const trackEntry = trackEntries[index];
+        const queryGroups = [];
+        if (doHashCheck() && trackEntry.hash !== null && /^[a-f0-9]{32}$/.test(trackEntry.hash)) {
+            queryGroups.push("hash=\"" + trackEntry.hash + "\"");
+        }
 
-                    queryGroups.push(
-                        "(title:\"" + escapeQuotes(trackEntry.title) + "\"" +
-                        (trackEntry.path !== null ? " AND path:\"/" + escapeQuotes(trackEntry.path) + "\"" : "") +
-                        (trackEntry.artist !== null ? " AND (artist:\"" + escapeQuotes(trackEntry.artist) + "\" OR artist~\"" + escapeQuotes(trackEntry.artist) + "\")" : "") +
-                        ((trackEntry.album_artist !== null && trackEntry.album_artist !== trackEntry.artist) ? " AND (artist:\"" + escapeQuotes(trackEntry.album_artist) + "\" OR artist~\"" + escapeQuotes(trackEntry.album_artist) + "\")" : "") +
-                        (trackEntry.album !== null ? " AND album:\"" + escapeQuotes(trackEntry.album) + "\"" : "") +
-                        ")"
-                    );
-                }
-            }
+        if (doMetadataCheck()) {
+            if (trackEntry.duration !== null) {
+                queryGroups.push(
+                    "duration<" + (trackEntry.duration + 3) + " AND duration>" + (trackEntry.duration - 3) +
+                    " AND (title=\"" + escapeQuotes(trackEntry.title !== null ? trackEntry.title : "[Unknown Title]") + "\"" +
+                    " OR path:\"/" + escapeQuotes(trackEntry.path !== null ? trackEntry.path : "[Unknown Path]") + "\"" +
+                    " OR artist=\"" + escapeQuotes(trackEntry.artist !== null ? trackEntry.artist : "[Unknown Artist]") + "\"" +
+                    " OR artist=\"" + escapeQuotes((trackEntry.album_artist !== null && trackEntry.album_artist !== trackEntry.artist) ? trackEntry.album_artist : "[Unknown Artist]") + "\"" +
+                    " OR album=\"" + escapeQuotes(trackEntry.album !== null ? trackEntry.album : "[Unknown Album]") + "\"" +
+                    ")"
+                );
+                queryGroups.push(
+                    "duration<" + (trackEntry.duration + 3) + " AND duration>" + (trackEntry.duration - 3) +
+                    " AND (title:\"" + escapeQuotes(trackEntry.title !== null ? trackEntry.title : "[Unknown Title]") + "\"" +
+                    " OR path:\"/" + escapeQuotes(trackEntry.path !== null ? trackEntry.path : "[Unknown Path]") + "\"" +
+                    " OR artist:\"" + escapeQuotes(trackEntry.artist !== null ? trackEntry.artist : "[Unknown Artist]") + "\"" +
+                    " OR artist:\"" + escapeQuotes((trackEntry.album_artist !== null && trackEntry.album_artist !== trackEntry.artist) ? trackEntry.album_artist : "[Unknown Artist]") + "\"" +
+                    " OR artist~\"" + escapeQuotes(trackEntry.artist !== null ? trackEntry.artist : "[Unknown Artist]") + "\"" +
+                    " OR artist~\"" + escapeQuotes((trackEntry.album_artist !== null && trackEntry.album_artist !== trackEntry.artist) ? trackEntry.album_artist : "[Unknown Artist]") + "\"" +
+                    " OR album:\"" + escapeQuotes(trackEntry.album !== null ? trackEntry.album : "[Unknown Album]") + "\"" +
+                    ")"
+                );
+                queryGroups.push(
+                    "duration<" + (trackEntry.duration + 4) + " AND duration>" + (trackEntry.duration - 4) +
+                    " AND (" +
+                    (trackEntry.title !== null ? "(" + escapeParenthesis(trackEntry.title) + ") OR " : "") +
+                    (trackEntry.artist !== null ? "(" + escapeParenthesis(trackEntry.artist) + ") OR " : "") +
+                    ((trackEntry.album_artist !== null && trackEntry.album_artist !== trackEntry.artist) ? "(" + escapeParenthesis(trackEntry.album_artist) + ") OR " : "") +
+                    (trackEntry.album !== null ? "(" + escapeParenthesis(trackEntry.album) + ") OR " : "") +
+                    "hash=00000000000000000000000000000000)" +
+                    ")"
+                );
+            } else if (trackEntry.title !== null) {
+                queryGroups.push(
+                    "(title=\"" + escapeQuotes(trackEntry.title) + "\"" +
+                    (trackEntry.path !== null ? " AND path:\"/" + escapeQuotes(trackEntry.path) + "\"" : "") +
+                    (trackEntry.artist !== null ? " AND artist=\"" + escapeQuotes(trackEntry.artist) + "\"" : "") +
+                    (trackEntry.artist !== null ? " AND artist=\"" + escapeQuotes(trackEntry.artist) + "\"" : "") +
+                    (trackEntry.album !== null ? " AND album=\"" + escapeQuotes(trackEntry.album) + "\"" : "") +
+                    ")"
+                );
 
-            if (queryGroups.length === 0) {
-                resolve([])
-                return;
-            }
+                queryGroups.push(
+                    "(title:\"" + escapeQuotes(trackEntry.title) + "\"" +
+                    (trackEntry.path !== null ? " AND path:\"/" + escapeQuotes(trackEntry.path) + "\"" : "") +
+                    (trackEntry.artist !== null ? " AND (artist:\"" + escapeQuotes(trackEntry.artist) + "\" OR artist~\"" + escapeQuotes(trackEntry.artist) + "\")" : "") +
+                    ((trackEntry.album_artist !== null && trackEntry.album_artist !== trackEntry.artist) ? " AND (artist:\"" + escapeQuotes(trackEntry.album_artist) + "\" OR artist~\"" + escapeQuotes(trackEntry.album_artist) + "\")" : "") +
+                    (trackEntry.album !== null ? " AND album:\"" + escapeQuotes(trackEntry.album) + "\"" : "") +
+                    ")"
+                );
 
-            handleSearch(resolve, reject, trackEntry, queryGroups, 0);
-        });
+                queryGroups.push(
+                    "(title=\"" + escapeQuotes(trackEntry.title) + "\"" +
+                    ")"
+                );
+            }
+        }
+
+        if (queryGroups.length === 0) {
+            return [];
+        }
+
+        return await handleSearch(trackEntry, queryGroups);
     }
 
     function clearNameForMatch(name) {
@@ -572,9 +549,16 @@ It also supports JSON favorite extracts from listen.moe and r-a-d.io.
         return name.normalize().toLowerCase().replace(/[:\'\"\-~ \.\[\]\(\)_\#�\?\!\/;\+=\*]/g, '').replace(/(part|cd|disc|box|ost|cdbox)[0-9i]+/u, '').replace(/(original|complete)?soundtrack[0-9i]*/u, '');
     }
 
-    function handleSearch(resolve, reject, trackEntry, queryGroups, currentIndex) {
-        doSearch(queryGroups[currentIndex]).then((data) => {
-            let results = [];
+    async function handleSearch(trackEntry, queryGroups) {
+        for(let currentIndex = 0; currentIndex < queryGroups.length; ++currentIndex){
+            let data;
+            try{
+                data = await doSearch(queryGroups[currentIndex]);
+            }catch (e){
+                continue;
+            }
+
+            const results = [];
             const title1 = clearNameForMatch(trackEntry.title);
             const album1 = clearNameForMatch(trackEntry.album);
             const artist1 = clearNameForMatch(trackEntry.artist);
@@ -582,7 +566,7 @@ It also supports JSON favorite extracts from listen.moe and r-a-d.io.
             const path1 = clearNameForMatch(trackEntry.path);
 
             for (let i = 0; i < data.length; ++i) {
-                let t = data[i];
+                const t = data[i];
                 if (t.hash === trackEntry.hash) {
                     results.unshift(t);
                     break;
@@ -617,21 +601,11 @@ It also supports JSON favorite extracts from listen.moe and r-a-d.io.
             }
 
             if (results.length > 0) {
-                resolve(results);
-            } else {
-                if ((currentIndex + 1) < queryGroups.length) {
-                    handleSearch(resolve, reject, trackEntry, queryGroups, currentIndex + 1);
-                } else {
-                    resolve([]);
-                }
+                return results;
             }
-        }).catch((e) => {
-            if ((currentIndex + 1) < queryGroups.length) {
-                handleSearch(resolve, reject, trackEntry, queryGroups, currentIndex + 1);
-            } else {
-                reject(e);
-            }
-        });
+        }
+
+        return [];
     }
 
     function escapeQuotes(str) {
@@ -657,10 +631,18 @@ It also supports JSON favorite extracts from listen.moe and r-a-d.io.
             let md5_ctx = md5_init();
             let offset = 0;
             const self = this; // we need a reference to the current object
-            let chunkReaderBlock = null;
             let lastProgress = 0;
+            let progress;
+            let readEventHandler;
 
-            const readEventHandler = function (evt) {
+            const chunkReaderBlock = function (_offset, length, _file) {
+                const r = new FileReader();
+                const blob = _file.slice(_offset, length + _offset);
+                r.onload = readEventHandler;
+                r.readAsArrayBuffer(blob);
+            }
+
+            readEventHandler = function (evt) {
                 let dataHeap;
                 let dataPtr;
                 if (md5_ctx === null) {
@@ -686,7 +668,7 @@ It also supports JSON favorite extracts from listen.moe and r-a-d.io.
                     } finally {
                         MD5Module._free(dataPtr);
                     }
-                    if ((progress = Math.floor((offset / fileSize) * 100)) != lastProgress) {
+                    if ((progress = Math.floor((offset / fileSize) * 100)) !== lastProgress) {
                         lastProgress = progress;
                         trackEntry.hash = "hashing " + progress + "%";
                         updateTrackEntry(index);
@@ -723,13 +705,6 @@ It also supports JSON favorite extracts from listen.moe and r-a-d.io.
                 chunkReaderBlock(offset, chunkSize, trackEntry.file);
             };
 
-            chunkReaderBlock = function (_offset, length, _file) {
-                const r = new FileReader();
-                const blob = _file.slice(_offset, length + _offset);
-                r.onload = readEventHandler;
-                r.readAsArrayBuffer(blob);
-            }
-
             // now let's start the read with the first block
             chunkReaderBlock(offset, chunkSize, trackEntry.file);
         });
@@ -749,7 +724,7 @@ It also supports JSON favorite extracts from listen.moe and r-a-d.io.
             searching--;
             trackEntries[index].element.classList.remove("progress-search");
             console.log(results);
-            for (var j = 0; j < results.length; ++j) {
+            for (let j = 0; j < results.length; ++j) {
                 createResultEntry(index, results[j]);
             }
             if (results.length === 0) {
