@@ -637,6 +637,7 @@ flush();
     <link rel="icon" sizes="512x512" href="/img/icon-512.png">
     <meta name="theme-color" content="#ed106a">
 
+    <link rel="manifest" href="/manifest.webmanifest?<?php echo VERSION_HASH; ?>">
     <link rel="stylesheet" type="text/css" href="/css/foundation.min.css?<?php echo VERSION_HASH; ?>"/>
     <link rel="stylesheet" type="text/css" href="/css/app.css?<?php echo VERSION_HASH; ?>"/>
     <link rel="stylesheet" type="text/css" href="/css/player.css?<?php echo VERSION_HASH; ?>"/>
