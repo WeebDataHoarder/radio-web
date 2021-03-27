@@ -477,6 +477,8 @@ It also supports JSON favorite extracts from listen.moe and r-a-d.io.
         let url = new URL("/api/search", document.location.origin);
         url.searchParams.append("q", query);
         url.searchParams.append("limit", 500);
+        url.searchParams.append("orderBy", "score");
+        url.searchParams.append("orderDirection", "desc");
 
         const response = await fetch(url, {
             credentials: "same-origin",
