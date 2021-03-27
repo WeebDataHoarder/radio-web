@@ -500,6 +500,8 @@ if (!isRequestSatsuki() and !isRequestTheLounge() and $playlistFormat !== null) 
             }
         }
 
+        $doMatroska = isRequestVideoPlayer();
+
         foreach ($songs as $k => $data) {
             if($albumView){
                 $m3u .= "#EXTINF:" . $data["duration"] . ", " . $data["artist"] . " - " . (isset($data["originalTitle"]) ? $data["originalTitle"] : $data["title"]) . PHP_EOL;
@@ -512,7 +514,7 @@ if (!isRequestSatsuki() and !isRequestTheLounge() and $playlistFormat !== null) 
                 $m3u .= "#EXTALBUMARTURL:" . "https://".SITE_HOSTNAME."/api/cover/".$data["cover"]."/large" . PHP_EOL;
                 $m3u .= "#EXTIMG:" . "https://".SITE_HOSTNAME."/api/cover/".$data["cover"]."/large" . PHP_EOL;
             }
-            $m3u .= "https://".SITE_HOSTNAME."/api/download/" . $data["hash"] . PHP_EOL . PHP_EOL;
+            $m3u .= ($doMatroska and (/*$data["cover"] !== null or */count($data["lyrics"]) > 0)) ? "https://".SITE_HOSTNAME."/service/encode/" . $data["hash"] . "/mkv" . PHP_EOL . PHP_EOL : "https://".SITE_HOSTNAME."/api/download/" . $data["hash"] . PHP_EOL . PHP_EOL;
         }
         $hash = hash("sha256", $m3u);
 

@@ -1,7 +1,7 @@
 <?php
 
 setlocale(LC_CTYPE, "en_US.UTF-8");
-define("VERSION_HASH", rtrim(base64_encode(md5(file_get_contents(__DIR__ . "/../.version"), true)), "="));
+define("VERSION_HASH", substr(md5(file_get_contents(__DIR__ . "/../.version"), true), 0, 8));
 define("SCRIPT_NONCE", isset($_SERVER["HTTP_X_NONCE"]) ? bin2hex(hex2bin($_SERVER["HTTP_X_NONCE"])) : null);
 
 require_once("config.php");
@@ -102,8 +102,13 @@ function isRequestSatsuki(){
 }
 
 function isRequestMediaPlayer(){
-    return @stripos($_SERVER['HTTP_USER_AGENT'], "libmpv") !== false or //mpv
+    return isRequestVideoPlayer() or
         @stripos($_SERVER['HTTP_USER_AGENT'], "lavf/") === 0 or //ffplay
-        @stripos($_SERVER['HTTP_USER_AGENT'], "libvlc") !== false or //VLC
         (isset($_SERVER['HTTP_ICY_METADATA']) and $_SERVER['HTTP_ICY_METADATA'] === "1"); //others?
+}
+
+function isRequestVideoPlayer(){
+    return @stripos($_SERVER['HTTP_USER_AGENT'], "libmpv") !== false or //mpv
+        @stripos($_SERVER['HTTP_USER_AGENT'], "libvlc") !== false //VLC
+    ;
 }
