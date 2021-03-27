@@ -375,25 +375,23 @@ It also supports JSON favorite extracts from listen.moe and r-a-d.io.
         });
     }
 
-    function addRawEntryToList(entry) {
-        return new Promise((resolve, reject) => {
-            const index = trackEntries.push({
-                "hash": entry.hash ? entry.hash : null,
-                "file": null,
-                "path": entry.path ? entry.path.substr(entry.path.lastIndexOf('/') + 1) : null,
-                "size": entry.size ? entry.size : null,
-                "title": entry.title ? entry.title : null,
-                "artist": entry.artist ? entry.artist : null,
-                "album_artist": entry.album_artist ? entry.album_artist : null,
-                "album": entry.album ? entry.album : null,
-                "duration": entry.duration ? entry.duration : null,
-                "progress": 0,
-                "coverArt": null
-            }) - 1;
-            createTrackEntry(index);
+    async function addRawEntryToList(entry) {
+        const index = trackEntries.push({
+            "hash": entry.hash ? entry.hash : null,
+            "file": null,
+            "path": entry.path ? entry.path.substr(entry.path.lastIndexOf('/') + 1) : null,
+            "size": entry.size ? entry.size : null,
+            "title": entry.title ? entry.title : null,
+            "artist": entry.artist ? entry.artist : null,
+            "album_artist": entry.album_artist ? entry.album_artist : null,
+            "album": entry.album ? entry.album : null,
+            "duration": entry.duration ? entry.duration : null,
+            "progress": 0,
+            "coverArt": null
+        }) - 1;
+        await createTrackEntry(index);
 
-            resolve(index);
-        });
+        return index;
     }
 
     function prepareEntry(index) {
@@ -475,29 +473,17 @@ It also supports JSON favorite extracts from listen.moe and r-a-d.io.
         });
     }
 
-    function doSearch(query) {
-        return new Promise((resolve, reject) => {
-            let url = new URL("/api/search", document.location.origin);
-            url.searchParams.append("q", query);
-            url.searchParams.append("limit", 500);
+    async function doSearch(query) {
+        let url = new URL("/api/search", document.location.origin);
+        url.searchParams.append("q", query);
+        url.searchParams.append("limit", 500);
 
-            fetch(url, {
-                credentials: "same-origin",
-                method: "GET"
-            })
-                .then(response => {
-                    response.json()
-                        .then(data => {
-                            resolve(data);
-                        })
-                        .catch(reason => {
-                            reject("Error decoding JSON: " + reason);
-                        });
-                })
-                .catch(reason => {
-                    reject("Error fetching data: " + reason);
-                });
+        const response = await fetch(url, {
+            credentials: "same-origin",
+            method: "GET"
         });
+
+        return await response.json();
     }
 
     function doSearchOperations(index) {
@@ -520,19 +506,21 @@ It also supports JSON favorite extracts from listen.moe and r-a-d.io.
                     queryGroups.push(
                         "duration<" + (trackEntry.duration + 3) + " AND duration>" + (trackEntry.duration - 3) +
                         " AND (title=\"" + escapeQuotes(trackEntry.title !== null ? trackEntry.title : "[Unknown Title]") + "\"" +
-                        " OR path=\"%/" + escapeQuotes(trackEntry.path !== null ? trackEntry.path : "[Unknown Path]") + "\"" +
-                        " OR artist=\"%/" + escapeQuotes(trackEntry.artist !== null ? trackEntry.artist : "[Unknown Artist]") + "\"" +
-                        " OR artist=\"%/" + escapeQuotes(trackEntry.album_artist !== null ? trackEntry.album_artist : "[Unknown Artist]") + "\"" +
-                        " OR album=\"%/" + escapeQuotes(trackEntry.album !== null ? trackEntry.album : "[Unknown Album]") + "\"" +
+                        " OR path:\"/" + escapeQuotes(trackEntry.path !== null ? trackEntry.path : "[Unknown Path]") + "\"" +
+                        " OR artist=\"" + escapeQuotes(trackEntry.artist !== null ? trackEntry.artist : "[Unknown Artist]") + "\"" +
+                        " OR artist=\"" + escapeQuotes((trackEntry.album_artist !== null && trackEntry.album_artist !== trackEntry.artist) ? trackEntry.album_artist : "[Unknown Artist]") + "\"" +
+                        " OR album=\"" + escapeQuotes(trackEntry.album !== null ? trackEntry.album : "[Unknown Album]") + "\"" +
                         ")"
                     );
                     queryGroups.push(
                         "duration<" + (trackEntry.duration + 3) + " AND duration>" + (trackEntry.duration - 3) +
                         " AND (title:\"" + escapeQuotes(trackEntry.title !== null ? trackEntry.title : "[Unknown Title]") + "\"" +
-                        " OR path=\"%/" + escapeQuotes(trackEntry.path !== null ? trackEntry.path : "[Unknown Path]") + "\"" +
-                        " OR artist:\"%/" + escapeQuotes(trackEntry.artist !== null ? trackEntry.artist : "[Unknown Artist]") + "\"" +
-                        " OR artist:\"%/" + escapeQuotes(trackEntry.album_artist !== null ? trackEntry.album_artist : "[Unknown Artist]") + "\"" +
-                        " OR album:\"%/" + escapeQuotes(trackEntry.album !== null ? trackEntry.album : "[Unknown Album]") + "\"" +
+                        " OR path:\"/" + escapeQuotes(trackEntry.path !== null ? trackEntry.path : "[Unknown Path]") + "\"" +
+                        " OR artist:\"" + escapeQuotes(trackEntry.artist !== null ? trackEntry.artist : "[Unknown Artist]") + "\"" +
+                        " OR artist:\"" + escapeQuotes((trackEntry.album_artist !== null && trackEntry.album_artist !== trackEntry.artist) ? trackEntry.album_artist : "[Unknown Artist]") + "\"" +
+                        " OR artist~\"" + escapeQuotes(trackEntry.artist !== null ? trackEntry.artist : "[Unknown Artist]") + "\"" +
+                        " OR artist~\"" + escapeQuotes((trackEntry.album_artist !== null && trackEntry.album_artist !== trackEntry.artist) ? trackEntry.album_artist : "[Unknown Artist]") + "\"" +
+                        " OR album:\"" + escapeQuotes(trackEntry.album !== null ? trackEntry.album : "[Unknown Album]") + "\"" +
                         ")"
                     );
                     queryGroups.push(
@@ -540,7 +528,7 @@ It also supports JSON favorite extracts from listen.moe and r-a-d.io.
                         " AND (" +
                         (trackEntry.title !== null ? "(" + escapeParenthesis(trackEntry.title) + ") OR " : "") +
                         (trackEntry.artist !== null ? "(" + escapeParenthesis(trackEntry.artist) + ") OR " : "") +
-                        (trackEntry.album_artist !== null ? "(" + escapeParenthesis(trackEntry.album_artist) + ") OR " : "") +
+                        ((trackEntry.album_artist !== null && trackEntry.album_artist !== trackEntry.artist) ? "(" + escapeParenthesis(trackEntry.album_artist) + ") OR " : "") +
                         (trackEntry.album !== null ? "(" + escapeParenthesis(trackEntry.album) + ") OR " : "") +
                         "hash=00000000000000000000000000000000)" +
                         ")"
@@ -548,19 +536,19 @@ It also supports JSON favorite extracts from listen.moe and r-a-d.io.
                 } else if (trackEntry.title !== null) {
                     queryGroups.push(
                         "(title=\"" + escapeQuotes(trackEntry.title) + "\"" +
-                        (trackEntry.path !== null ? " AND path=\"%/" + escapeQuotes(trackEntry.path) + "\"" : "") +
-                        (trackEntry.artist !== null ? " AND artist=\"%/" + escapeQuotes(trackEntry.artist) + "\"" : "") +
-                        (trackEntry.album_artist !== null ? " AND artist=\"%/" + escapeQuotes(trackEntry.album_artist) + "\"" : "") +
-                        (trackEntry.album !== null ? " AND album=\"%/" + escapeQuotes(trackEntry.album) + "\"" : "") +
+                        (trackEntry.path !== null ? " AND path:\"/" + escapeQuotes(trackEntry.path) + "\"" : "") +
+                        (trackEntry.artist !== null ? " AND artist=\"" + escapeQuotes(trackEntry.artist) + "\"" : "") +
+                        (trackEntry.artist !== null ? " AND artist=\"" + escapeQuotes(trackEntry.artist) + "\"" : "") +
+                        (trackEntry.album !== null ? " AND album=\"" + escapeQuotes(trackEntry.album) + "\"" : "") +
                         ")"
                     );
 
                     queryGroups.push(
                         "(title:\"" + escapeQuotes(trackEntry.title) + "\"" +
-                        (trackEntry.path !== null ? " AND path:\"%/" + escapeQuotes(trackEntry.path) + "\"" : "") +
-                        (trackEntry.artist !== null ? " AND artist:\"%/" + escapeQuotes(trackEntry.artist) + "\"" : "") +
-                        (trackEntry.album_artist !== null ? " AND artist:\"%/" + escapeQuotes(trackEntry.album_artist) + "\"" : "") +
-                        (trackEntry.album !== null ? " AND album:\"%/" + escapeQuotes(trackEntry.album) + "\"" : "") +
+                        (trackEntry.path !== null ? " AND path:\"/" + escapeQuotes(trackEntry.path) + "\"" : "") +
+                        (trackEntry.artist !== null ? " AND (artist:\"" + escapeQuotes(trackEntry.artist) + "\" OR artist~\"" + escapeQuotes(trackEntry.artist) + "\")" : "") +
+                        ((trackEntry.album_artist !== null && trackEntry.album_artist !== trackEntry.artist) ? " AND (artist:\"" + escapeQuotes(trackEntry.album_artist) + "\" OR artist~\"" + escapeQuotes(trackEntry.album_artist) + "\")" : "") +
+                        (trackEntry.album !== null ? " AND album:\"" + escapeQuotes(trackEntry.album) + "\"" : "") +
                         ")"
                     );
                 }
