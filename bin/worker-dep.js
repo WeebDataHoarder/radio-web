@@ -4,7 +4,7 @@
  * @param request
  * @returns {Promise<Response>}
  */
-self.tryToCache = async (request) => {
+async function tryToCache (request) {
     const r = await caches.match(request);
     if(r){
         console.log("[ServiceWorker] returned from cache " + request.url + ", scope " + self.registration.scope);
@@ -66,7 +66,7 @@ self.addEventListener("activate", function (event) {
 self.addEventListener('fetch', (event) => {
     const url = event.request.url;
     const scope = self.registration.scope;
-    console.log("[ServiceWorker] fetch " + url + ", scope " + self.registration.scope);
+    console.log("[ServiceWorker] fetch " + url + ", path " + url.pathname + ", scope " + self.registration.scope);
 
     // Skip cross-origin requests
     if (!url.startsWith(scope)) {
@@ -88,7 +88,7 @@ self.addEventListener('fetch', (event) => {
     }
 
     if (/^\/api\/(cover|download|lyrics)\//.test(path)) { // Parts of API that can be cached
-        event.respondWith(self.tryToCache(event.request)());
+        event.respondWith(tryToCache(event.request));
         return;
     }
 
@@ -97,7 +97,7 @@ self.addEventListener('fetch', (event) => {
     }
 
     if (/^\/(js|css|img|fonts|dict)\//.test(path)) { //Static files
-        event.respondWith(self.tryToCache(event.request)());
+        event.respondWith(tryToCache(event.request));
         return;
     }
 
@@ -105,7 +105,7 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    event.respondWith(self.tryToCache(event.request)()); //Cache everything else
+    event.respondWith(tryToCache(event.request)); //Cache everything else
 });
 
 self.addEventListener("message", function (event) {
