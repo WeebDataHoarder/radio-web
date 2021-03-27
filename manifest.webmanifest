@@ -2,7 +2,7 @@
   "short_name": "anime(bits)",
   "name": "anime(bits) #radio",
   "description": "anime(bits) #radio - all them beats, live",
-  "start_url": ".",
+  "start_url": "./",
   "scope": "/",
   "icons": [
     {
