@@ -135,9 +135,9 @@ if ($user === null) {
                                                 accept=".flac,.ogg,.opus,.m4a,.alac,.caf,.mp3,.wav,.wave,.tta,.aiff,.aif"
                                                 multiple/></label>
     <br>
-    <label>Do hash search (useless if you edited tags or re-encoded it) <input type="checkbox" id="do-hash"
-                                                                               checked/></label> :: <label>Load and
-        extract metadata <input type="checkbox" id="do-metadata" checked/></label>
+    <label>Do hash search (useless if you edited tags or re-encoded it) <input type="checkbox" id="do-hash" checked/></label>
+    :: <label>Load and extract metadata <input type="checkbox" id="do-metadata" checked/></label>
+    :: <label>Do loose title match <input type="checkbox" id="do-loose-title"/></label>
 </p>
 <hr>
 <p id="text-picker">
@@ -352,6 +352,10 @@ It also supports JSON favorite extracts from listen.moe and r-a-d.io.
         return document.querySelector("#do-metadata").checked;
     }
 
+    function doLooseTitleCheck() {
+        return document.querySelector("#do-loose-title").checked;
+    }
+
     function addFileToList(file) {
         return new Promise((resolve, reject) => {
             const index = trackEntries.push({
@@ -458,7 +462,7 @@ It also supports JSON favorite extracts from listen.moe and r-a-d.io.
     async function doSearch(query) {
         const url = new URL("/api/search", document.location.origin);
         url.searchParams.append("q", query);
-        url.searchParams.append("limit", 500);
+        url.searchParams.append("limit", 20);
         url.searchParams.append("orderBy", "score");
         url.searchParams.append("orderDirection", "desc");
 
@@ -528,10 +532,12 @@ It also supports JSON favorite extracts from listen.moe and r-a-d.io.
                     ")"
                 );
 
-                queryGroups.push(
-                    "(title=\"" + escapeQuotes(trackEntry.title) + "\"" +
-                    ")"
-                );
+                if(doLooseTitleCheck()){
+                    queryGroups.push(
+                        "(title=\"" + escapeQuotes(trackEntry.title) + "\"" +
+                        ")"
+                    );
+                }
             }
         }
 
@@ -738,7 +744,7 @@ It also supports JSON favorite extracts from listen.moe and r-a-d.io.
             searching--;
             console.log(e);
             trackEntries[index].element.classList.add("progress-error");
-            trackEntries[index].element.querySelector(".results-entry").append("An error ocurred: " + e);
+            trackEntries[index].element.querySelector(".results-entry").append("An error occurred: " + e);
             tryToSearch();
         });
     }
@@ -755,7 +761,7 @@ It also supports JSON favorite extracts from listen.moe and r-a-d.io.
             }).catch((index, e) => {
                 console.log(e);
                 trackEntries[index].element.classList.add("progress-error");
-                trackEntries[index].element.querySelector(".results-entry").append("An error ocurred: " + e);
+                trackEntries[index].element.querySelector(".results-entry").append("An error occurred: " + e);
             });
         }
     });
@@ -784,7 +790,7 @@ It also supports JSON favorite extracts from listen.moe and r-a-d.io.
                         }).catch((index, e) => {
                             console.log(e);
                             trackEntries[index].element.classList.add("progress-error");
-                            trackEntries[index].element.querySelector(".results-entry").append("An error ocurred: " + e);
+                            trackEntries[index].element.querySelector(".results-entry").append("An error occurred: " + e);
                         });
                     }
                 });
@@ -811,7 +817,7 @@ It also supports JSON favorite extracts from listen.moe and r-a-d.io.
                             }).catch((index, e) => {
                                 console.log(e);
                                 trackEntries[index].element.classList.add("progress-error");
-                                trackEntries[index].element.querySelector(".results-entry").append("An error ocurred: " + e);
+                                trackEntries[index].element.querySelector(".results-entry").append("An error occurred: " + e);
                             });
                         });
                     } else if (Array.isArray(dataset) && dataset.length > 0 && ('tracks_id' in dataset[0]) && ('meta' in dataset[0])) {
@@ -835,7 +841,7 @@ It also supports JSON favorite extracts from listen.moe and r-a-d.io.
                                 }).catch((index, e) => {
                                     console.log(e);
                                     trackEntries[index].element.classList.add("progress-error");
-                                    trackEntries[index].element.querySelector(".results-entry").append("An error ocurred: " + e);
+                                    trackEntries[index].element.querySelector(".results-entry").append("An error occurred: " + e);
                                 });
                             }
 
@@ -849,7 +855,7 @@ It also supports JSON favorite extracts from listen.moe and r-a-d.io.
                             }).catch((index, e) => {
                                 console.log(e);
                                 trackEntries[index].element.classList.add("progress-error");
-                                trackEntries[index].element.querySelector(".results-entry").append("An error ocurred: " + e);
+                                trackEntries[index].element.querySelector(".results-entry").append("An error occurred: " + e);
                             });
                         });
                     }
