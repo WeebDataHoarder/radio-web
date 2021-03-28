@@ -10,158 +10,6 @@ if ($dbconn === null) {
 }
 
 
-
-
-function convertLRCtoEntries($data){
-        $lyricEntries = [];
-
-        $lines = explode("\n", $data);
-        $currentOffset = 0;
-        $previousEntry = null;
-        foreach ($lines as $line){
-            if(preg_match("/\[(offset):([^\]]+)\]/u", $line, $matches) > 0){
-                $type = strtolower($matches[1]);
-                $content = trim($matches[2]);
-                if($type === "offset"){
-                    $currentOffset = floatval($content) / 1000;
-                }
-            }elseif(preg_match("/\[([^\]]+)\](.*)/u", $line, $matches) > 0){
-                $text = trim($matches[2]);
-                $timeUnits = explode(":", $matches[1]);
-                $time = floatval(array_pop($timeUnits));
-                $time += floatval(array_pop($timeUnits)) * 60;
-                $time += floatval(array_pop($timeUnits)) * 3600;
-                $time += $currentOffset;
-
-                if(preg_match("/^(作词|作曲|编曲|曲|歌|词)[ \t]*[：∶:]/u", $text)){
-                    continue;
-                }
-                if($previousEntry !== null && !isset($previousEntry->end)){
-                    if($previousEntry->text === "" && $text === ""){
-                        continue;
-                    }
-                    $previousEntry->end = $time;
-                }
-
-                $subEntries = [];
-                
-                $prevSubEntry = null;
-                if(preg_match_all("/<([0-9:. ]+)>([^<]*)/u", $text, $results)){
-                    foreach ($results[1] as $i => $t){
-                        $subText = $results[2][$i];
-                        $subTimeUnits = explode(":", $t);
-                        $subTime = floatval(array_pop($subTimeUnits));
-                        $subTime += floatval(array_pop($subTimeUnits)) * 60;
-                        $subTime += floatval(array_pop($subTimeUnits)) * 3600;
-                        $subTime += $currentOffset;
-                        
-                        if($prevSubEntry !== null && !$prevSubEntry->end){
-                            $prevSubEntry->end = $subTime;
-                        }
-                        
-                        $subEntries[] = $prevSubEntry = (object) [
-                            "text" => $subText,
-                            "start" => $subTime
-                        ];
-                    }
-                }
-
-                $lyricEntries[] = $previousEntry = (object) [
-                    "text" => preg_replace("/<[^>]+>/u", "", $text),
-                    "start" => $time
-                ];
-                if(count($subEntries)){
-                    $previousEntry->entries = $subEntries;
-                }
-            }
-        }
-        
-        return $lyricEntries;
-    }
-
-
-    function createASSFromEntries($lyricEntries, $duration){
-        $playResX = 512;
-        $playResY = 512;
-
-        $areaX = $playResX;
-        $areaY = (int) min(floor($playResX / 8), $playResY);
-
-        $fontSize = 24;
-
-        $subtitleFile = "[Script Info]\n" .
-        "Title: Lyrics\n" .
-        "ScriptType: v4.00+\n" .
-        "Collisions: Normal\n" .
-        "WrapStyle: 0\n" .
-        "ScaledBorderAndShadow: yes\n" .
-        "YCbCr Matrix: None\n" .
-        "PlayResX: 512\n" .
-        "PlayResY: 512\n" .
-        "Timer: 100.0000\n" .
-        "PlayDepth: 0\n" .
-        "\n" .
-        "[Aegisub Project Garbage]\n" .
-        "Last Style Storage: Default\n" .
-        "Video File: ?dummy:30:40000:512:512:47:163:254:\n" .
-        "Video AR Value: 5.000000\n" .
-        "\n" .
-        "[V4+ Styles]\n" .
-        "Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding\n" .
-        "Style: Current,Open Sans,$fontSize,&H00FFFFFF,&H00B1B1B1,&H00000000,&H00000000,1,0,0,0,100,100,0,0,1,1,0,2,10,10,".floor(($areaY / 2) - ($fontSize / 2)).",1\n" .
-        "Style: BG,Open Sans,$fontSize,&H66000000,&H00000000,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,0,0,2,0,0,0,1\n" .
-        "\n" .
-        "[Events]\n" .
-        "Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n";
-
-        $timeToStamp = function ($time) {
-            $time = max($time, 0);
-            $hours = floor($time / 3600);
-            $time = $time - $hours * 3600;
-            $minutes = floor($time / 60);
-            $seconds = $time - $minutes * 60;
-
-            return $hours . ":" . str_pad($minutes, 2, '0',  STR_PAD_LEFT) . ':' . str_pad(floor($seconds), 2, '0',  STR_PAD_LEFT) . "." . str_pad(round(($seconds - floor($seconds)) * 100), 2, '0',  STR_PAD_LEFT);
-        };
-
-        $pickText = function($ob) {
-            return preg_replace("/[ ]+/", " ", $ob->text);
-        };
-
-        $currentBackgroundTime = 0; //TODO: have multiple per song
-
-        foreach ($lyricEntries as $line){
-            
-            //TODO: secondary line
-
-            $lineEnd = $line->end ?? ($line->start + 5);
-            $entryLine = 'Dialogue: 1,' . $timeToStamp($line->start) . ', ' . $timeToStamp($lineEnd) . ',Current,,0,0,0,,';
-            $lineDuration = max(1, floor((($line->end ?? ($line->start + 5)) - $line->start) * 100));
-            if(isset($line->entries) && count($line->entries) > 0){
-                $entryLine .= '{\\fade(50,250)}';
-                foreach ($line->entries as $entry){
-                    $entryDuration = max(1, floor(((isset($entry->end) ? min($lineEnd, $entry->end) : $lineEnd) - $entry->start) * 100));
-                    $entryLine .= '{\\kf'.$entryDuration.'}' . $pickText($entry);
-                }
-            }else{
-                $txt = $pickText($line);
-                if(trim($txt) === ""){
-                    continue;
-                }
-                $entryLine .= '{'.($lineDuration > 50 ? '\\fade(50,250)' : '') . '\\kf' . $lineDuration . '}' . $txt;
-            }
-
-            $subtitleFile .= $entryLine . "\n";
-       
-        }
-
-
-        $subtitleFile .= 'Dialogue: 0,' . $timeToStamp($currentBackgroundTime) . ', ' . $timeToStamp($duration) . ',BG,,0,0,0,,{\\p1}m 0 0 l '.$areaX.' 0 '.$areaX.' '.$areaY.' 0 '.$areaY;
-
-        return $subtitleFile;
-    }
-
-
 $hashSql = <<<SQL
 SELECT
 songs.id AS id,
@@ -227,6 +75,7 @@ if (preg_match("#^/service/encode/(?P<hash>[a-fA-F0-9]{8,32})(|/(?P<codec>(m4a|a
             if(isset($data["lyrics"]["ass"])){
                 $subs = [tempnam("/tmp", "encode_"), $data["lyrics"]["ass"]];
             }else if(isset($data["lyrics"]["timed"])){
+                require_once("subs.php");
                 $subs = [tempnam("/tmp", "encode_"), createASSFromEntries(convertLRCtoEntries($data["lyrics"]["timed"]), $data["duration"])];
             }
 
@@ -242,7 +91,7 @@ if (preg_match("#^/service/encode/(?P<hash>[a-fA-F0-9]{8,32})(|/(?P<codec>(m4a|a
                 }
 
                 //$cmd .= " -i " . escapeshellarg(DEFAULT_API_URL . "lyrics/" . $data["cover"] ."/ass") . " ";
-                $cmd .= " -i " . $subs[0] . " ";
+                $cmd .= " -f ass -i " . escapeshellarg($subs[0]) . " ";
 
                 $multiplier = (int) max(1, ceil( ($playResX / $playResY) > 2 ? 2048 / $playResX : 1024 / $playResY));
 
@@ -251,11 +100,11 @@ if (preg_match("#^/service/encode/(?P<hash>[a-fA-F0-9]{8,32})(|/(?P<codec>(m4a|a
 
                 $cmd .= " -f lavfi -i 'color=size={$playResX}x{$playResY}:rate=30:duration=".$data["duration"].":color=black' ";
                 if($data["cover"] !== null){
-                    $params .=  "-map 2:s -disposition:s:0 forced -filter_complex '[1:v]scale=w=-1:h={$playResY}[cover];[3:v][cover]overlay=eof_action=repeat[out]' -map '[out]' -pix_fmt yuv420p -c:v libx264 -preset:v ultrafast -profile:v high -tune:v stillimage -crf 40 -x264opts \"keyint=900:min-keyint=900:no-scenecut\" ";
+                    $params .=  "-map 2:s -filter_complex '[1:v]scale=w=-1:h={$playResY}[cover];[3:v][cover]overlay=eof_action=repeat[out]' -map '[out]' ";
                 }else{
-                    $params .=  "-map 1:s -disposition:s:0 forced -filter_complex -map 2:v -pix_fmt yuv420p -c:v libx264 -preset:v ultrafast -profile:v high -tune:v stillimage -crf 40 -x264opts \"keyint=900:min-keyint=900:no-scenecut\" ";
-
+                    $params .=  "-map 1:s -map 2:v ";
                 }
+                $params .= "-c:s ass -disposition:s:0 forced -pix_fmt yuv420p -c:v libx264 -preset:v ultrafast -profile:v high -tune:v stillimage -crf 40 -x264opts \"keyint=900:min-keyint=900:no-scenecut\" ";
             }else{
                 $params .= "-map 1:v ";
             }

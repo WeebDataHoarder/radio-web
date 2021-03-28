@@ -108,7 +108,13 @@ function isRequestMediaPlayer(){
 }
 
 function isRequestVideoPlayer(){
-    return @stripos($_SERVER['HTTP_USER_AGENT'], "libmpv") !== false or //mpv
-        @stripos($_SERVER['HTTP_USER_AGENT'], "libvlc") !== false //VLC
-    ;
+    return isRequestVLC() or isRequestMPV();
+}
+
+function isRequestVLC(){
+    return @stripos($_SERVER['HTTP_USER_AGENT'], "libvlc") !== false;
+}
+
+function isRequestMPV(){
+    return @stripos($_SERVER['HTTP_USER_AGENT'], "libmpv") !== false;
 }
