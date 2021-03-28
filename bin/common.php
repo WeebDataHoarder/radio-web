@@ -118,5 +118,5 @@ function isRequestVLC(){
 }
 
 function isRequestMPV(){
-    return @stripos($_SERVER['HTTP_USER_AGENT'], "libmpv") !== false;
+    return @stripos($_SERVER['HTTP_USER_AGENT'], "libmpv") !== false or @stripos($_SERVER['HTTP_USER_AGENT'], "mpv ") === 0;
 }

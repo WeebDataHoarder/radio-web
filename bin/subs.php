@@ -3792,10 +3792,10 @@ function createASSFromEntries($lyricEntries, $duration){
         "\n" .
         "[V4+ Styles]\n" .
         "Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding\n" .
-        "Style: Current,Open Sans Semibold,$fontSize,&H00FFFFFF,&H00B1B1B1,&H00000000,&H00000000,1,0,0,0,100,100,0,0,1,1,0,2,10,10,".floor(($areaY / 2) - ($fontSize / 2)).",1\n" .
-        "Style: CurrentOriginal,Open Sans Semibold,$fontSize,&H00FFFFFF,&H00B1B1B1,&H00000000,&H00000000,1,0,0,0,100,100,0,0,1,1,0,2,10,10,".floor(($areaY / 2) + ($fontSize / 4)).",1\n" .
-        "Style: CurrentRomaji,Open Sans Semibold,$fontSize,&H00FFFFFF,&H00B1B1B1,&H00000000,&H00000000,1,0,0,0,100,100,0,0,1,1,0,2,10,10,".floor(($areaY / 2) - $fontSize - ($fontSize / 4)).",1\n" .
-        "Style: BG,Open Sans Semibold,$fontSize,&H66000000,&H00000000,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,0,0,2,0,0,0,1\n" .
+        "Style: Current,Open Sans Semibold,$fontSize,&H00FFFFFF,&H00B1B1B1,&H00000000,&H00000000,-1,0,0,0,100,100,0,0,1,1,0,2,10,10,".floor(($areaY / 2) - ($fontSize / 2)).",1\n" .
+        "Style: CurrentOriginal,Open Sans Semibold,$fontSize,&H00FFFFFF,&H00B1B1B1,&H00000000,&H00000000,-1,0,0,0,100,100,0,0,1,1,0,2,10,10,".floor(($areaY / 2) + ($fontSize / 4)).",1\n" .
+        "Style: CurrentRomaji,Open Sans Semibold,$fontSize,&H00FFFFFF,&H00B1B1B1,&H00000000,&H00000000,-1,0,0,0,100,100,0,0,1,1,0,2,10,10,".floor(($areaY / 2) - $fontSize - ($fontSize / 4)).",1\n" .
+        "Style: BG,Open Sans Semibold,$fontSize,&H66000000,&H00000000,&H00000000,&H00000000,-1,0,0,0,100,100,0,0,1,0,0,2,0,0,0,1\n" .
         "\n" .
         "[Fonts]\n" .
         getOpenSansFontEntry() . "\n" .
