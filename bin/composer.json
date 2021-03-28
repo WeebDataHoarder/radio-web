@@ -1,0 +1,18 @@
+{
+  "name": "weebdatahoarder/radio-web",
+  "description": "",
+  "type": "project",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "WeebDataHoarder",
+      "email": "57538841+WeebDataHoarder@users.noreply.github.com"
+    }
+  ],
+  "require": {
+    "ext-json": "*",
+    "ext-curl": "*",
+    "ext-pgsql": "*",
+    "nihongodera/limelight": "^1.6"
+  }
+}

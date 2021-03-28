@@ -1,5 +1,7 @@
 <?php
 
+use Limelight\Limelight;
+
 function getOpenSansFontEntry(){
     return <<<'EOF'
 fontname: OpenSans-SemiBold_0.ttf
@@ -3767,7 +3769,7 @@ function createASSFromEntries($lyricEntries, $duration){
     $playResY = 512;
 
     $areaX = $playResX;
-    $areaY = (int) min(floor($playResX / 8), $playResY);
+    $areaY = (int) min(floor($playResX / 6), $playResY);
 
     $fontSize = 24;
 
@@ -3791,10 +3793,13 @@ function createASSFromEntries($lyricEntries, $duration){
         "[V4+ Styles]\n" .
         "Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding\n" .
         "Style: Current,Open Sans Semibold,$fontSize,&H00FFFFFF,&H00B1B1B1,&H00000000,&H00000000,1,0,0,0,100,100,0,0,1,1,0,2,10,10,".floor(($areaY / 2) - ($fontSize / 2)).",1\n" .
+        "Style: CurrentOriginal,Open Sans Semibold,$fontSize,&H00FFFFFF,&H00B1B1B1,&H00000000,&H00000000,1,0,0,0,100,100,0,0,1,1,0,2,10,10,".floor(($areaY / 2) + ($fontSize / 4)).",1\n" .
+        "Style: CurrentRomaji,Open Sans Semibold,$fontSize,&H00FFFFFF,&H00B1B1B1,&H00000000,&H00000000,1,0,0,0,100,100,0,0,1,1,0,2,10,10,".floor(($areaY / 2) - $fontSize - ($fontSize / 4)).",1\n" .
         "Style: BG,Open Sans Semibold,$fontSize,&H66000000,&H00000000,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,0,0,2,0,0,0,1\n" .
         "\n" .
         "[Fonts]\n" .
         getOpenSansFontEntry() . "\n" .
+        "\n" .
         "[Events]\n" .
         "Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n";
 
@@ -3808,39 +3813,154 @@ function createASSFromEntries($lyricEntries, $duration){
         return $hours . ":" . str_pad($minutes, 2, '0',  STR_PAD_LEFT) . ':' . str_pad(floor($seconds), 2, '0',  STR_PAD_LEFT) . "." . str_pad(round(($seconds - floor($seconds)) * 100), 2, '0',  STR_PAD_LEFT);
     };
 
-    $pickText = function($ob) {
-        return preg_replace("/[ ]+/", " ", $ob->text);
+    $pickText = function($ob, $romaji = false) {
+        return preg_replace("/[ ]+/", " ", ($romaji and isset($ob->romajiText)) ? $ob->romajiText : $ob->text);
     };
 
     $currentBackgroundTime = 0; //TODO: have multiple per song
 
     foreach ($lyricEntries as $line){
 
+        $hasRomaji = $hadRomaji = getEntriesToRomaji($line);
+
         //TODO: secondary line
 
-        $lineEnd = $line->end ?? ($line->start + 5);
-        $entryLine = 'Dialogue: 1,' . $timeToStamp($line->start) . ', ' . $timeToStamp($lineEnd) . ',Current,,0,0,0,,';
-        $lineDuration = max(1, floor((($line->end ?? ($line->start + 5)) - $line->start) * 100));
-        if(isset($line->entries) && count($line->entries) > 0){
-            $entryLine .= '{\\fade(50,250)}';
-            foreach ($line->entries as $entry){
-                $entryDuration = max(1, floor(((isset($entry->end) ? min($lineEnd, $entry->end) : $lineEnd) - $entry->start) * 100));
-                $entryLine .= '{\\kf'.$entryDuration.'}' . $pickText($entry);
+        do{
+            $lineEnd = $line->end ?? ($line->start + 5);
+            $entryLine = 'Dialogue: '.($hadRomaji ? "2" : "1").',' . $timeToStamp($line->start) . ', ' . $timeToStamp($lineEnd) . ','.($hadRomaji ? ($hasRomaji ? "CurrentRomaji" : "CurrentOriginal") : "Current").',,0,0,0,,';
+            $lineDuration = max(1, floor((($line->end ?? ($line->start + 5)) - $line->start) * 100));
+            if(isset($line->entries) && count($line->entries) > 0){
+                $entryLine .= '{\\fade(50,250)}';
+                foreach ($line->entries as $entry){
+                    $entryDuration = max(1, floor(((isset($entry->end) ? min($lineEnd, $entry->end) : $lineEnd) - $entry->start) * 100));
+                    $entryLine .= '{\\kf'.$entryDuration.'}' . $pickText($entry, $hasRomaji);
+                }
+            }else{
+                $txt = $pickText($line, $hasRomaji);
+                if(trim($txt) === ""){
+                    break;
+                }
+                $entryLine .= '{'.($lineDuration > 50 ? '\\fade(50,250)' : '') . '\\kf' . $lineDuration . '}' . $txt;
             }
-        }else{
-            $txt = $pickText($line);
-            if(trim($txt) === ""){
-                continue;
+
+            $subtitleFile .= $entryLine . "\n";
+
+            if(!$hasRomaji){
+                break;
             }
-            $entryLine .= '{'.($lineDuration > 50 ? '\\fade(50,250)' : '') . '\\kf' . $lineDuration . '}' . $txt;
-        }
-
-        $subtitleFile .= $entryLine . "\n";
-
+            $hasRomaji = false;
+        }while(true);
     }
 
 
     $subtitleFile .= 'Dialogue: 0,' . $timeToStamp($currentBackgroundTime) . ', ' . $timeToStamp($duration) . ',BG,,0,0,0,,{\\p1}m 0 0 l '.$areaX.' 0 '.$areaX.' '.$areaY.' 0 '.$areaY;
 
     return $subtitleFile;
+}
+
+function getEntriesToRomaji(object $ob){
+    $hasRomaji = false;
+
+    $t = textToRomaji($ob->text);
+    if($t !== $ob->text){
+        $hasRomaji = true;
+        $ob->romajiText = $t;
+    }
+
+    foreach ($ob->entries ?? [] as $o){
+        $t = textToRomaji($o->text);
+        if($t !== $o->text){
+            $hasRomaji = true;
+            $o->romajiText = $t;
+        }
+    }
+
+    return $hasRomaji;
+}
+
+function textToRomaji($text){
+    if(preg_match_all('/([\p{Han}\p{Hiragana}]+|[\p{Katakana}]+)/u', $text, $matches, PREG_OFFSET_CAPTURE) > 0){
+        $replacements = [
+            "insutoxurumentaru" => "instrumental",
+            "ba-jon" => "version",
+            "endhingu" => "ending"
+        ];
+        $limelight = new Limelight();
+        $limelight->setConfig('wapuro', 'Romaji', 'style');
+        $parts = [];
+        $lastOffset = 0;
+        foreach ($matches[0] as $match){
+            $newOffset = $match[1];
+            if($newOffset > $lastOffset){
+                $parts[] = [
+                    "process" => false,
+                    "content" => substr($text, $lastOffset, $newOffset - $lastOffset),
+                    "fullWord" => true
+                ];
+            }
+            $content = substr($text, $newOffset, strlen($match[0]));
+            $parts[] = [
+                "process" => true,
+                "content" => $content,
+                "fullWord" => preg_match("#^[\p{Katakana}]+$#u", $content) > 0
+            ];
+            $lastOffset = $newOffset + strlen($match[0]);
+        }
+
+        if(strlen($text) > $lastOffset){
+            $parts[] = [
+                "process" => false,
+                "content" => substr($text, $lastOffset, strlen($text) - $lastOffset),
+                "fullWord" => true
+            ];
+        }
+
+        foreach ($parts as $i => &$part){
+            if ($part["process"]){
+                try{
+                    $result = $limelight->parse($part["content"]);
+                    $newWords = [];
+                    foreach ($result->romaji() as $word){
+                        $word = $replacements[strtolower($word)] ?? $word;
+                        if(!$part["fullWord"] and strlen($word) > 2){
+                            //$word = ucfirst($word);
+                        }
+                        $newWords[] = $word;
+                    }
+                    $part["text"] = implode($part["fullWord"] ? "" : " ", $newWords);
+                    continue;
+                }catch (\Exception $e){
+
+                }
+            }
+
+            $part["text"] = $part["content"];
+        }
+
+        $str = "";
+        foreach ($parts as $i => &$t){
+            if($i === 0 and $t["process"]){
+                //$t["text"] = ucfirst($t["text"]);
+            }
+            if($t["fullWord"]){
+                if(($i === 0 or !$parts[$i - 1]["fullWord"] or !$parts[$i - 1]["process"]) and ($i === (count($parts) - 1) or !$parts[$i + 1]["fullWord"] or !$parts[$i + 1]["process"])){
+                    $t["text"] = ucfirst($t["text"]);
+                }
+
+                if($t["process"] and $i > 0 and !$parts[$i - 1]["fullWord"]){
+                    $t["text"] = " " . $t["text"];
+                }
+                if($t["process"] and $i < (count($parts) - 1) and !$parts[$i + 1]["fullWord"]){
+                    $t["text"] .= " ";
+                }
+            }
+
+
+            $str .= $t["text"];
+        }
+
+        $text = $str;
+    }
+
+    return $text;
 }

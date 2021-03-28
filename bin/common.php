@@ -1,5 +1,7 @@
 <?php
 
+require_once("vendor/autoload.php");
+
 setlocale(LC_CTYPE, "en_US.UTF-8");
 define("VERSION_HASH", substr(md5(file_get_contents(__DIR__ . "/../.version")), 0, 8));
 define("SCRIPT_NONCE", isset($_SERVER["HTTP_X_NONCE"]) ? bin2hex(hex2bin($_SERVER["HTTP_X_NONCE"])) : null);
