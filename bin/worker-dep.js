@@ -107,7 +107,7 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    if (/^\/(js|css|img|fonts|dict)\//.test(path)) { //Static files
+    if (/^\/(js|css|img|fonts)\//.test(path)) { //Static files
         event.respondWith(tryToCache(event.request));
         return;
     }
