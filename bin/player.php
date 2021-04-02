@@ -650,12 +650,12 @@ flush();
     <?php
     if (count($covers) <= 1) {
         ?>
-        div.song img.queue-cover {
+        div.song img.queue-cover, div.song .queue-fit {
             display: none !important;
         }
 
         div#radio-right div.song div.song-meta-data{
-            max-width: calc(100% - 44px - 10px - 20px - 10px - 60px);
+            max-width: calc(100% - 10px - 20px - 10px - 60px);
         }
         <?php
     }

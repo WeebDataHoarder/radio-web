@@ -48,8 +48,9 @@ self.addEventListener("install", (event) => {
                 '/help.html',
             ]
         );
+        await self.skipWaiting();
     })());
-    //self.skipWaiting();
+
 });
 
 self.addEventListener("activate", function (event) {
@@ -68,7 +69,13 @@ self.addEventListener('fetch', (event) => {
     const scope = self.registration.scope;
     const path = (new URL(url)).pathname;
 
-    if (event.request.headers.has('range')) {
+    // Skip non-get
+    if (event.request.method !== "GET") {
+        return;
+    }
+
+    // Skip range requests
+    if (event.request.headers.has("range")) {
         return;
     }
 
@@ -78,10 +85,6 @@ self.addEventListener('fetch', (event) => {
     }
 
     console.log("[ServiceWorker] fetch " + url + ", path " + path + ", scope " + self.registration.scope);
-    // Skip range requests
-    if (event.request.headers.has('range')) {
-        return;
-    }
 
     if (/^\/(stream|service)\//.test(path)) {
         return;

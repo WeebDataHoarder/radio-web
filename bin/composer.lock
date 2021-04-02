@@ -1,0 +1,73 @@
+{
+    "_readme": [
+        "This file locks the dependencies of your project to a known state",
+        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
+        "This file is @generated automatically"
+    ],
+    "content-hash": "3c358ec94beb432635545888e71be8c7",
+    "packages": [
+        {
+            "name": "nihongodera/limelight",
+            "version": "1.6.8",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/nihongodera/limelight.git",
+                "reference": "319902fc88e9e8673dc6892073633227e5888ab9"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/nihongodera/limelight/zipball/319902fc88e9e8673dc6892073633227e5888ab9",
+                "reference": "319902fc88e9e8673dc6892073633227e5888ab9",
+                "shasum": ""
+            },
+            "require": {
+                "ext-mecab": "*",
+                "php": ">=5.6"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^6.4"
+            },
+            "type": "project",
+            "autoload": {
+                "psr-4": {
+                    "Limelight\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Zach Leigh",
+                    "email": "zachleigh@fastmail.jp",
+                    "role": "Developer"
+                }
+            ],
+            "description": "A php Japanese language text analyzer and parser.",
+            "homepage": "https://github.com/nihongodera/limelight",
+            "keywords": [
+                "furigana",
+                "japanese",
+                "kanji",
+                "language",
+                "mecab",
+                "parse",
+                "romaji"
+            ],
+            "time": "2020-10-30T12:47:47+00:00"
+        }
+    ],
+    "packages-dev": [],
+    "aliases": [],
+    "minimum-stability": "stable",
+    "stability-flags": [],
+    "prefer-stable": false,
+    "prefer-lowest": false,
+    "platform": {
+        "ext-json": "*",
+        "ext-curl": "*",
+        "ext-pgsql": "*"
+    },
+    "platform-dev": []
+}

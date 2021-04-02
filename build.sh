@@ -14,7 +14,7 @@ make clean
 make browser
 sed -i "s#${ROOT_DIR}##g" build/aurora.js.map
 sed -i 's!\(# sourceMappingURL=\)!\1/js/player/!g' build/aurora.js
-cp -vf build/aurora.js* ../../js/player/
+cp -vf build/aurora.js* ../../static/js/player/
 popd
 
 pushd aac.js
@@ -23,7 +23,7 @@ make clean
 make browser
 sed -i "s#${ROOT_DIR}##g" build/aac.js.map
 sed -i 's!\(# sourceMappingURL=\)!\1/js/player/codecs/!g' build/aac.js
-cp -vf build/aac.js* ../../js/player/codecs/
+cp -vf build/aac.js* ../../static/js/player/codecs/
 popd
 
 pushd flac.js
@@ -32,7 +32,7 @@ make clean
 make browser
 sed -i "s#${ROOT_DIR}##g" build/flac.js.map
 sed -i 's!\(# sourceMappingURL=\)!\1/js/player/codecs/!g' build/flac.js
-cp -vf build/flac.js* ../../js/player/codecs/
+cp -vf build/flac.js* ../../static/js/player/codecs/
 popd
 
 pushd alac.js
@@ -41,7 +41,7 @@ make clean
 make browser
 sed -i "s#${ROOT_DIR}##g" build/alac.js.map
 sed -i 's!\(# sourceMappingURL=\)!\1/js/player/codecs/!g' build/alac.js
-cp -vf build/alac.js* ../../js/player/codecs/
+cp -vf build/alac.js* ../../static/js/player/codecs/
 popd
 
 pushd mp3.js
@@ -50,7 +50,7 @@ make clean
 make browser
 sed -i "s#${ROOT_DIR}##g" build/mp3.js.map
 sed -i 's!\(# sourceMappingURL=\)!\1/js/player/codecs/!g' build/mp3.js
-cp -vf build/mp3.js* ../../js/player/codecs/
+cp -vf build/mp3.js* ../../static/js/player/codecs/
 popd
 
 pushd ogg.js
@@ -58,7 +58,7 @@ npm install
 make clean
 make libogg
 make browser
-cp -vf build/ogg.js* ../../js/player/codecs/
+cp -vf build/ogg.js* ../../static/js/player/codecs/
 popd
 
 pushd opus.js
@@ -66,7 +66,7 @@ npm install
 make clean
 make libopus
 make browser
-cp -vf build/opus.js* ../../js/player/codecs/
+cp -vf build/opus.js* ../../static/js/player/codecs/
 popd
 
 pushd vorbis.js
@@ -74,13 +74,13 @@ npm install
 make clean
 make libvorbis
 make browser
-cp -vf build/vorbis.js* ../../js/player/codecs/
+cp -vf build/vorbis.js* ../../static/js/player/codecs/
 popd
 
 pushd trueaudio.js
 npm init -y
 npm install --save-dev coffeeify coffeescript browserify
-./node_modules/.bin/browserify -t coffeeify --extension=".coffee" tta.coffee > ../../js/player/codecs/tta.js
+./node_modules/.bin/browserify -t coffeeify --extension=".coffee" tta.coffee > ../../static/js/player/codecs/tta.js
 popd
 
 
@@ -90,6 +90,6 @@ docker build -t radio/javascriptsubtitlesoctopus .
 docker run -it --rm -v "$(pwd)":/code radio/javascriptsubtitlesoctopus:latest make clean-dist
 docker run -it --rm -v "$(pwd)":/code radio/javascriptsubtitlesoctopus:latest make dist
 
-rm -rvf ../../js/modules/subtitles/*
-cp -rvf dist/js/* ../../js/modules/subtitles/
+rm -rvf ../../static/js/modules/subtitles/*
+cp -rvf dist/js/* ../../static/js/modules/subtitles/
 popd

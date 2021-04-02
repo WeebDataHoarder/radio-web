@@ -29,6 +29,7 @@ header("Link: </js/online.js?".VERSION_HASH."; rel=preload; as=script", false);
 	<meta property="og:audio:type" content="audio/ogg;codec=opus">
 	<meta property="og:audio" content="https://<?php echo SITE_HOSTNAME; ?>/stream/stream128.aac">
 	<meta property="og:audio:type" content="audio/aac">
+    <!-- Fake this for youtube-dl <meta property="og:url" content="https://<?php echo SITE_HOSTNAME; ?>/m3u/stream192.mp3.m3u?bandcamp.com"> -->
 	<meta name="description" content="anime(bits) #radio - all them beats, live">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<meta name="referrer" content="no-referrer">
