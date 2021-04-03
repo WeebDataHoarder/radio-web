@@ -126,15 +126,6 @@ FROM songs
 JOIN artists ON songs.artist = artists.id
 JOIN albums ON songs.album = albums.id
 WHERE songs.hash LIKE $1
-GROUP BY
-songs.id,
-songs.hash,
-songs.title,
-artists.name,
-albums.name,
-songs.path,
-songs.duration,
-songs.status
 SQL;
 $tagSql = <<<SQL
 SELECT
@@ -156,15 +147,6 @@ FROM songs
 JOIN artists ON songs.artist = artists.id
 JOIN albums ON songs.album = albums.id
 WHERE songs.id IN(SELECT song FROM taggings WHERE taggings.tag = (SELECT id FROM tags WHERE tags.name = $1))
-GROUP BY
-songs.id,
-songs.hash,
-songs.title,
-artists.name,
-albums.name,
-songs.path,
-songs.duration,
-songs.status
 SQL;
 $pathSql = <<<SQL
 SELECT
@@ -186,15 +168,6 @@ FROM songs
 JOIN artists ON songs.artist = artists.id
 JOIN albums ON songs.album = albums.id
 WHERE songs.path LIKE $1
-GROUP BY
-songs.id,
-songs.hash,
-songs.title,
-artists.name,
-albums.name,
-songs.path,
-songs.duration,
-songs.status
 SQL;
 $queue = [];
 $songs = [];

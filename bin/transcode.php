@@ -28,15 +28,6 @@ FROM songs
 JOIN artists ON songs.artist = artists.id
 JOIN albums ON songs.album = albums.id
 WHERE songs.hash LIKE $1
-GROUP BY
-songs.id,
-songs.hash,
-songs.title,
-artists.name,
-albums.name,
-songs.path,
-songs.duration,
-songs.status
 ORDER BY album ASC, path ASC
 ;
 SQL;
