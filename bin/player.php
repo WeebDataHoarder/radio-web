@@ -155,7 +155,7 @@ array_to_json(ARRAY(SELECT users.name FROM users JOIN favorites ON (favorites.us
 FROM songs
 JOIN artists ON songs.artist = artists.id
 JOIN albums ON songs.album = albums.id
-WHERE EXISTS(SELECT 1 FROM taggings JOIN tags ON (taggings.tag = tags.id) WHERE taggings.song = songs.id AND tags.name = $1)
+WHERE songs.id IN(SELECT song FROM taggings WHERE taggings.tag = (SELECT id FROM tags WHERE tags.name = $1))
 GROUP BY
 songs.id,
 songs.hash,
