@@ -180,8 +180,8 @@ $orderBy = [
         "ORDER BY album DESC, path DESC"
     ],
     "score" => [
-        "ORDER BY (favorite_count * 5 + play_count + (CASE WHEN path ILIKE '%.flac' THEN 5 ELSE 0 END)) ASC, path ASC",
-        "ORDER BY (favorite_count * 5 + play_count + (CASE WHEN path ILIKE '%.flac' THEN 5 ELSE 0 END)) DESC, path DESC",
+        "ORDER BY score ASC, path ASC",
+        "ORDER BY score DESC, path DESC",
     ],
     "title" => [
         "ORDER BY title ASC, path ASC",
