@@ -15,18 +15,16 @@ SELECT
 songs.id AS id,
 songs.hash AS hash,
 songs.title AS title,
-artists.name AS artist,
-albums.name AS album,
+(SELECT artists.name FROM artists WHERE songs.artist = artists.id LIMIT 1) AS artist,
+(SELECT albums.name FROM albums WHERE songs.album = albums.id LIMIT 1) AS album,  
 songs.path AS path,
 songs.duration AS duration,
 songs.cover AS cover,
 songs.lyrics AS lyrics,
 songs.status AS status,
-array_to_json(ARRAY(SELECT tags.name FROM taggings JOIN tags ON (taggings.tag = tags.id) WHERE taggings.song = songs.id)) AS tags,
+array_to_json(ARRAY(SELECT tags.name FROM tags JOIN taggings ON (taggings.tag = tags.id) WHERE taggings.song = songs.id)) AS tags,
 array_to_json(ARRAY(SELECT users.name FROM users JOIN favorites ON (favorites.user_id = users.id) WHERE favorites.song = songs.id)) AS favored_by
 FROM songs
-JOIN artists ON songs.artist = artists.id
-JOIN albums ON songs.album = albums.id
 WHERE songs.hash LIKE $1
 ORDER BY album ASC, path ASC
 ;

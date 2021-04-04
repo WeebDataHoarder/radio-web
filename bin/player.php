@@ -111,8 +111,8 @@ SELECT
 songs.id AS id,
 songs.hash AS hash,
 songs.title AS title,
-artists.name AS artist,
-albums.name AS album,
+(SELECT artists.name FROM artists WHERE songs.artist = artists.id LIMIT 1) AS artist,
+(SELECT albums.name FROM albums WHERE songs.album = albums.id LIMIT 1) AS album,  
 songs.path AS path,
 songs.duration AS duration,
 songs.favorite_count AS favorite_count,
@@ -120,11 +120,9 @@ songs.play_count AS play_count,
 songs.cover AS cover,
 array_to_json(ARRAY(SELECT jsonb_object_keys(songs.lyrics))) AS lyrics,
 songs.status AS status,
-array_to_json(ARRAY(SELECT tags.name FROM taggings JOIN tags ON (taggings.tag = tags.id) WHERE taggings.song = songs.id)) AS tags,
+array_to_json(ARRAY(SELECT tags.name FROM tags JOIN taggings ON (taggings.tag = tags.id) WHERE taggings.song = songs.id)) AS tags,
 array_to_json(ARRAY(SELECT users.name FROM users JOIN favorites ON (favorites.user_id = users.id) WHERE favorites.song = songs.id)) AS favored_by
 FROM songs
-JOIN artists ON songs.artist = artists.id
-JOIN albums ON songs.album = albums.id
 WHERE songs.hash LIKE $1
 SQL;
 $tagSql = <<<SQL
@@ -132,8 +130,8 @@ SELECT
 songs.id AS id,
 songs.hash AS hash,
 songs.title AS title,
-artists.name AS artist,
-albums.name AS album,
+(SELECT artists.name FROM artists WHERE songs.artist = artists.id LIMIT 1) AS artist,
+(SELECT albums.name FROM albums WHERE songs.album = albums.id LIMIT 1) AS album,  
 songs.path AS path,
 songs.duration AS duration,
 songs.favorite_count AS favorite_count,
@@ -141,11 +139,9 @@ songs.play_count AS play_count,
 songs.cover AS cover,
 array_to_json(ARRAY(SELECT jsonb_object_keys(songs.lyrics))) AS lyrics,
 songs.status AS status,
-array_to_json(ARRAY(SELECT tags.name FROM taggings JOIN tags ON (taggings.tag = tags.id) WHERE taggings.song = songs.id)) AS tags,
+array_to_json(ARRAY(SELECT tags.name FROM tags JOIN taggings ON (taggings.tag = tags.id) WHERE taggings.song = songs.id)) AS tags,
 array_to_json(ARRAY(SELECT users.name FROM users JOIN favorites ON (favorites.user_id = users.id) WHERE favorites.song = songs.id)) AS favored_by
 FROM songs
-JOIN artists ON songs.artist = artists.id
-JOIN albums ON songs.album = albums.id
 WHERE songs.id IN(SELECT song FROM taggings WHERE taggings.tag = (SELECT id FROM tags WHERE tags.name = $1))
 SQL;
 $pathSql = <<<SQL
@@ -153,8 +149,8 @@ SELECT
 songs.id AS id,
 songs.hash AS hash,
 songs.title AS title,
-artists.name AS artist,
-albums.name AS album,
+(SELECT artists.name FROM artists WHERE songs.artist = artists.id LIMIT 1) AS artist,
+(SELECT albums.name FROM albums WHERE songs.album = albums.id LIMIT 1) AS album,  
 songs.path AS path,
 songs.duration AS duration,
 songs.favorite_count AS favorite_count,
@@ -162,11 +158,9 @@ songs.play_count AS play_count,
 songs.cover AS cover,
 array_to_json(ARRAY(SELECT jsonb_object_keys(songs.lyrics))) AS lyrics,
 songs.status AS status,
-array_to_json(ARRAY(SELECT tags.name FROM taggings JOIN tags ON (taggings.tag = tags.id) WHERE taggings.song = songs.id)) AS tags,
+array_to_json(ARRAY(SELECT tags.name FROM tags JOIN taggings ON (taggings.tag = tags.id) WHERE taggings.song = songs.id)) AS tags,
 array_to_json(ARRAY(SELECT users.name FROM users JOIN favorites ON (favorites.user_id = users.id) WHERE favorites.song = songs.id)) AS favored_by
 FROM songs
-JOIN artists ON songs.artist = artists.id
-JOIN albums ON songs.album = albums.id
 WHERE songs.path LIKE $1
 SQL;
 $queue = [];
