@@ -1,10 +1,14 @@
+
+const logVolumeCoefficient = 1001;
+
 class UPlayer {
+
     constructor(options) {
         /*
         streaming: (bool) default false
         forceCodec: (bool) default false
         preload: (bool) default false
-        volume: (float 0.0-1.0) default 1.0
+        volume: (float 0.0-1.0) default 1.0, linear scale
         muted: (bool) default false
         retry: (bool) default false
         crossorigin: (bool) default false
@@ -26,7 +30,7 @@ class UPlayer {
         this.readyToPlay = false;
         this.sentPreEndEvent = false;
 
-        this.volume = "volume" in this.options ? this.options["volume"] : 1.0;
+        this.volume = this.linearVolumeToLog("volume" in this.options ? this.options["volume"] : 1.0);
         this.oldVolume = this.volume;
         this.muted = "muted" in this.options ? this.options["muted"] : false;
         this.retry = "retry" in this.options ? this.options["retry"] : false;
@@ -68,11 +72,11 @@ class UPlayer {
         }
 
         if ("volume-element" in this.options) {
-            this.options["volume-element"].value = this.volume * 100;
+            this.options["volume-element"].value = this.logVolumeToLinear(this.volume) * 100;
 
             const volumeChangeFunction = function () {
+                this.volume = this.linearVolumeToLog(this.options["volume-element"].value / 100);
                 if (this.playerObject !== null) {
-                    this.volume = this.options["volume-element"].value / 100;
                     this.playerObject.volume = this.nativePlayback ? this.volume : this.volume * 100;
                 }
             }.bind(this);
@@ -221,6 +225,21 @@ class UPlayer {
             }
         ];
         this.checkBrowserCompatibility();
+    }
+
+    linearVolumeToLog(volume){
+        if(volume < 0 || volume > 1){
+            throw new Error("volume must be between 0 and 1 inclusive: " + volume);
+        }
+
+        return Math.max(0.0, Math.min(1.0, (Math.exp(Math.log(logVolumeCoefficient) * volume) - 1) / logVolumeCoefficient));
+    }
+
+    logVolumeToLinear(volume){
+        if(volume < 0 || volume > 1){
+            throw new Error("volume must be between 0 and 1 inclusive: " + volume);
+        }
+        return Math.max(0.0, Math.min(1.0, (Math.log(volume + 1 / logVolumeCoefficient) + Math.log(logVolumeCoefficient)) / Math.log(logVolumeCoefficient)));
     }
 
     playPause() {
