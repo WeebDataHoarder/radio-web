@@ -1,6 +1,4 @@
-var audioStreams = [
-
-
+const audioStreams = [
     /* --- AAC --- */
     {
         "id": "stream256.aac",
@@ -74,14 +72,13 @@ var audioStreams = [
     }
 ];
 
-var compatibleFormats = {};
+const compatibleFormats = {};
 
-var compatibleAudioStreams = [];
+const compatibleAudioStreams = [];
 
 function findCompatibleAudioStreams() {
-    for (var i = 0; i < audioStreams.length; ++i) {
-        var entry = audioStreams[i];
-        var info = uplayer.decodingInfo({
+    for(const entry of audioStreams){
+        const info = uplayer.decodingInfo({
             type: "file",
             audio: {
                 contentType: entry.format,
@@ -101,22 +98,19 @@ function findCompatibleAudioStreams() {
 }
 
 function selectAudioStream(wantedQualities) {
-    var selectedStream = -1;
+    let selectedStream = null;
 
-    for (var j = 0; j < wantedQualities.length; ++j) {
-        var wantedQuality = wantedQualities[j];
-        for (var i = 0; i < compatibleAudioStreams.length; ++i) {
-            var entry = audioStreams[i];
+    for(const wantedQuality of wantedQualities){
+        for(const entry of compatibleAudioStreams) {
             if (entry.quality === wantedQuality) {
-                selectedStream = i;
+                selectedStream = entry;
                 break;
             }
         }
-
-        if (selectedStream !== -1) {
+        if (selectedStream !== null) {
             break;
         }
     }
 
-    return selectedStream === -1 ? null : compatibleAudioStreams[selectedStream];
+    return selectedStream;
 }

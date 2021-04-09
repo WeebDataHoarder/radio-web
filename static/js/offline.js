@@ -78,7 +78,7 @@ const uplayer = new UPlayer({
     },
     "on-progress": function () {
         currentTime = uplayer.currentProgress * uplayer.totalDuration;
-        subtitles.then((s)=> {
+        getSubtitles().then((s)=> {
             s.setCurrentTime(currentTime)
         });
 
@@ -92,33 +92,37 @@ const uplayer = new UPlayer({
     }
 });
 
-const navigatorHasImprecisePlaybackTime = navigator.userAgent.match(/(AppleWebKit)((?!Chrom(ium|e)\/).)*$/) !== null;
+let _subtitlesPromise = null;
+function getSubtitles(){
+    return _subtitlesPromise !== null ? _subtitlesPromise : _subtitlesPromise = (async () => {
+        const module = await import("./modules/subtitles.mjs?" + VERSION_HASH);
 
-let subtitles = (async () => {
-    const module = await import("./modules/subtitles.mjs?" + VERSION_HASH);
-    return new module.default(document.getElementById("lyrics-area"), {
-        displaySettings: {
-            showOriginal: showOriginalLyrics,
-            fadeTransition: lyricsAnimationLevel > 0,
-            karaoke: lyricsAnimationLevel === 0 ? false : {
-                animate: lyricsAnimationLevel === 1
-            }
-        },
-        currentTimeCallback: () => {
-            if(navigatorHasImprecisePlaybackTime){
-                return {
-                    precise: !uplayer.isPlaying(),
-                    time: currentTime
+        const navigatorHasImprecisePlaybackTime = navigator.userAgent.match(/(AppleWebKit)((?!Chrom(ium|e)\/).)*$/) !== null;
+
+        return new module.default(document.getElementById("lyrics-area"), {
+            displaySettings: {
+                showOriginal: showOriginalLyrics,
+                fadeTransition: lyricsAnimationLevel > 0,
+                karaoke: lyricsAnimationLevel === 0 ? false : {
+                    animate: lyricsAnimationLevel === 1
                 }
-            }else{
-                return {
-                    precise: true,
-                    time: uplayer.nativePlayback ? uplayer.playerObject.currentTime : uplayer.playerObject.currentTime / 1000
+            },
+            currentTimeCallback: () => {
+                if(navigatorHasImprecisePlaybackTime || !uplayer.nativePlayback){
+                    return {
+                        precise: !uplayer.isPlaying(),
+                        time: currentTime
+                    }
+                }else{
+                    return {
+                        precise: true,
+                        time: uplayer.nativePlayback ? uplayer.playerObject.currentTime : uplayer.playerObject.currentTime / 1000
+                    }
                 }
             }
-        }
-    });
-})();
+        });
+    })();
+}
 
 
 document.querySelector(".volume-slider").addEventListener("change", function () {
@@ -133,7 +137,7 @@ document.querySelector("#lyrics-area").addEventListener("click", () => {
 
         if("entries" in currentLyrics){
             currentLyrics.type = "entries";
-            subtitles.then(async (s) => {
+            getSubtitles().then(async (s) => {
                 await s.loadSubtitles(currentLyrics, {
                     displaySettings: {
                         showOriginal: showOriginalLyrics,
@@ -389,7 +393,7 @@ function preloadThisSong(song, isPlaying = null) {
 
 async function tryLoadLyrics(song){
     currentLyrics = null;
-    let s = await subtitles;
+    let s = await getSubtitles();
     s.stopSubtitles();
     if(loadLyrics){
         const preferredLyrics = ["ass", "timed"];
@@ -486,7 +490,7 @@ function playThisSong(song, isPlaying = null) {
     tryLoadLyrics(song).then(async () => {
         const np = shuffle ? shuffledPlaylist[currentPlaylistIndex] : songPlaylist[currentPlaylistIndex];
         if(!("lyrics" in np)){
-            const s = (await subtitles);
+            const s = (await getSubtitles());
             s.stopSubtitles();
             s.hideSubtitles();
         }
