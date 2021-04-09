@@ -25,9 +25,6 @@
 [submodule "deps/opus.js"]
 	path = deps/opus.js
 	url = https://github.com/WeebDataHoarder/opus.js
-[submodule "deps/ogg.js"]
-	path = deps/ogg.js
-	url = https://github.com/WeebDataHoarder/ogg.js
 [submodule "deps/trueaudio.js"]
 	path = deps/trueaudio.js
 	url = https://github.com/WeebDataHoarder/trueaudio.js
