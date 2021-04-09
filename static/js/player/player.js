@@ -1,5 +1,5 @@
 
-const logVolumeCoefficient = 1001;
+const logVolumeCoefficient = 100;
 
 class UPlayer {
 
