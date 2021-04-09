@@ -691,6 +691,9 @@ var SubtitlesOctopus = function (options) {
                 console.log(data.styles);
                 break;
             }
+            case 'ready': {
+                break;
+            }
             default:
                 throw 'what? ' + data.target;
         }
@@ -930,4 +933,3 @@ if (typeof exports !== 'undefined') {
 if (typeof module !== 'undefined') {
     module.exports = SubtitlesOctopus
 }
-

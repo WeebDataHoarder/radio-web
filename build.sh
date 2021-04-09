@@ -83,13 +83,6 @@ npm install --save-dev coffeeify coffeescript browserify
 ./node_modules/.bin/browserify -t coffeeify --extension=".coffee" tta.coffee > ../../static/js/player/codecs/tta.js
 popd
 
-
-
-pushd JavascriptSubtitlesOctopus
-docker build -t radio/javascriptsubtitlesoctopus .
-docker run -it --rm -v "$(pwd)":/code radio/javascriptsubtitlesoctopus:latest make clean-dist
-docker run -it --rm -v "$(pwd)":/code radio/javascriptsubtitlesoctopus:latest make dist
-
-rm -rvf ../../static/js/modules/subtitles/*
-cp -rvf dist/js/* ../../static/js/modules/subtitles/
 popd
+
+./build-subs.sh

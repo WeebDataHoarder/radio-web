@@ -15,7 +15,7 @@ async function require(path, global = null) {
     return exports;
 }
 
-const SubtitlesOctopus = require("./subtitles/subtitles-octopus.js");
+const SubtitlesOctopus = require("/js/modules/subtitles/subtitles-octopus.js");
 
 class Subtitles {
 
@@ -141,8 +141,8 @@ class Subtitles {
 
             options.canvas = this.canvas;
             options.dropAllAnimations = (!options.displaySettings.karaoke.animate && !options.displaySettings.fadeTransition);
-            options.workerUrl = "/js/modules/subtitles/subtitles-octopus-worker.js";
-            options.legacyWorkerUrl = "/js/modules/subtitles/subtitles-octopus-worker-legacy.js";
+            options.workerUrl = "/js/modules/subtitles/subtitles-octopus-worker.js?" + VERSION_HASH;
+            options.legacyWorkerUrl = "/js/modules/subtitles/subtitles-octopus-worker-legacy.js?" + VERSION_HASH;
             options.renderMode = typeof createImageBitmap !== 'undefined' ? "fast" : "normal";
             //renderMode: "blend",
             options.availableFonts = Object.assign(Object.assign({}, options.availableFonts), displayInformation.embeddedFonts);
@@ -234,25 +234,6 @@ class Subtitles {
         };
 
         let result;
-        {
-            const regex = /^fontname((v2:[ \t]*(?<fontName2>[^_]+)_(?<fontProperties2>[^,]*)\.(?<fontExtension2>[a-z0-9]{3,5}),[ \t]*(?<fontContent2>.+)$)|(:[ \t]*(?<fontName>[^_]+)_(?<fontProperties>[^$]*)\.(?<fontExtension>[a-z0-9]{3,5})(?<fontContent>(?:\r?\n[\x21-\x60]+)+)))/mg;
-            while((result = regex.exec(file)) !== null){
-                if("fontName2" in result.groups && result.groups.fontName2 !== undefined){
-                    displayInformation.embeddedFonts[result.groups.fontName2.toLowerCase()] = result.groups.fontContent2;
-                }else{
-                    const currentResult = result;
-                    await new Promise((resolve) => {
-                        const blob = new Blob([this._decodeASSFontEncoding(currentResult.groups.fontContent)], {type: "application/font-" + currentResult.groups.fontExtension.toLowerCase()});
-                        const reader = new FileReader();
-                        reader.readAsDataURL(blob);
-                        reader.addEventListener("load", function () {
-                            displayInformation.embeddedFonts[currentResult.groups.fontName.toLowerCase()] = reader.result;
-                            resolve();
-                        }, false);
-                    });
-                }
-            }
-        }
 
         {
             result = file.match(/^PlayResX:[ \t]*([0-9]+)$/m);
@@ -283,44 +264,6 @@ class Subtitles {
         }
         return displayInformation;
     }
-
-    _decodeASSFontEncoding(input){
-        let output = new Uint8Array(input.length);
-        let grouping = new Uint8Array(4);
-
-        let offset = 0;
-        let arrayOffset = 0;
-        let writeOffset = 0;
-        let charCode;
-        while (offset < input.length){
-            charCode = input.charCodeAt(offset++);
-            if(charCode >= 0x21 && charCode <= 0x60){
-                grouping[arrayOffset++] = charCode - 33;
-                if(arrayOffset === 4){
-                    output[writeOffset++] = (grouping[0] << 2) | (grouping[1] >> 4);
-                    output[writeOffset++] = ((grouping[1] & 0xf) << 4) | (grouping[2] >> 2);
-                    output[writeOffset++] = ((grouping[2] & 0x3) << 6) | (grouping[3]);
-                    arrayOffset = 0;
-                }
-            }
-        }
-
-        //Handle ASS special padding
-        if(arrayOffset > 0){
-            if(arrayOffset === 2){
-                output[writeOffset++] = ((grouping[0] << 6) | grouping[1]) >> 4;
-            }else if(arrayOffset === 3){
-                let ix = ((grouping[0] << 12) | (grouping[1] << 6) | grouping[2]) >> 2;
-                output[writeOffset++] = ix >> 8;
-                output[writeOffset++] = ix & 0xff;
-            }
-        }
-
-        return output.slice(0, writeOffset);
-    }
-
-
-
 
     async _convertLRCtoEntries(data){
         const lyricEntries = [];
