@@ -55,9 +55,11 @@ self.addEventListener("install", (event) => {
 
 self.addEventListener("activate", function (event) {
     event.waitUntil((async () => {
+        console.log("[ServiceWorker] activating worker " + self.registration.scope);
         const keyList = await caches.keys();
         await Promise.all(keyList.map(async (key) => {
             if (key === cacheName) { return; }
+            console.log("[ServiceWorker] deleted old cache " + key + ", scope " + self.registration.scope);
             await caches.delete(key);
         }));
         await self.clients.claim();

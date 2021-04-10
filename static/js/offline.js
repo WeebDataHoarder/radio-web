@@ -23,7 +23,7 @@ const uplayer = new UPlayer({
     "volume": window.localStorage.getItem("radio-volume") !== null ? window.localStorage.getItem("radio-volume") / 100 : 1.0,
     "preload": true,
     //"streaming": true,
-    "forceCodec": urlParams.get("forceCodec") !== null ? true : navigator.userAgent.match(/(Macintosh|iOS|iPad|iPhone)((?!Chrom(ium|e)\/).)*$/) !== null,
+    "forceCodec": urlParams.get("forceCodec") !== null,
     "muted": false,
     "retry": false,
     "limitCodecs": limitCodecs,
@@ -95,7 +95,7 @@ const uplayer = new UPlayer({
 let _subtitlesPromise = null;
 function getSubtitles(){
     return _subtitlesPromise !== null ? _subtitlesPromise : _subtitlesPromise = (async () => {
-        const module = await import("./modules/subtitles.mjs?" + VERSION_HASH);
+        const module = await import("/js/modules/subtitles.mjs?" + VERSION_HASH);
 
         const navigatorHasImprecisePlaybackTime = navigator.userAgent.match(/(AppleWebKit)((?!Chrom(ium|e)\/).)*$/) !== null;
 

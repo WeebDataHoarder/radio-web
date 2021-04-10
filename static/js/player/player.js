@@ -44,48 +44,48 @@ class UPlayer {
         }
 
         if ("mediaSession" in navigator) {
-            navigator.mediaSession.setActionHandler('play', function () {
+            navigator.mediaSession.setActionHandler('play', () => {
                 if (!this.readyToPlay) {
                     return;
                 }
                 if (!this.isPlaying()) {
                     this.play();
                 }
-            }.bind(this));
-            navigator.mediaSession.setActionHandler('pause', function () {
+            });
+            navigator.mediaSession.setActionHandler('pause', () => {
                 if (this.isPlaying()) {
                     this.pause();
                 }
-            }.bind(this));
+            });
         }
 
         if ("mute-element" in this.options) {
             this.options["mute-element"].classList.remove("muted");
             this.options["mute-element"].classList.add("not-muted");
-            this.options["mute-element"].addEventListener("click", function () {
+            this.options["mute-element"].addEventListener("click", () => {
                 if (this.isMuted()) {
                     this.unmute();
                 } else {
                     this.mute();
                 }
-            }.bind(this));
+            });
         }
 
         if ("volume-element" in this.options) {
             this.options["volume-element"].value = this.logVolumeToLinear(this.volume) * 100;
 
-            const volumeChangeFunction = function () {
+            const volumeChangeFunction = () => {
                 this.volume = this.linearVolumeToLog(this.options["volume-element"].value / 100);
                 if (this.playerObject !== null) {
                     this.playerObject.volume = this.nativePlayback ? this.volume : this.volume * 100;
                 }
-            }.bind(this);
+            };
             this.options["volume-element"].addEventListener("change", volumeChangeFunction);
             this.options["volume-element"].addEventListener("input", volumeChangeFunction);
         }
 
         if ("seek-element" in this.options) {
-            const seekChangeFunction = function () {
+            const seekChangeFunction = () => {
                 if (this.playerObject !== null) {
                     if (this.nativePlayback) {
                         this.playerObject.currentTime = this.totalDuration * (this.options["seek-element"].value / 100);
@@ -93,17 +93,17 @@ class UPlayer {
                         this.playerObject.seek(this.totalDuration * (this.options["seek-element"].value / 100) * 1000);
                     }
                 }
-            }.bind(this);
+            };
             this.options["seek-element"].addEventListener("change", seekChangeFunction);
             this.options["seek-element"].addEventListener("input", seekChangeFunction);
         }
 
 
         this.codecSupport = {
-            "(Macintosh|iOS|iPad|iPhone)((?!Chrom(ium|e)/).)*$": function () {
+            "(AppleWebKit)((?!Chrom(ium|e)\/).)*$": () => {
                 this.options.preload = true;
                 return true;
-            }.bind(this),
+            },
             "*": true
         };
         this.supportsCodecs = null;
@@ -112,7 +112,7 @@ class UPlayer {
             {
                 "extensions": ["aac", "m4a", "mp4"],
                 "format": ["audio/aac"],
-                "softCodec": [/*"/js/player/codecs/mp4.js",*/ "/js/player/codecs/aac.js"],
+                "softCodec": ["/js/player/codecs/aac.js"],
                 "type": "lossy",
                 "supported": {
                     "probably": {"*": true},
@@ -172,9 +172,9 @@ class UPlayer {
                 "supported": {
                     "probably": {"*": true},
                     "maybe": {
-                        "Safari": function () {
+                        "(AppleWebKit)((?!Chrom(ium|e)\/).)*$": () => {
                             return !("streaming" in this.options && this.options["streaming"]);
-                        }.bind(this), "*": true
+                        }, "*": true
                     }
                 },
                 "info": {}
@@ -183,7 +183,7 @@ class UPlayer {
                 "extensions": ["alac", "m4a", "mp4", "caf"],
                 "format": ["audio/alac"],
                 "type": "lossless",
-                "softCodec": [/*"/js/player/codecs/mp4.js",*/ "/js/player/codecs/alac.js"],
+                "softCodec": ["/js/player/codecs/alac.js"],
                 "supported": {
                     "probably": {"*": true},
                     "maybe": {"*": true}
@@ -288,14 +288,7 @@ class UPlayer {
                     if (result in entry.supported) {
                         for (check in entry.supported[result]) {
                             if (entry.supported[result].hasOwnProperty(check)) {
-                                if (check === '*') {
-                                    if (typeof entry.supported[result][check] === "function") {
-                                        this.audioCodecs[i].playback = entry.supported[result][check]() ? "native" : "";
-                                    } else {
-                                        this.audioCodecs[i].playback = entry.supported[result][check] ? "native" : "";
-                                    }
-                                    break;
-                                } else if (navigator.userAgent.indexOf(check) > -1) {
+                                if (check === '*' || navigator.userAgent.match(new RegExp(check)) !== null) {
                                     if (typeof entry.supported[result][check] === "function") {
                                         this.audioCodecs[i].playback = entry.supported[result][check]() ? "native" : "";
                                     } else {
@@ -354,11 +347,11 @@ class UPlayer {
                             contentType: this.audioCodecs[i].format[0],
                             channels: 2,
                         }
-                    }).then(function (info) {
+                    }).then((info) => {
                         if (info.supported) {
                             this.audioCodecs[i].info.concat(info);
                         }
-                    }.bind(this));
+                    });
 
                 }
             } else {
@@ -423,11 +416,11 @@ class UPlayer {
         console.log(error);
         this.clearCurrentPlayback(true);
 
-        this.retryTimer = setTimeout(function () {
+        this.retryTimer = setTimeout(() => {
             this.retryTimer = null;
             this.tryToPlay(this.currentUrl, this.guessedFormats[this.currentFormat], this.forceCodec);
             this.play();
-        }.bind(this), 2000);
+        }, 2000);
     }
 
     clearCurrentPlayback(stop) {
@@ -492,18 +485,14 @@ class UPlayer {
             this.preloadObject.volume = 0;
             this.preloadObject.muted = true;
 
-            return new Promise(function (resolve, reject) {
-                this.preloadObject.addEventListener("error", function (e) {
-                    reject(e);
-                }.bind(this));
+            return new Promise((resolve, reject) => {
+                this.preloadObject.addEventListener("error", reject);
 
-                this.preloadObject.addEventListener("canplay", function (e) {
-                    resolve(e);
-                }.bind(this));
+                this.preloadObject.addEventListener("canplay", resolve);
 
                 this.preloadObject.src = url;
                 this.preloadObject.load();
-            }.bind(this));
+            });
         } else if (playbackType === "codec" || forceCodec === true) {
             this.nativePreload = false;
             if ("streaming" in this.options && this.options["streaming"]) {
@@ -514,21 +503,15 @@ class UPlayer {
 
             this.preloadObject.volume = 0;
 
-            return new Promise(function (resolve, reject) {
-                this.preloadObject.on("error", function (e) {
-                    reject(e);
-                }.bind(this));
+            return new Promise((resolve, reject) => {
+                this.preloadObject.on("error", reject);
 
-                this.preloadObject.on("ready", function (e) {
-                    resolve(e)
-                }.bind(this));
+                this.preloadObject.on("ready", resolve);
                 this.preloadObject.preload();
-            }.bind(this));
+            });
         }
 
-        return new Promise(function (resolve, reject) {
-            reject("failed to guess codec");
-        });
+        return Promise.reject("failed to guess codec");
     }
 
 
@@ -549,7 +532,7 @@ class UPlayer {
             this.playerObject.muted = this.muted;
 
             if (this.playerObject !== this.oldPlayerObject) {
-                this.playerObject.addEventListener("error", function (e) {
+                this.playerObject.addEventListener("error", (e) => {
                     if (e.target.error === null) {
                         console.log(e);
                         return;
@@ -591,28 +574,28 @@ class UPlayer {
                                 this.options["on-error"](e);
                             }
                             console.log("[UPlayer] MEDIA_ERR_DECODE (" + e.target.error.code + ") when playing format " + this.guessedFormats[this.currentFormat] + ", trying different method.");
-                            this.retryTimer = setTimeout(function () {
+                            this.retryTimer = setTimeout(() => {
                                 this.retryTimer = null;
                                 this.tryNextFormat();
-                            }.bind(this), 1000);
+                            }, 1000);
                             break;
                         case e.target.error.MEDIA_ERR_SRC_NOT_SUPPORTED:
                             if ("on-error" in this.options) {
                                 this.options["on-error"](e);
                             }
                             console.log("[UPlayer] MEDIA_ERR_SRC_NOT_SUPPORTED (" + e.target.error.code + ") when playing format " + this.guessedFormats[this.currentFormat] + ", trying different method.");
-                            this.retryTimer = setTimeout(function () {
+                            this.retryTimer = setTimeout(() => {
                                 this.retryTimer = null;
                                 this.tryNextFormat();
-                            }.bind(this), 1000);
+                            }, 1000);
                             break;
                         default:
                             console.log(e);
                             break;
                     }
-                }.bind(this));
+                });
 
-                this.playerObject.addEventListener("play", function () {
+                this.playerObject.addEventListener("play", () => {
                     if ('mediaSession' in navigator) {
                         navigator.mediaSession.playbackState = "playing";
                     }
@@ -620,9 +603,9 @@ class UPlayer {
                         this.options["play-pause-element"].classList.remove("paused");
                         this.options["play-pause-element"].classList.add("playing");
                     }
-                }.bind(this));
+                });
 
-                this.playerObject.addEventListener("playing", function () {
+                this.playerObject.addEventListener("playing", () => {
                     if ('mediaSession' in navigator) {
                         navigator.mediaSession.playbackState = "playing";
                     }
@@ -630,9 +613,9 @@ class UPlayer {
                         this.options["play-pause-element"].classList.remove("paused");
                         this.options["play-pause-element"].classList.add("playing");
                     }
-                }.bind(this));
+                });
 
-                this.playerObject.addEventListener("stalled", function () {
+                this.playerObject.addEventListener("stalled", () => {
                     console.log("[UPlayer] Playback stalled.");
                     if ('mediaSession' in navigator) {
                         navigator.mediaSession.playbackState = "paused";
@@ -641,9 +624,9 @@ class UPlayer {
                         this.options["play-pause-element"].classList.remove("playing");
                         this.options["play-pause-element"].classList.add("paused");
                     }
-                }.bind(this));
+                });
 
-                this.playerObject.addEventListener("ended", function () {
+                this.playerObject.addEventListener("ended", () => {
                     if ("on-end" in this.options) {
                         this.options["on-end"]();
                     }
@@ -657,22 +640,22 @@ class UPlayer {
                     if (this.retry) {
                         this.tryRestartPlayer("stream ended");
                     }
-                }.bind(this));
+                });
 
-                this.playerObject.addEventListener("canplay", function (e) {
+                this.playerObject.addEventListener("canplay", (e) => {
                     //console.log(e);
                     this.readyToPlay = true;
                     if ("on-ready" in this.options) {
                         this.options["on-ready"]();
                     }
                     console.log("[UPlayer] Media is ready to play");
-                }.bind(this));
+                });
 
-                this.playerObject.addEventListener("loadedmetadata", function (e) {
+                this.playerObject.addEventListener("loadedmetadata", (e) => {
                     //console.log(e);
-                }.bind(this));
+                });
 
-                this.playerObject.addEventListener("durationchange", function (duration) {
+                this.playerObject.addEventListener("durationchange", (duration) => {
                     if (this.playerObject == null) {
                         return;
                     }
@@ -700,8 +683,8 @@ class UPlayer {
                         this.options["on-progress"]();
                     }
                     this.checkSendPreEnd();
-                }.bind(this));
-                this.playerObject.addEventListener("progress", function () {
+                });
+                this.playerObject.addEventListener("progress", () => {
                     if (this.playerObject == null) {
                         return;
                     }
@@ -711,8 +694,8 @@ class UPlayer {
                     if (this.bufferProgress >= 0.0 && this.bufferProgress <= 1.0 && "buffer-progress-element" in this.options) {
                         this.options["buffer-progress-element"].value = this.bufferProgress;
                     }
-                }.bind(this));
-                this.playerObject.addEventListener("timeupdate", function () {
+                });
+                this.playerObject.addEventListener("timeupdate", () => {
                     if (this.playerObject == null) {
                         return;
                     }
@@ -736,7 +719,7 @@ class UPlayer {
                         this.options["on-progress"]();
                     }
                     this.checkSendPreEnd();
-                }.bind(this));
+                });
             }
 
             this.playerObject.src = this.currentUrl;
@@ -744,7 +727,7 @@ class UPlayer {
             if ("preload" in this.options && this.options["preload"]) {
                 this.playerObject.load();
             }
-        } else if (playbackType == "codec" || forceCodec == true) {
+        } else if (playbackType === "codec" || forceCodec == true) {
             this.nativePlayback = false;
             if ("streaming" in this.options && this.options["streaming"]) {
                 this.playerObject = new AV.Player(new AV.Asset(new FetchStreamingSource(this.currentUrl)));
@@ -754,7 +737,7 @@ class UPlayer {
 
             this.playerObject.volume = this.volume * 100;
 
-            this.playerObject.on("error", function (e) {
+            this.playerObject.on("error", (e) => {
                 if ('mediaSession' in navigator) {
                     navigator.mediaSession.playbackState = "paused";
                 }
@@ -770,8 +753,8 @@ class UPlayer {
                 } else {
                     console.log("[UPlayer] Error: " + e);
                 }
-            }.bind(this));
-            this.playerObject.on("end", function () {
+            });
+            this.playerObject.on("end", () => {
                 if ("on-end" in this.options) {
                     this.options["on-end"]();
                 }
@@ -785,25 +768,25 @@ class UPlayer {
                 if (this.retry) {
                     this.tryRestartPlayer("stream ended");
                 }
-            }.bind(this));
+            });
 
-            this.playerObject.on("ready", function () {
+            this.playerObject.on("ready", () => {
                 this.readyToPlay = true;
                 if ("on-ready" in this.options) {
                     this.options["on-ready"]();
                 }
                 console.log("[UPlayer] Media is ready to play");
-            }.bind(this));
+            });
 
-            this.playerObject.on("format", function (format) {
+            this.playerObject.on("format", (format) => {
                 console.log(format);
-            }.bind(this));
-            this.playerObject.on("metadata", function (metadata) {
+            });
+            this.playerObject.on("metadata", (metadata) => {
                 console.log(metadata);
-            }.bind(this));
+            });
 
 
-            this.playerObject.on("duration", function (duration) {
+            this.playerObject.on("duration", (duration) => {
                 this.totalDuration = duration / 1000;
                 if ("duration-minutes-element" in this.options) {
                     this.options["duration-minutes-element"].textContent = this.zeroPad(Math.floor(this.totalDuration / 60), 2);
@@ -827,14 +810,14 @@ class UPlayer {
                     this.options["on-progress"]();
                 }
                 this.checkSendPreEnd();
-            }.bind(this));
-            this.playerObject.on("buffer", function (percent) {
+            });
+            this.playerObject.on("buffer", (percent) => {
                 this.bufferProgress = percent / 100;
                 if (this.bufferProgress >= 0.0 && this.bufferProgress <= 1.0 && "buffer-progress-element" in this.options) {
                     this.options["buffer-progress-element"].value = this.bufferProgress;
                 }
-            }.bind(this));
-            this.playerObject.on("progress", function (time) {
+            });
+            this.playerObject.on("progress", (time) => {
                 if (this.totalDuration > 0.0) {
                     this.currentProgress = (time / 1000) / this.totalDuration;
                 }
@@ -862,7 +845,7 @@ class UPlayer {
                     this.options["on-progress"]();
                 }
                 this.checkSendPreEnd();
-            }.bind(this));
+            });
 
             if ("preload" in this.options && this.options["preload"]) {
                 this.playerObject.preload();
@@ -908,14 +891,14 @@ class UPlayer {
                 }
                 const promise = this.playerObject.play();
                 if (promise !== undefined) {
-                    promise.catch(function (error) {
+                    promise.catch((error) => {
                         console.log(error);
                         // Auto-play was prevented
                         // Show a UI element to let the user manually start playback
                         if ("on-error" in this.options) {
                             this.options["on-error"](error);
                         }
-                    }.bind(this)).then(function () {
+                    }).then(() => {
                         if ('mediaSession' in navigator) {
                             navigator.mediaSession.playbackState = "playing";
                             if ("streaming" in this.options && this.options.streaming) {
@@ -924,7 +907,7 @@ class UPlayer {
                         }
                         // Auto-play started
 
-                    }.bind(this));
+                    });
                 } else {
                     if ('mediaSession' in navigator) {
                         navigator.mediaSession.playbackState = "playing";
@@ -1100,14 +1083,14 @@ class FetchStreamingSource extends AV.EventEmitter {
             headers: {
                 "X-Requested-With": "UPlayer/FetchStreamingSource"
             }
-        }).then(function (response) {
+        }).then((response) => {
             this.reader = response.body.getReader();
-            this.reader.read().then(this.receiveChunk.bind(this)).catch(function (err) {
+            this.reader.read().then(this.receiveChunk.bind(this)).catch((err) => {
                 this.emit("error", err);
-            }.bind(this));
-        }.bind(this)).catch(function (err) {
+            });
+        }).catch((err) => {
             this.emit("error", err);
-        }.bind(this));
+        });
     }
 
     receiveChunk(result) {
@@ -1120,9 +1103,9 @@ class FetchStreamingSource extends AV.EventEmitter {
             return;
         }
         this.emit("data", new AV.Buffer(result.value));
-        this.reader.read().then(this.receiveChunk.bind(this)).catch(function (err) {
+        this.reader.read().then(this.receiveChunk.bind(this)).catch((err) => {
             this.emit("error", err);
-        }.bind(this));
+        });
     }
 
     start() {
@@ -1134,9 +1117,9 @@ class FetchStreamingSource extends AV.EventEmitter {
     pause() {
         if (this.request != null) {
             if (this.reader != null) {
-                this.reader.cancel().catch(function (err) {
+                this.reader.cancel().catch((err) => {
 
-                }.bind(this));
+                });
                 this.reader = null;
             }
             //this.request.close();
