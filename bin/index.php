@@ -71,7 +71,7 @@ header("Link: </js/online.js?".VERSION_HASH."; rel=preload; as=script", false);
 			<img src="/img/title.svg" id="radio-title" />
 			<div id="user-login">
 				<label>Identify
-					<input id="api-key" name="apikey" autocomplete="on" type="text" placeholder='API key (needs miku access)' />
+					<input id="api-key" name="apikey" autocomplete="on" type="text" placeholder='API key' />
 				</label>
 			</div>
 			<p class="user-feature title-menu">

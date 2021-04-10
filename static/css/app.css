@@ -25,7 +25,7 @@ div#user-login {
 }
 
 input#api-key {
-    width: 250px;
+    width: 90px;
     height: 30px;
     margin: 0px;
     display: inline-block;
