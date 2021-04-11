@@ -352,14 +352,14 @@ div#radio-right div.song div.song-now-playing-icon-container .now-playing {
 
 div#radio-right div.song div.play-button-container {
     display: none;
-    background: url("../img/list-play-light.png") no-repeat;
+    background: url("../img/list-play-light.webp") no-repeat;
     width: 22px;
     height: 22px;
     margin-top: 10px;
 }
 
 div#radio-right div.song div.play-button-container:hover {
-    background: url("../img/list-play-hover.png") no-repeat;
+    background: url("../img/list-play-hover.webp") no-repeat;
 }
 
 div#radio-right div.song div.song-meta-data {
@@ -776,7 +776,7 @@ div#control-container div#repeat-container a#np-download.jps {
     cursor: pointer;
     float: right;
     display: inline-block;
-    background: url("../img/jps-logo-small.png");
+    background: url("../img/jps-logo-small.webp");
     background-size: 24px 24px;
     background-size: cover;
     background-repeat: no-repeat;
@@ -788,7 +788,7 @@ div#control-container div#repeat-container a#np-download.bbt {
     cursor: pointer;
     float: right;
     display: inline-block;
-    background: url("../img/bbt-logo-small.png");
+    background: url("../img/bbt-logo-small.webp");
     background-size: 24px 24px;
     background-size: cover;
     background-repeat: no-repeat;
@@ -800,7 +800,7 @@ div#control-container div#repeat-container a#np-download.red {
     cursor: pointer;
     float: right;
     display: inline-block;
-    background: url("../img/red-logo-small.png");
+    background: url("../img/red-logo-small.webp");
     background-size: 24px 24px;
     background-size: cover;
     background-repeat: no-repeat;

@@ -333,7 +333,7 @@ function updateTrackData(data) {
     if (data.hash) {
         document.querySelector("#np-player").setAttribute( "href", baseApiUrl + "/player/hash/" + data.hash);
     }
-    let imageUrl = (data.cover !== null ? '/api/cover/' + data.cover + '/large' : '/img/no-cover.jpg');
+    let imageUrl = (data.cover !== null ? '/api/cover/' + data.cover + '/large' : '/img/no-cover.webp');
     document.querySelectorAll(".np-image").forEach((e) => {
        e.setAttribute("src", imageUrl);
     });
@@ -360,7 +360,7 @@ function createQueueEntry(data, startTime = null) {
         fit.classList.add("queue-fit");
         const im = document.createElement("img");
         im.classList.add("queue-cover");
-        im.setAttribute("src", data["cover"] !== null ? "/api/cover/" + data["cover"] + "/small" : "/img/no-cover.jpg");
+        im.setAttribute("src", data["cover"] !== null ? "/api/cover/" + data["cover"] + "/small" : "/img/no-cover.webp");
         im.setAttribute("loading", "lazy");
         fit.append(im);
 
@@ -437,7 +437,7 @@ function createResultsEntry(data) {
         fit.classList.add("queue-fit");
         const im = document.createElement("img");
         im.classList.add("queue-cover");
-        im.setAttribute("src", data["cover"] !== null ? "/api/cover/" + data["cover"] + "/small" : "/img/no-cover.jpg");
+        im.setAttribute("src", data["cover"] !== null ? "/api/cover/" + data["cover"] + "/small" : "/img/no-cover.webp");
         im.setAttribute("loading", "lazy");
         fit.append(im);
 

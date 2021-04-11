@@ -5,7 +5,7 @@
 // @description Adds group radio links on AnimeBytes to artists, series, collages listings, and direct links to each torrent group on related lists as well.
 // @version     1.5.0
 // @homepage    https://radio.animebits.moe
-// @icon        https://radio.animebits.moe/img/icon-128.png
+// @icon        https://radio.animebits.moe/img/icon-128.webp
 // @updateURL   https://radio.animebits.moe/userscript/animebytes-radio-extensions.user.js
 // @downloadURL https://radio.animebits.moe/userscript/animebytes-radio-extensions.user.js
 //

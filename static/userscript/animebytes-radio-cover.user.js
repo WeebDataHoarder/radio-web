@@ -5,7 +5,7 @@
 // @description Allows finding new covers directly from torrent group, and other utilities to find further data
 // @version     1.1.0
 // @homepage    https://radio.animebits.moe
-// @icon        https://radio.animebits.moe/img/icon-128.png
+// @icon        https://radio.animebits.moe/img/icon-128.webp
 // @updateURL   https://radio.animebits.moe/userscript/animebytes-radio-cover.user.js
 // @downloadURL https://radio.animebits.moe/userscript/animebytes-radio-cover.user.js
 //

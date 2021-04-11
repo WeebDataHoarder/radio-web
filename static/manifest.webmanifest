@@ -6,26 +6,26 @@
   "scope": "/",
   "icons": [
     {
-        "src": "/img/icon-128.png",
-        "type": "image/png",
+        "src": "/img/icon-128.webp",
+        "type": "image/webp",
         "purpose": "maskable any",
         "sizes": "128x128"
     },
     {
-        "src": "/img/icon-192.png",
-        "type": "image/png",
+        "src": "/img/icon-192.webp",
+        "type": "image/webp",
         "purpose": "maskable any",
         "sizes": "192x192"
     },
     {
-        "src": "/img/icon-256.png",
-        "type": "image/png",
+        "src": "/img/icon-256.webp",
+        "type": "image/webp",
         "purpose": "maskable any",
         "sizes": "256x256"
     },
     {
-        "src": "/img/icon-512.png",
-        "type": "image/png",
+        "src": "/img/icon-512.webp",
+        "type": "image/webp",
         "purpose": "maskable any",
         "sizes": "512x512"
     },

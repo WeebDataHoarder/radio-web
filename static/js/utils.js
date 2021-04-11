@@ -193,8 +193,8 @@ function pushPlayNotification(song, context){
     if ("Notification" in window) {
         if (window.localStorage.getItem("radio-notifications") === "on" && Notification.permission === "granted") {
             var n = new Notification(song.title, {
-                icon: (song["cover"] !== null ? "/api/cover/" + song["cover"] + "/small" : "/img/no-cover.jpg"),
-                image: (song["cover"] !== null ? "/api/cover/" + song["cover"] + "/large" : "/img/no-cover.jpg"),
+                icon: (song["cover"] !== null ? "/api/cover/" + song["cover"] + "/small" : "/img/no-cover.webp"),
+                image: (song["cover"] !== null ? "/api/cover/" + song["cover"] + "/large" : "/img/no-cover.webp"),
                 body: "by " + song.artist + " from " + song.album,
                 silent: true,
                 requireInteraction: false,
@@ -216,14 +216,14 @@ function pushMediaSessionMetadata(song){
             album: song["album"],
             artwork: [
                 {
-                    src: location.protocol + '//' + document.domain + ':' + location.port + (song["cover"] !== null ? "/api/cover/" + song["cover"] + "/large" : "/img/no-cover.jpg"),
+                    src: location.protocol + '//' + document.domain + ':' + location.port + (song["cover"] !== null ? "/api/cover/" + song["cover"] + "/large" : "/img/no-cover.webp"),
                     sizes: '800x800',
-                    type: 'image/jpeg'
+                    type: 'image/webp'
                 },
                 {
-                    src: location.protocol + '//' + document.domain + ':' + location.port + (song["cover"] !== null ? "/api/cover/" + song["cover"] + "/small" : "/img/no-cover.jpg"),
+                    src: location.protocol + '//' + document.domain + ':' + location.port + (song["cover"] !== null ? "/api/cover/" + song["cover"] + "/small" : "/img/no-cover.webp"),
                     sizes: '55x55',
-                    type: 'image/jpeg'
+                    type: 'image/webp'
                 }
             ]
         });

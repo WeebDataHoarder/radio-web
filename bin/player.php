@@ -548,7 +548,7 @@ foreach ($songs as $k => $data) {
 
 reset($songs);
 
-header("Link: <".(current($songs)["cover"] !== null ? "/api/cover/" . current($songs)["cover"] . "/large" : "/img/no-cover.jpg").">; rel=preload; as=image; type=image/jpeg", false);
+header("Link: <".(current($songs)["cover"] !== null ? "/api/cover/" . current($songs)["cover"] . "/large" : "/img/no-cover.webp").">; rel=preload; as=image; type=image/webp", false);
 header("Link: </api/download/".current($songs)["hash"].">; rel=preload; as=audio; type=".current($songs)["mimeType"], false);
 flush();
 
@@ -585,8 +585,8 @@ flush();
     }
     ?>
     <meta property="og:image"
-          content="https://<?php echo SITE_HOSTNAME . ($cover !== null ? "/api/cover/" . $cover . "/large" : "/img/no-cover.jpg"); ?>">
-    <meta property="og:image:type" content="image/jpeg">
+          content="https://<?php echo SITE_HOSTNAME . ($cover !== null ? "/api/cover/" . $cover . "/large" : "/img/no-cover.webp"); ?>">
+    <meta property="og:image:type" content="image/webp">
     <meta property="og:image:width" content="800">
     <meta property="og:image:height" content="800">
     <meta property="og:url"
@@ -598,10 +598,10 @@ flush();
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="referrer" content="no-referrer">
 
-    <link rel="icon" sizes="128x128" href="/img/icon-128.png">
-    <link rel="icon" sizes="192x192" href="/img/icon-192.png">
-    <link rel="icon" sizes="256x256" href="/img/icon-256.png">
-    <link rel="icon" sizes="512x512" href="/img/icon-512.png">
+    <link rel="icon" sizes="128x128" href="/img/icon-128.webp">
+    <link rel="icon" sizes="192x192" href="/img/icon-192.webp">
+    <link rel="icon" sizes="256x256" href="/img/icon-256.webp">
+    <link rel="icon" sizes="512x512" href="/img/icon-512.webp">
     <meta name="theme-color" content="#ed106a">
 
     <link rel="manifest" href="/manifest.webmanifest?<?php echo VERSION_HASH; ?>">
@@ -694,7 +694,7 @@ flush();
     </style>
 </head>
 <body>
-<div class="body-blur" style="background-image: url(<?php echo current($songs)["cover"] !== null ? "/api/cover/" . current($songs)["cover"] . "/large" : "/img/no-cover.jpg"; ?>)"></div>
+<div class="body-blur" style="background-image: url(<?php echo current($songs)["cover"] !== null ? "/api/cover/" . current($songs)["cover"] . "/large" : "/img/no-cover.webp"; ?>)"></div>
 <div class="grid-x" id="blue-playlist-container">
     <div class="large-12 medium-12 small-12 cell" id="title-bar">
         <img src="/img/title.svg" id="radio-title"/>
@@ -710,7 +710,7 @@ flush();
                 <div class="hash-area np-hash" id="np-hash-cover"><?php echo current($songs)["hash"]; ?></div>
                 <div class="tag-area" id="np-tags"></div>
                 <div class="cover-fit-container">
-                    <img class="main-cover" src="<?php echo current($songs)["cover"] !== null ? "/api/cover/" . current($songs)["cover"] . "/large" : "/img/no-cover.jpg"; ?>"/>
+                    <img class="main-cover" src="<?php echo current($songs)["cover"] !== null ? "/api/cover/" . current($songs)["cover"] . "/large" : "/img/no-cover.webp"; ?>"/>
                 </div>
                 <div id="player-left-bottom">
                     <canvas id="lyrics-area"></canvas>

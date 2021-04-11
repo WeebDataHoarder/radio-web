@@ -21,36 +21,7 @@ async function tryToCache (request) {
 }
 
 self.addEventListener("install", (event) => {
-    event.waitUntil((async () => {
-        const cache = await caches.open(cacheName);
-        await cache.addAll(
-            [
-                '/img/ab-logo.svg',
-                '/img/add.svg',
-                '/img/download.svg',
-                '/img/external-player.svg',
-                '/img/heart.svg',
-                '/img/jps-logo-small.png',
-                '/img/list-play-hover.png',
-                '/img/list-play-light.png',
-                '/img/mute.svg',
-                '/img/next.svg',
-                '/img/now-playing.svg',
-                '/img/pause.svg',
-                '/img/play.svg',
-                '/img/prev.svg',
-                '/img/repeat-off.svg',
-                '/img/repeat-on.svg',
-                '/img/shuffle-off.svg',
-                '/img/shuffle-on.svg',
-                '/img/volume.svg',
-                '/img/no-cover.jpg',
-                '/help.html',
-            ]
-        );
-        await self.skipWaiting();
-    })());
-
+    self.skipWaiting();
 });
 
 self.addEventListener("activate", function (event) {

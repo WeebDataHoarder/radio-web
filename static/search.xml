@@ -6,6 +6,6 @@
   <Language>en-us</Language>
   <OutputEncoding>UTF-8</OutputEncoding>
   <InputEncoding>UTF-8</InputEncoding>
-  <Image width="128" height="128" type="image/png">https://radio.animebits.moe/img/icon-128.png</Image>
+  <Image width="128" height="128" type="image/webp">https://radio.animebits.moe/img/icon-128.webp</Image>
   <Url type="text/html" method="get" template="https://radio.animebits.moe/player/search/{searchTerms}"/>
 </OpenSearchDescription>

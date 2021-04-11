@@ -39,20 +39,20 @@ header("Link: </js/online.js?".VERSION_HASH."; rel=preload; as=script", false);
 	<meta name="mobile-web-app-title" content="anime(bits)" />
 	<meta name="google" content="notranslate" />
 
-	<link rel="icon" sizes="128x128" href="/img/icon-128.png">
-	<link rel="icon" sizes="192x192" href="/img/icon-192.png">
-	<link rel="icon" sizes="256x256" href="/img/icon-256.png">
-	<link rel="icon" sizes="512x512" href="/img/icon-512.png">
+	<link rel="icon" sizes="128x128" href="/img/icon-128.webp">
+	<link rel="icon" sizes="192x192" href="/img/icon-192.webp">
+	<link rel="icon" sizes="256x256" href="/img/icon-256.webp">
+	<link rel="icon" sizes="512x512" href="/img/icon-512.webp">
 
-	<link rel="apple-touch-icon" sizes="128x128" href="/img/icon-128.png">
-	<link rel="apple-touch-icon" sizes="192x192" href="/img/icon-192.png">
-	<link rel="apple-touch-icon" sizes="256x256" href="/img/icon-256.png">
-	<link rel="apple-touch-icon" sizes="512x512" href="/img/icon-512.png">
+	<link rel="apple-touch-icon" sizes="128x128" href="/img/icon-128.webp">
+	<link rel="apple-touch-icon" sizes="192x192" href="/img/icon-192.webp">
+	<link rel="apple-touch-icon" sizes="256x256" href="/img/icon-256.webp">
+	<link rel="apple-touch-icon" sizes="512x512" href="/img/icon-512.webp">
 
-	<meta name="msapplication-square128x128logo" content="/img/icon-128.png">
-	<meta name="msapplication-square192x192logo" content="/img/icon-192.png">
-	<meta name="msapplication-square256x256logo" content="/img/icon-256.png">
-	<meta name="msapplication-square512x512logo" content="/img/icon-512.png">
+	<meta name="msapplication-square128x128logo" content="/img/icon-128.webp">
+	<meta name="msapplication-square192x192logo" content="/img/icon-192.webp">
+	<meta name="msapplication-square256x256logo" content="/img/icon-256.webp">
+	<meta name="msapplication-square512x512logo" content="/img/icon-512.webp">
 
 	<meta name="theme-color" content="#ed106a">
 

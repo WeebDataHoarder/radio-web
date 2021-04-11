@@ -200,7 +200,7 @@ for (index = 0; index < songPlaylist.length; ++index) {
         fit.classList.add("queue-fit");
         const im = document.createElement("img");
         im.classList.add("queue-cover");
-        im.setAttribute("data-src", data["cover"] !== null ? "/api/cover/" + data["cover"] + "/small" : "/img/no-cover.jpg");
+        im.setAttribute("data-src", data["cover"] !== null ? "/api/cover/" + data["cover"] + "/small" : "/img/no-cover.webp");
         fit.append(im);
 
         e.append(fit);
@@ -477,7 +477,7 @@ function playThisSong(song, isPlaying = null) {
         newActiveElement.classList.add("active-song-container");
     }
     let imageUrl;
-    document.querySelector(".main-cover").src = (imageUrl = song["cover"] !== null ? "/api/cover/" + song["cover"] + "/large" : "/img/no-cover.jpg");
+    document.querySelector(".main-cover").src = (imageUrl = song["cover"] !== null ? "/api/cover/" + song["cover"] + "/large" : "/img/no-cover.webp");
     document.querySelector(".body-blur").style["background-image"] = "url("+ imageUrl +")";
 
     document.querySelector("#meta-container .song-name").textContent = song["title"];
