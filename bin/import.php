@@ -11,6 +11,7 @@ if ($key === null) {
 
 $dbconn = connectToMusicDatabase();
 if ($dbconn === null) {
+    http_response_code(500);
     exit();
 }
 

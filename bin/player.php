@@ -4,6 +4,7 @@ require_once("common.php");
 
 $dbconn = connectToMusicDatabase();
 if ($dbconn === null) {
+    http_response_code(500);
     exit();
 }
 

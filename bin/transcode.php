@@ -57,7 +57,7 @@ if (preg_match("#^/service/encode/(?P<hash>[a-fA-F0-9]{8,32})(|/(?P<codec>(m4a|a
             $params = "-map_metadata -1 -map 0:a ";
 
             if($data["cover"] !== null){
-                $cmd .= " -i " . escapeshellarg(DEFAULT_API_URL . "cover/" . $data["cover"] ."/original") . " ";
+                $cmd .= " -i " . escapeshellarg(DEFAULT_API_URL . "/cover/" . $data["cover"] ."/original") . " ";
             }
 
             $subs = null;

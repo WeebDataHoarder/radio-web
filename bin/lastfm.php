@@ -4,19 +4,20 @@ require_once("common.php");
 
 $key = getAuthenticationKey();
 if($key === null){
-    header('HTTP/1.1 403 Forbidden');
+    http_response_code(403);
 	echo("You need to authenticate on main page before using the Favorite Import service");
 	exit();
 }
 
 $dbconn = connectToMusicDatabase();
 if($dbconn === null){
+    http_response_code(500);
 	exit();
 }
 
 $user = checkAuthenticationKey($dbconn, $key);
 if($user === null){
-    header('HTTP/1.1 403 Forbidden');
+    http_response_code(403);
 	echo("You need to authenticate on main page before using the Favorite Import service");
 	exit();
 }
