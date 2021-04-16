@@ -650,34 +650,6 @@ flush();
         div#radio-right div.song div.song-meta-data span.song-artist {
             padding-left: 4ch;
         }
-
-        div#radio-right div.album-header {
-            display: flex;
-            align-items: center;
-            text-align: center;
-
-            width: 100%;
-            padding: 5px;
-            margin-top: 20px;
-            font-weight: bold;
-            text-transform: uppercase;
-            color: #999999;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        div#radio-right div.album-header::before, div#radio-right div.album-header::after {
-            content: '';
-            flex: 1;
-            border-bottom: 2px solid #999999;
-        }
-        div#radio-right div.album-header::before {
-            margin-right: .25em;
-        }
-        div#radio-right div.album-header::after {
-            margin-left: .25em;
-        }
         div#radio-right hr {
             display: none;
         }
@@ -685,7 +657,7 @@ flush();
         <?php
     }else{
         ?>
-        div#radio-right div.album-header {
+        div#radio-right div.album-header, div#radio-right div.album-header::before, div#radio-right div.album-header::after {
             display: none;
         }
         <?php
