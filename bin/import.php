@@ -52,7 +52,7 @@ if ($user === null) {
             async></script>
     <script type="text/javascript" src="/js/md5asm.js?<?php echo VERSION_HASH; ?>" nonce="<?php echo SCRIPT_NONCE; ?>"
             async></script>
-    <style type="text/css">
+    <style type="text/css" nonce="<?php echo SCRIPT_NONCE; ?>">
         #file-picker {
             font-size: 125%;
         }
