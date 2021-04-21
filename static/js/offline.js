@@ -254,7 +254,7 @@ for (index = 0; index < songPlaylist.length; ++index) {
     prevData = data;
 }
 
-delete songElement.style.display;
+songElement.style.removeProperty("display");
 document.querySelector("div#radio-right").replaceWith(songElement);
 
 document.addEventListener("DOMContentLoaded", function() {
