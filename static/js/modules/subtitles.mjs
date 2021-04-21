@@ -4,10 +4,12 @@ async function require(path, global = null) {
     const _module = window.module;
     window.module = {};
     window.module = {};
-    await import(path + "?" + VERSION_HASH);
+    const result = await import(path + "?" + VERSION_HASH);
     let exports;
     if(global !== null){
         exports = window[global];
+    }else if ("default" in result){
+        exports = result.default;
     }else{
         exports = module.exports;
     }
@@ -441,14 +443,14 @@ let _kuroshiroImportPromise = null;
 let _kuroshiroInitPromise = null;
 
 function importKuroshiro(){
-    return _kuroshiroImportPromise !== null ? _kuroshiroImportPromise : _kuroshiroImportPromise = require("./kuroshiro.min.js", "Kuroshiro");
+    return _kuroshiroImportPromise !== null ? _kuroshiroImportPromise : _kuroshiroImportPromise = require("./kuroshiro.mjs");
 }
 
 async function convertJapaneseToRomaji(text){
     if(_kuroshiroInitPromise === null){
         _kuroshiroInitPromise = (async () => {
             const kuroshiro = new (await importKuroshiro())();
-            await kuroshiro.init(new (await require("./kuroshiro-analyzer-kuromoji.min.js", "KuromojiAnalyzer"))({
+            await kuroshiro.init(new (await require("./kuroshiro-analyzer-kuromoji.mjs"))({
                 dictPath: "/js/modules/dict/"
             }));
             return kuroshiro;
