@@ -292,7 +292,7 @@ class Subtitles {
                     time += (parseFloat(timeUnits.pop()) * 3600) || 0;
                     time += currentOffset;
 
-                    if(text.match(/^(作词|作曲|编曲|曲|歌|词)[ \t]*[：∶:]/)){
+                    if(text.match(/^(作词|作曲|作詞|编曲|曲|歌|词)[ \t]*[：∶:]/)){
                         continue;
                     }
 
