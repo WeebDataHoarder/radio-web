@@ -33,7 +33,7 @@
         "src": "/img/icon.svg",
         "type": "image/svg+xml",
         "purpose": "maskable any",
-        "sizes": "1024x1024"
+        "sizes": "21x21"
     }
   ],
   "background_color": "#ed106a",

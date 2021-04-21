@@ -1,0 +1,31 @@
+{
+  "name": "radio-web",
+  "description": "The site powering radio",
+  "repository": {
+    "url": "https://github.com/WeebDataHoarder/radio-docker",
+    "license": "MIT"
+  },
+  "participate": {
+    "home": "https://github.com/WeebDataHoarder/radio-docker",
+    "docs": "https://github.com/WeebDataHoarder/radio-web/blob/master/static/help.html",
+    "irc": "irc://irc.rizon.net/#animebits",
+    "irc-contacts": [
+      "DataHoarder"
+    ]
+  },
+  "bugs": {
+    "list": "https://github.com/WeebDataHoarder/radio-docker/issues",
+    "report": "https://github.com/WeebDataHoarder/radio-docker/issues/new"
+  },
+  "urls": {
+    "prod": "https://github.com/WeebDataHoarder/radio-docker"
+  },
+  "keywords": [
+    "radio",
+    "kawa",
+    "animebits",
+    "python",
+    "php",
+    "rust"
+  ]
+}

@@ -153,8 +153,11 @@ document.querySelector("#lyrics-area").addEventListener("click", () => {
 });
 
 
-const songElement = document.querySelector("div#radio-right").cloneNode(false);
-songElement.innerHTML = "";
+const oldElement = document.querySelector("div#radio-right");
+const songElement = document.createElement("div");
+songElement.id = oldElement.id;
+songElement.classList.add(...oldElement.classList.values());
+songElement.style.display = "none";
 let prevData = null;
 
 for (index = 0; index < songPlaylist.length; ++index) {
@@ -250,6 +253,8 @@ for (index = 0; index < songPlaylist.length; ++index) {
 
     prevData = data;
 }
+
+delete songElement.style.display;
 document.querySelector("div#radio-right").replaceWith(songElement);
 
 document.addEventListener("DOMContentLoaded", function() {
