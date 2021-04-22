@@ -370,6 +370,7 @@ class Subtitles {
             'ScriptType: v4.00+\n' +
             'Collisions: Normal\n' +
             'WrapStyle: 0\n' +
+            'Kerning: yes\n' +
             'ScaledBorderAndShadow: yes\n' +
             'YCbCr Matrix: None\n' +
             'PlayResX: 512\n' +

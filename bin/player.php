@@ -415,7 +415,6 @@ if($playlistFormat === null){
     header("Link: </js/player/player.js?".VERSION_HASH.">; rel=preload; as=script", false);
     header("Link: </js/utils.js?".VERSION_HASH.">; rel=preload; as=script", false);
     header("Link: </js/offline.js?".VERSION_HASH.">; rel=preload; as=script", false);
-    header("Link: </js/modules/subtitles.mjs?".VERSION_HASH.">; rel=modulepreload", false);
     flush();
 }
 
@@ -550,7 +549,7 @@ foreach ($songs as $k => $data) {
 reset($songs);
 
 header("Link: <".(current($songs)["cover"] !== null ? "/api/cover/" . current($songs)["cover"] . "/large" : "/img/no-cover.webp").">; rel=preload; as=image; type=image/webp", false);
-header("Link: </api/download/".current($songs)["hash"].">; rel=preload; as=audio; type=".current($songs)["mimeType"], false);
+header("Link: </api/download/".current($songs)["hash"].">; rel=preload; as=auto; type=".current($songs)["mimeType"], false);
 flush();
 
 ?>

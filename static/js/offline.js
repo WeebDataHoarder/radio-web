@@ -100,6 +100,7 @@ function getSubtitles(){
         const navigatorHasImprecisePlaybackTime = navigator.userAgent.match(/(AppleWebKit)((?!Chrom(ium|e)\/).)*$/) !== null;
 
         return new module.default(document.getElementById("lyrics-area"), {
+            debug: urlParams.get("debug") !== null,
             displaySettings: {
                 showOriginal: showOriginalLyrics,
                 fadeTransition: lyricsAnimationLevel > 0,
