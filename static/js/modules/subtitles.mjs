@@ -58,8 +58,6 @@ class Subtitles {
                 "open sans semibold": "/fonts/subtitles/OpenSans-SemiBold.woff2",
 
                 "noto sans": "/fonts/subtitles/NotoSansCJK-Regular.woff2",
-                "noto sans cjk": "/fonts/subtitles/NotoSansCJK-Regular.woff2",
-                "noto sans cjk jp": "/fonts/subtitles/NotoSansCJK-Regular.woff2",
                 "noto sans regular": "/fonts/subtitles/NotoSansCJK-Regular.woff2",
                 "noto sans cjk regular": "/fonts/subtitles/NotoSansCJK-Regular.woff2",
 
@@ -148,7 +146,6 @@ class Subtitles {
             options.canvas = this.canvas;
             options.dropAllAnimations = (!options.displaySettings.karaoke.animate && !options.displaySettings.fadeTransition);
             options.workerUrl = "/js/modules/subtitles/subtitles-octopus-worker.js?" + VERSION_HASH;
-            options.legacyWorkerUrl = "/js/modules/subtitles/subtitles-octopus-worker-legacy.js?" + VERSION_HASH;
             options.renderMode = typeof createImageBitmap !== 'undefined' ? "fast" : "normal";
             //renderMode: "blend",
             options.availableFonts = Object.assign(Object.assign({}, options.availableFonts), displayInformation.embeddedFonts);
