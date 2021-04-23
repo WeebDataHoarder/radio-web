@@ -15,5 +15,3 @@ cp -rvf dist/js/* ../../static/js/modules/subtitles/
 popd
 
 popd
-
-./res/compress.sh ./static/js/modules/subtitles

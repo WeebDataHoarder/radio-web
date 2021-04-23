@@ -50,32 +50,36 @@ class Subtitles {
                     animate: true
                 }
             },
+            fallbackFont: "/fonts/subtitles/NotoSansCJK-Medium.woff2",
             availableFonts: {
-                "open sans": "/fonts/OpenSans-Regular.ttf",
-                "open sans regular": "/fonts/OpenSans-Regular.ttf",
+                "open sans": "/fonts/subtitles/OpenSans-Regular.woff2",
+                "open sans regular": "/fonts/subtitles/OpenSans-Regular.woff2",
 
-                "open sans semibold": "/fonts/OpenSans-SemiBold.ttf",
+                "open sans semibold": "/fonts/subtitles/OpenSans-SemiBold.woff2",
 
-                "noto sans": "/fonts/NotoSansCJK-Regular.ttc",
-                "noto sans cjk": "/fonts/NotoSansCJK-Regular.ttc",
-                "noto sans cjk jp": "/fonts/NotoSansCJK-Regular.ttc",
-                "noto sans regular": "/fonts/NotoSansCJK-Regular.ttc",
-                "noto sans cjk regular": "/fonts/NotoSansCJK-Regular.ttc",
+                "noto sans": "/fonts/subtitles/NotoSansCJK-Regular.woff2",
+                "noto sans cjk": "/fonts/subtitles/NotoSansCJK-Regular.woff2",
+                "noto sans cjk jp": "/fonts/subtitles/NotoSansCJK-Regular.woff2",
+                "noto sans regular": "/fonts/subtitles/NotoSansCJK-Regular.woff2",
+                "noto sans cjk regular": "/fonts/subtitles/NotoSansCJK-Regular.woff2",
 
-                "noto sans bold": "/fonts/NotoSansCJK-Bold.ttc",
-                "noto sans cjk bold": "/fonts/NotoSansCJK-Bold.ttc",
+                "noto sans medium": "/fonts/subtitles/NotoSansCJK-Medium.woff2",
+                "noto sans cjk medium": "/fonts/subtitles/NotoSansCJK-Medium.woff2",
 
-                "arial": "/fonts/arial.ttf",
-                "arial regular": "/fonts/arial.ttf",
+                "noto sans bold": "/fonts/subtitles/NotoSansCJK-Bold.woff2",
+                "noto sans cjk bold": "/fonts/subtitles/NotoSansCJK-Bold.woff2",
 
-                "arial bold": "/fonts/arialbd.ttf",
+                "arial": "/fonts/subtitles/arial.woff2",
+                "arial regular": "/fonts/subtitles/arial.woff2",
 
-                "arial rounded mt bold": "/fonts/ARLRDBD.TTF",
+                "arial bold": "/fonts/subtitles/arialbd.woff2",
 
-                "dfkai-sb": "/fonts/kaiu.ttf",
+                "arial rounded mt bold": "/fonts/subtitles/ARLRDBD.woff2",
 
-                "franklin gothic book": "/fonts/frabk.ttf",
-                "franklin gothic book regular": "/fonts/frabk.ttf"
+                "dfkai-sb": "/fonts/subtitles/kaiu.woff2",
+
+                "franklin gothic book": "/fonts/subtitles/frabk.woff2",
+                "franklin gothic book regular": "/fonts/subtitles/frabk.woff2"
             },
             targetFps: 30,
             resizeVariation: 0.1,
