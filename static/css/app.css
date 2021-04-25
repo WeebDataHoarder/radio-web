@@ -336,7 +336,6 @@ div#radio-right div.album-header {
     padding: 5px;
     margin-top: 20px;
     font-weight: bold;
-    text-transform: uppercase;
     color: #999999;
     white-space: nowrap;
     overflow: hidden;
@@ -415,7 +414,6 @@ div#radio-right div.song div.song-meta-data span.song-artist {
     color: #999999;
     font-size: 12px;
     font-weight: bold;
-    text-transform: uppercase;
     display: block;
     white-space: nowrap;
     overflow: hidden;
@@ -428,7 +426,6 @@ div#radio-right div.song div.song-meta-data span.song-album {
     font-size: 12px;
     font-weight: normal;
     font-style: italic;
-    text-transform: uppercase;
     display: block;
     white-space: nowrap;
     overflow: hidden;
@@ -1222,7 +1219,6 @@ div#meta-container div.song-artist-album {
     color: #999999;
     font-size: 14px;
     font-weight: 700;
-    text-transform: uppercase;
     font-family: "Open Sans", sans-serif;
     white-space: nowrap;
     overflow: hidden;
