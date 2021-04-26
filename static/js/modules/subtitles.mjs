@@ -99,10 +99,7 @@ class Subtitles {
         window.addEventListener("resize", this.resizeToMatchCanvas.bind(this));
     }
 
-    resizeToMatchCanvas(){
-        if(this.octopus === null){
-            return;
-        }
+    resizeCanvas(){
         const ar = this.canvas.getAttribute("aspect-ratio");
         const canvasStyles = window.getComputedStyle(this.canvas);
         const width = canvasStyles.width.replace(/px$/, "");
@@ -116,8 +113,18 @@ class Subtitles {
             }
         }
 
+        return {width: width, height: height};
+    }
+
+    resizeToMatchCanvas(){
+        if(this.octopus === null){
+            return;
+        }
+
+        let opt = this.resizeCanvas();
+
         const pixelRatio = "devicePixelRatio" in window ? window.devicePixelRatio : 1;
-        this.octopus.resize(width * pixelRatio, height * pixelRatio, 0, 0);
+        this.octopus.resize(opt.width * pixelRatio, opt.height * pixelRatio, 0, 0);
     }
 
     /**
@@ -150,11 +157,14 @@ class Subtitles {
             //renderMode: "blend",
             options.availableFonts = Object.assign(Object.assign({}, options.availableFonts), displayInformation.embeddedFonts);
             options.subContent = data.content;
+            options.pixelRatio = "devicePixelRatio" in window ? window.devicePixelRatio : 1;
             //renderAhead: options.targetFps,
             options.onReady = () => {
                 this.octopus.setCurrentTime(this.currentTime);
                 this.resizeToMatchCanvas();
             };
+
+            this.resizeCanvas();
 
             this.octopus = new (await SubtitlesOctopus)(options);
             this.octopus.setCurrentTime(this.currentTime);
