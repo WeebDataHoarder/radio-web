@@ -1240,7 +1240,6 @@ div#meta-container span.song-name {
     display: block;
     color: #cacaca;
     font-size: 20px;
-    font-family: "Noto Sans JP", "Open Sans", sans-serif;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -1250,7 +1249,6 @@ div#meta-container div.song-artist-album {
     color: #999999;
     font-size: 16px;
     font-weight: 700;
-    font-family: "Noto Sans JP", "Open Sans", sans-serif;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -1262,6 +1260,7 @@ div#meta-container div.song-artist-album span {
 }
 
 body {
+    font-family: "Noto Sans JP", "Open Sans", sans-serif;
     background: #292929;
     height: 100vh;
     color: #999;
