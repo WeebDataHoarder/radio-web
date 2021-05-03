@@ -1,3 +1,35 @@
+@font-face {
+    font-family: 'Noto Sans JP';
+    font-style: normal;
+    font-weight: 400;
+    src: local("Noto Sans CJK JP"), local("Noto Sans JP"), url(/fonts/NotoSansJP-Regular.woff2) format('woff2');
+    unicode-range: U+3000-30FF, U+FF00-FFEF, U+4E00-9FAF;
+}
+
+@font-face {
+    font-family: 'Noto Sans JP';
+    font-style: normal;
+    font-weight: 600;
+    src: local("Noto Sans CJK JP"), local("Noto Sans JP"), url(/fonts/NotoSansJP-Medium.woff2) format('woff2');
+    unicode-range: U+3000-30FF, U+FF00-FFEF, U+4E00-9FAF;
+}
+
+@font-face {
+    font-family: 'Open Sans';
+    font-style: normal;
+    font-weight: 400;
+    src: local("Open Sans"), url(/fonts/subtitles/OpenSans-Regular.woff2) format('woff2');
+}
+
+@font-face {
+    font-family: 'Open Sans';
+    font-style: normal;
+    font-weight: 700;
+    src: local("Open Sans"), url(/fonts/subtitles/OpenSans-SemiBold.woff2) format('woff2');
+}
+
+
+
 .body-blur{
     position: fixed;
     width: 100%;
@@ -403,7 +435,7 @@ div#radio-right div.song div.song-meta-data span.song-title {
     color: #cacaca;
     font-size: 14px;
     display: block;
-    font-weight: 300;
+    font-weight: 400;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -1208,7 +1240,7 @@ div#meta-container span.song-name {
     display: block;
     color: #cacaca;
     font-size: 20px;
-    font-family: "Open Sans", sans-serif;
+    font-family: "Noto Sans JP", "Open Sans", sans-serif;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -1218,7 +1250,7 @@ div#meta-container div.song-artist-album {
     color: #999999;
     font-size: 16px;
     font-weight: 700;
-    font-family: "Open Sans", sans-serif;
+    font-family: "Noto Sans JP", "Open Sans", sans-serif;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
