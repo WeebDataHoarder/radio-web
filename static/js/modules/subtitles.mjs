@@ -80,6 +80,7 @@ class Subtitles {
                 "franklin gothic book regular": "/fonts/subtitles/frabk.woff2"
             },
             targetFps: 30,
+            lazyFontLoading: true,
             resizeVariation: 0.1,
             libassMemoryLimit: 40,
             libassGlyphLimit: 40,
@@ -154,7 +155,6 @@ class Subtitles {
             options.dropAllAnimations = (!options.displaySettings.karaoke.animate && !options.displaySettings.fadeTransition);
             options.workerUrl = "/js/modules/subtitles/subtitles-octopus-worker.js?" + VERSION_HASH;
             options.renderMode = typeof createImageBitmap !== 'undefined' ? "fast" : "normal";
-            //renderMode: "blend",
             options.availableFonts = Object.assign(Object.assign({}, options.availableFonts), displayInformation.embeddedFonts);
             options.subContent = data.content;
             options.pixelRatio = "devicePixelRatio" in window ? window.devicePixelRatio : 1;
