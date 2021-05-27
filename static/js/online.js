@@ -88,7 +88,7 @@ function initWebsite() {
     });
 
     document.querySelector("#radio-skip").addEventListener('click', function () {
-        if (listeners.num_listeners <= 2 || confirm("Are you sure you want to skip this track? You are (not) alone.")) {
+        if (listeners.num_listeners <= 1) {
             apiRequest("/api/skip").then(r => {
 
             });
@@ -263,7 +263,7 @@ function initWebSocket() {
             updateQueueData(currentQueue);
         } else if (data.type === 'listeners') {
             listeners = data.data;
-            if (listeners.num_listeners <= 2) {
+            if (listeners.num_listeners <= 1) {
                 document.querySelector("#radio-skip").style.display = "";
             } else {
                 document.querySelector("#radio-skip").style.display = "none";
