@@ -707,6 +707,7 @@ flush();
                                 ?>
                                 <div class="radio-shuffle shuffle-off" id="shuffle"></div>
                                 <?php
+                            }else{
                                 ?>
                                 <a id="np-download" href="/api/download/<?php echo current($songs)["hash"]; ?>"></a>
                                 <?php
