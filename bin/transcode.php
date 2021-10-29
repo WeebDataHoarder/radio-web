@@ -134,7 +134,6 @@ if (preg_match("#^/service/encode/(?P<hash>[a-fA-F0-9]{8,32})(|/(?P<codec>(m4a|a
                 header("Content-Type: video/x-matroska");
                 break;
         }
-        flush();
 
         $cmd .= " pipe:1";
 
@@ -147,13 +146,22 @@ if (preg_match("#^/service/encode/(?P<hash>[a-fA-F0-9]{8,32})(|/(?P<codec>(m4a|a
         ], $pipes);
         stream_set_blocking($pipes[2], false);
 
-        echo fread($pipes[1], 128);
-        flush();
+        $len = 0;
+        $read = fread($pipes[1], 128);
+        $len += strlen($read);
+        if(strlen($read) > 0){
+            echo $read;
+            flush();
+        }
 
         do{
-            echo fread($pipes[1], 4096);
+            $read = fread($pipes[1], 4096);
+            $len += strlen($read);
             fread($pipes[2], 1024);
-            flush();
+            if(strlen($read) > 0){
+                echo $read;
+                flush();
+            }
         }while(!connection_aborted() and $pipes[1] !== null and !feof($pipes[1]));
 
         fclose($pipes[0]);
@@ -163,6 +171,33 @@ if (preg_match("#^/service/encode/(?P<hash>[a-fA-F0-9]{8,32})(|/(?P<codec>(m4a|a
 
         foreach($tempFiles as $tmpName){
             @unlink($tmpName);
+        }
+
+        if($len === 0){
+            $mimeType = "audio";
+            $ext = strtolower(pathinfo($data["path"], PATHINFO_EXTENSION));
+            if ($ext === "flac") {
+                $mimeType = "audio/flac";
+            } else if ($ext === "ogg") {
+                $mimeType = "audio/ogg";
+            } else if ($ext === "opus") {
+                $mimeType = "audio/opus";
+            } else if ($ext === "tta") {
+                $mimeType = "audio/tta";
+            } else if ($ext === "m4a") {
+                $mimeType = "audio/mp4";
+            } else if ($ext === "aac") {
+                $mimeType = "audio/aac";
+            } else if ($ext === "wav") {
+                $mimeType = "audio/wav";
+            } else if ($ext === "alac") {
+                $mimeType = "audio/alac";
+            } else if ($ext === "mp3") {
+                $mimeType = "audio/mpeg;codecs=mp3";
+            }
+            header("Content-Type: $mimeType");
+            flush();
+            readfile($data["path"]);
         }
 
         break;
