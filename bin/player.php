@@ -703,7 +703,16 @@ flush();
                     <div id="control-container">
                         <div id="repeat-container">
                             <div class="radio-repeat repeat-off" id="repeat"></div>
-                            <div class="radio-shuffle shuffle-off" id="shuffle"></div>
+                            <?php if(count($songs) > 1){
+                                ?>
+                                <div class="radio-shuffle shuffle-off" id="shuffle"></div>
+                                <?php
+                                ?>
+                                <a id="np-download" href="/api/download/<?php echo current($songs)["hash"]; ?>></a>
+                                <?php
+                            }
+                            ?>
+
                         </div>
 
                         <div id="central-control-container">
