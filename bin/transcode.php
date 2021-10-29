@@ -86,6 +86,7 @@ if (preg_match("#^/service/encode/(?P<hash>[a-fA-F0-9]{8,32})(|/(?P<codec>(m4a|a
 
                 $playResX *= $multiplier;
                 $playResY *= $multiplier;
+                $playResY = ($playResY % 2) === 0 ? $playResY : $playResY + 1; // & ~1;
 
                 $cmd .= " -f lavfi -i 'color=size={$playResX}x{$playResY}:rate=30:duration=".$data["duration"].":color=black' ";
                 if($data["cover"] !== null){
