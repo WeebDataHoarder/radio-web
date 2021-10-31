@@ -118,6 +118,7 @@ function isRequestSatsuki(){
 function isRequestMediaPlayer(){
     return isRequestVideoPlayer() or
         @stripos($_SERVER['HTTP_USER_AGENT'], "lavf/") === 0 or //ffplay
+        @stripos($_SERVER['HTTP_USER_AGENT'], "gvfs/") === 0 or //gvfs
         (isset($_SERVER['HTTP_ICY_METADATA']) and $_SERVER['HTTP_ICY_METADATA'] === "1"); //others?
 }
 
