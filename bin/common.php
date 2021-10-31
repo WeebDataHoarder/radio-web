@@ -112,7 +112,6 @@ function isRequestTheLounge(){
 
 function isRequestSatsuki(){
   return @stripos($_SERVER['HTTP_USER_AGENT'], "kana/") === 0;
-  //return isset($_COOKIE["PREF"]) and $_COOKIE["PREF"] == "f6=42008";
 }
 
 function isRequestMediaPlayer(){
@@ -123,7 +122,8 @@ function isRequestMediaPlayer(){
 }
 
 function isRequestVideoPlayer(){
-    return isRequestVLC() or isRequestMPV();
+    return @stripos($_SERVER['HTTP_USER_AGENT'], "Videos/") === 0 or
+        isRequestVLC() or isRequestMPV();
 }
 
 function isRequestVLC(){
