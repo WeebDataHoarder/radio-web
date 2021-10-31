@@ -94,7 +94,12 @@ if (preg_match("#^/service/encode/(?P<hash>[a-fA-F0-9]{8,32})(|/(?P<codec>(m4a|a
                 }else{
                     $params .=  "-map 1:s -map 2:v ";
                 }
-                $params .= "-c:s ass -disposition:s:0 forced -pix_fmt yuv420p -c:v libx264 -preset:v ultrafast -profile:v high -tune:v stillimage -crf 40 -x264opts \"keyint=900:min-keyint=900:no-scenecut\" ";
+
+                if(isRequestVideoPlayer()){
+                    $params .= "-c:s ass -disposition:s:0 forced -pix_fmt yuv444p10le -c:v libx264 -preset:v veryfast -profile:v high444 -tune:v stillimage -crf 28 -x264opts \"intra-refresh=1:keyint=3600:min-keyint=900:no-scenecut\" ";
+                }else{
+                    $params .= "-c:s ass -disposition:s:0 forced -pix_fmt yuv420p -c:v libx264 -preset:v veryfast -profile:v high -tune:v stillimage -crf 28 -x264opts \"intra-refresh=1:keyint=3600:min-keyint=900:no-scenecut\" ";
+                }
             }else{
                 $params .= "-map 1:v ";
             }
