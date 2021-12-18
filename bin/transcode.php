@@ -87,12 +87,13 @@ if (preg_match("#^/service/encode/(?P<hash>[a-fA-F0-9]{8,32})(|/(?P<codec>(m4a|a
                 $playResX *= $multiplier;
                 $playResY *= $multiplier;
                 $playResY = ($playResY % 2) === 0 ? $playResY : $playResY + 1; // & ~1;
+                $playResX = ($playResX % 2) === 0 ? $playResX : $playResX + 1; // & ~1;
 
-                $cmd .= " -f lavfi -i 'color=size={$playResX}x{$playResY}:rate=30:duration=".$data["duration"].":color=black' ";
+                $cmd .= " -f lavfi -i 'color=size={$playResX}x{$playResY}:rate=30:duration=".($data["duration"] + 1).":color=black' ";
                 if($data["cover"] !== null){
-                    $params .=  "-map 2:s -filter_complex '[1:v]scale=w=-1:h={$playResY}[cover];[3:v][cover]overlay=eof_action=repeat[out]' -map '[out]' ";
+                    $params .=  "-map 2:s -filter_complex '[1:v]scale=w=-1:h={$playResY}[cover];[3:v][cover]overlay=eof_action=repeat[out]' -map '[out]'";
                 }else{
-                    $params .=  "-map 1:s -map 2:v ";
+                    $params .=  "-map 1:s -map 2:v";
                 }
 
                 if(isRequestVideoPlayer()){
@@ -100,16 +101,19 @@ if (preg_match("#^/service/encode/(?P<hash>[a-fA-F0-9]{8,32})(|/(?P<codec>(m4a|a
                 }else{
                     $params .= "-c:s ass -disposition:s:0 forced -pix_fmt yuv420p -c:v libx264 -preset:v veryfast -profile:v high -tune:v stillimage -crf 28 -x264opts \"intra-refresh=1:keyint=3600:min-keyint=900:no-scenecut\" ";
                 }
-            }else{
+            }else if($data["cover"] !== null) {
+
+                $cmd .= " -f lavfi -i 'color=size=2x2:rate=30:duration=".($data["duration"] + 1).":color=black' ";
+
                 if(isRequestVideoPlayer()){
-                    $params .= "-map 1:v -c:v libx264 -preset:v veryfast -profile:v high444 -tune:v stillimage -crf 28 -x264opts \"intra-refresh=1:keyint=3600:min-keyint=900:no-scenecut\" ";
+                    $params .= "-filter_complex '[1:v]scale=trunc(iw/2)*2:trunc(ih/2)*2[ref];[2:v][ref]scale2ref[black][cover];[black][cover]overlay=eof_action=repeat[out]' -map '[out]' -c:v libx264 -preset:v veryfast -profile:v high444 -pix_fmt yuv444p10le -tune:v stillimage -crf 28 -x264opts \"intra-refresh=1:keyint=3600:min-keyint=900:no-scenecut\" ";
                 }else{
-                    $params .= "-map 1:v -c:v libx264 -preset:v veryfast -profile:v high -tune:v stillimage -crf 28 -x264opts \"intra-refresh=1:keyint=3600:min-keyint=900:no-scenecut\" ";
+                    $params .= "-filter_complex '[1:v]scale=trunc(iw/2)*2:trunc(ih/2)*2[ref];[2:v][ref]scale2ref[black][cover];[black][cover]overlay=eof_action=repeat[out]' -map '[out]' -c:v libx264 -preset:v veryfast -profile:v high yuv420p -tune:v stillimage -crf 28 -x264opts \"intra-refresh=1:keyint=3600:min-keyint=900:no-scenecut\" ";
                 }
             }
             $cmd .= $params;
         }else{
-            $cmd .= " -map_metadata -1 -map 0:a -filter_complex 'volume=volume=1.0:replaygain=track' -ac 2 ";
+            $cmd .= " -map_metadata -1 -filter_complex '[0:a]volume=volume=1.0:replaygain=track[out]' -map '[out]' -ac 2 ";
         }
 
         //header("Transfer-encoding: chunked");
@@ -140,7 +144,7 @@ if (preg_match("#^/service/encode/(?P<hash>[a-fA-F0-9]{8,32})(|/(?P<codec>(m4a|a
                 header("Content-Type: audio/flac");
                 break;
             case "mkv":
-                $cmd .= " -c:a copy -f matroska";
+                $cmd .= " -c:a copy -f matroska -fflags +bitexact -flags:v +bitexact -flags:a +bitexact";
                 header("Content-Type: video/x-matroska");
                 break;
         }
