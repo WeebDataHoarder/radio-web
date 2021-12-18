@@ -91,9 +91,9 @@ if (preg_match("#^/service/encode/(?P<hash>[a-fA-F0-9]{8,32})(|/(?P<codec>(m4a|a
 
                 $cmd .= " -f lavfi -i 'color=size={$playResX}x{$playResY}:rate=30:duration=".($data["duration"] + 1).":color=black' ";
                 if($data["cover"] !== null){
-                    $params .=  "-map 2:s -filter_complex '[1:v]scale=w=-1:h={$playResY}[cover];[3:v][cover]overlay=eof_action=repeat[out]' -map '[out]'";
+                    $params .=  "-map 2:s -filter_complex '[1:v]scale=w=-1:h={$playResY}[cover];[3:v][cover]overlay=eof_action=repeat[out]' -map '[out]' ";
                 }else{
-                    $params .=  "-map 1:s -map 2:v";
+                    $params .=  "-map 1:s -map 2:v ";
                 }
 
                 if(isRequestVideoPlayer()){
