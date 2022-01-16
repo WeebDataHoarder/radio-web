@@ -27,7 +27,7 @@ function searchApi() {
 
 function fetchSong() {
   if ! [ -f "${2}" ]; then
-    curl "${API_URL}download/${1}" --get --user-agent "${VERSIONED_AGENT}" --header "Authorization: ${API_TOKEN}" --fail --progress-bar > "${2}"
+    curl "${API_URL}download/${1}" --get --location --user-agent "${VERSIONED_AGENT}" --header "Authorization: ${API_TOKEN}" --fail --progress-bar > "${2}"
   fi
 }
 

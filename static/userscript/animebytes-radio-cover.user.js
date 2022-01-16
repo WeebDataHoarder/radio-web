@@ -139,7 +139,12 @@ let pageURL = new URL(document.location);
                             q.push("\""+escapeSearchParameter(japaneseTitle)+"\"");
                         }
                         for(let i in catalogs){
-                            q.push("\""+escapeSearchParameter(catalogs[i])+"\"");
+                            let c1 = catalogs[i];
+                            let c2 = c1.replace(/-/g, "");
+                            q.push("\""+escapeSearchParameter(c1)+"\"");
+                            if(c1 !== c2){
+                                q.push("\""+escapeSearchParameter(c2)+"\"");
+                            }
                         }
 
                         let searchQuery = "";
