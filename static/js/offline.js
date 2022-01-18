@@ -22,6 +22,7 @@ let currentTime = 0;
 const uplayer = new UPlayer({
     "volume": window.localStorage.getItem("radio-volume") !== null ? window.localStorage.getItem("radio-volume") / 100 : 1.0,
     "preload": true,
+    "crossorigin": "anonymous",
     //"streaming": true,
     "forceCodec": urlParams.get("forceCodec") !== null,
     "muted": false,

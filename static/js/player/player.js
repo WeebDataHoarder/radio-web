@@ -481,7 +481,7 @@ class UPlayer {
             this.preloadObject = new Audio();
             this.preloadObject.autoplay = false;
             this.preloadObject.preload = "auto";
-            this.preloadObject.crossorigin = ("crossorigin" in this.options && this.options["crossorigin"]) ? "use-credentials" : "same-origin";
+            this.preloadObject.crossorigin = ("crossorigin" in this.options && this.options["crossorigin"]) ? (this.options["crossorigin"] === true ? "use-credentials" : this.options["crossorigin"]) : "same-origin";
             this.preloadObject.volume = 0;
             this.preloadObject.muted = true;
 
@@ -527,7 +527,7 @@ class UPlayer {
             }
             this.playerObject.autoplay = false;
             this.playerObject.preload = ("preload" in this.options && this.options["preload"]) ? "auto" : "none";
-            this.playerObject.crossorigin = ("crossorigin" in this.options && this.options["crossorigin"]) ? "use-credentials" : "same-origin";
+            this.playerObject.crossorigin = ("crossorigin" in this.options && this.options["crossorigin"]) ? (this.options["crossorigin"] === true ? "use-credentials" : this.options["crossorigin"]) : "same-origin";
             this.playerObject.volume = this.volume;
             this.playerObject.muted = this.muted;
 
