@@ -171,11 +171,7 @@ class UPlayer {
                 "type": "lossless",
                 "supported": {
                     "probably": {"*": true},
-                    "maybe": {
-                        "(AppleWebKit)((?!Chrom(ium|e)\/).)*$": () => {
-                            return !("streaming" in this.options && this.options["streaming"]);
-                        }, "*": true
-                    }
+                    "maybe": {"*": true},
                 },
                 "info": {}
             },
