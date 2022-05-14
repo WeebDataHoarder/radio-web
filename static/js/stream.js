@@ -1,34 +1,18 @@
 const audioStreams = [
     /* --- AAC --- */
     {
-        "id": "stream256.aac",
-        "name": "AAC@256kbit/s",
-        "url": "/stream/stream256.aac",
-        "bitrate": 256,
-        "format": "audio/aac",
-        "quality": "high"
-    },
-    {
         "id": "stream128.aac",
-        "name": "AAC@128kbit/s",
+        "name": "HE-AACv2 @128kbit/s",
         "url": "/stream/stream128.aac",
         "bitrate": 128,
         "format": "audio/aac",
         "quality": "medium"
     },
-    {
-        "id": "stream64.aac",
-        "name": "AAC@64kbit/s",
-        "url": "/stream/stream64.aac",
-        "bitrate": 64,
-        "format": "audio/aac",
-        "quality": "low"
-    },
 
     /* --- OGG/Opus --- */
     {
         "id": "stream256.ogg",
-        "name": "Opus@256kbit/s",
+        "name": "Opus @256kbit/s",
         "url": "/stream/stream256.ogg",
         "bitrate": 256,
         "format": "audio/ogg;codecs=opus",
@@ -36,7 +20,7 @@ const audioStreams = [
     },
     {
         "id": "stream128.ogg",
-        "name": "Opus@128kbit/s",
+        "name": "Opus @128kbit/s",
         "url": "/stream/stream128.ogg",
         "bitrate": 128,
         "format": "audio/ogg;codecs=opus",
@@ -44,7 +28,7 @@ const audioStreams = [
     },
     {
         "id": "stream64.ogg",
-        "name": "Opus@64kbit/s",
+        "name": "Opus @64kbit/s",
         "url": "/stream/stream64.ogg",
         "bitrate": 64,
         "format": "audio/ogg;codecs=opus",
@@ -54,7 +38,7 @@ const audioStreams = [
     /* --- MP3 --- */
     {
         "id": "stream192.mp3",
-        "name": "MP3@192kbit/s",
+        "name": "MP3 V2 (VBR ~192kbit/s)",
         "url": "/stream/stream192.mp3",
         "bitrate": 192,
         "format": "audio/mpeg;codecs=mp3",
@@ -64,7 +48,7 @@ const audioStreams = [
     /* --- FLAC --- */
     {
         "id": "stream.flac",
-        "name": "FLAC@16-bit",
+        "name": "FLAC 16-bit",
         "url": "/stream/stream.flac",
         "bitrate": 0,
         "format": "audio/flac",

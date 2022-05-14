@@ -139,15 +139,15 @@ header("Link: </js/online.js?".VERSION_HASH."; rel=preload; as=script", false);
 					<div id="radio-settings">
 						<div class="grid-x settings-grid">
 							<div class="large-6 medium-12 small-12 large-centered medium-centered small-centered cell settings-cell">
-								<label>Stream Quality
+								<label>Stream Bitrate
 									<select id="radio-quality">
-										<optgroup id="radio-quality-group-lossless" label="Lossless Quality">
+										<optgroup id="radio-quality-group-lossless" label="Lossless">
 										</optgroup>
-										<optgroup id="radio-quality-group-high" label="High Quality">
+										<optgroup id="radio-quality-group-high" label="High Bitrate">
 										</optgroup>
-										<optgroup id="radio-quality-group-medium" label="Medium Quality">
+										<optgroup id="radio-quality-group-medium" label="Medium Bitrate">
 										</optgroup>
-										<optgroup id="radio-quality-group-low" label="Low Quality">
+										<optgroup id="radio-quality-group-low" label="Low Bitrate">
 										</optgroup>
 									</select>
 								</label>
