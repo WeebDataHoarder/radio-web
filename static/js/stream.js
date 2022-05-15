@@ -2,7 +2,7 @@ const audioStreams = [
     /* --- AAC --- */
     {
         "id": "stream128.aac",
-        "name": "HE-AACv2 @128kbit/s",
+        "name": "AAC (VBR ~148kbit/s)",
         "url": "/stream/stream128.aac",
         "bitrate": 128,
         "format": "audio/aac",
@@ -12,7 +12,7 @@ const audioStreams = [
     /* --- OGG/Opus --- */
     {
         "id": "stream256.ogg",
-        "name": "Opus @256kbit/s",
+        "name": "Opus (256kbit/s)",
         "url": "/stream/stream256.ogg",
         "bitrate": 256,
         "format": "audio/ogg;codecs=opus",
@@ -28,7 +28,7 @@ const audioStreams = [
     },
     {
         "id": "stream64.ogg",
-        "name": "Opus @64kbit/s",
+        "name": "Opus (64kbit/s mono)",
         "url": "/stream/stream64.ogg",
         "bitrate": 64,
         "format": "audio/ogg;codecs=opus",
@@ -38,7 +38,7 @@ const audioStreams = [
     /* --- MP3 --- */
     {
         "id": "stream192.mp3",
-        "name": "MP3 V2 (VBR ~192kbit/s)",
+        "name": "MP3 (VBR ~192kbit/s)",
         "url": "/stream/stream192.mp3",
         "bitrate": 192,
         "format": "audio/mpeg;codecs=mp3",
@@ -48,7 +48,7 @@ const audioStreams = [
     /* --- FLAC --- */
     {
         "id": "stream.flac",
-        "name": "FLAC 16-bit",
+        "name": "FLAC (16-bit)",
         "url": "/stream/stream.flac",
         "bitrate": 0,
         "format": "audio/flac",
