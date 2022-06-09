@@ -65,11 +65,11 @@ const uplayer = new UPlayer({
             }
         }
         playing = true;
-        if (shuffle) {
+        /*if (shuffle) {
             preloadThisSong(shuffledPlaylist[index], true);
         } else {
             preloadThisSong(songPlaylist[index], true);
-        }
+        }*/
     },
     "on-ready": function () {
         if (playing) {

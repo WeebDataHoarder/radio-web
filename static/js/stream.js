@@ -20,7 +20,7 @@ const audioStreams = [
     },
     {
         "id": "stream128.ogg",
-        "name": "Opus @128kbit/s",
+        "name": "Opus (128kbit/s)",
         "url": "/stream/stream128.ogg",
         "bitrate": 128,
         "format": "audio/ogg;codecs=opus",
