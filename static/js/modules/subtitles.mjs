@@ -80,7 +80,7 @@ class Subtitles {
                 "franklin gothic book regular": "/fonts/subtitles/frabk.woff2"
             },
             targetFps: 30,
-            lazyFontLoading: true,
+            lazyFileLoading: true,
             resizeVariation: 0.1,
             libassMemoryLimit: 40,
             libassGlyphLimit: 40,

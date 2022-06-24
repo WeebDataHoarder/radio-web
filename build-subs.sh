@@ -7,8 +7,8 @@ pushd "${ROOT_DIR}"
 pushd deps
 
 pushd JavascriptSubtitlesOctopus
-docker build -t radio/javascriptsubtitlesoctopus .
-docker run -it --rm -v "$(pwd)"/dist/js:/code/dist/js radio/javascriptsubtitlesoctopus:latest
+./run-docker-build.sh make clean
+./run-docker-build.sh
 
 rm -rvf ../../static/js/modules/subtitles/*
 cp -rvf dist/js/* ../../static/js/modules/subtitles/
