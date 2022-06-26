@@ -9,9 +9,14 @@ pushd deps
 pushd JavascriptSubtitlesOctopus
 ./run-docker-build.sh make clean
 ./run-docker-build.sh
-
 rm -rvf ../../static/js/modules/subtitles/*
 cp -rvf dist/js/* ../../static/js/modules/subtitles/
+
+# Build SIMD modern version
+./run-docker-build.sh make clean
+./run-docker-build.sh -m make dist/js/subtitles-octopus-worker-modern.js
+cp -rvf dist/js/subtitles-octopus-worker-modern.* ../../static/js/modules/subtitles/
+
 popd
 
 popd

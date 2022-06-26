@@ -953,6 +953,29 @@
 //   That's all there is to it!
 "use strict";
 var SubtitlesOctopus = function (options) {
+    var supportsWebAssembly = false;
+    var supportsWebAssemblyFixedWidthSIMD = false;
+    try {
+        if (typeof WebAssembly === "object"
+            && typeof WebAssembly.instantiate === "function") {
+            const module = new WebAssembly.Module(Uint8Array.of(0x0, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00));
+            if (module instanceof WebAssembly.Module)
+                supportsWebAssembly = (new WebAssembly.Instance(module) instanceof WebAssembly.Instance);
+        }
+    } catch (e) {
+    }
+    if(supportsWebAssembly) {
+        try {
+            //detect SIMD support
+            supportsWebAssemblyFixedWidthSIMD = WebAssembly.validate(Uint8Array.of(0, 97, 115, 109, 1, 0, 0, 0, 1, 5, 1, 96, 0, 1, 123, 3, 2, 1, 0, 10, 10, 1, 8, 0, 65, 0, 253, 15, 253, 98, 11));
+        } catch (e) {
+
+        }
+    }
+
+
+    console.log("WebAssembly support detected: " + (supportsWebAssembly ? (supportsWebAssemblyFixedWidthSIMD ? "yes + SIMD" : "yes") : "no"));
+
     var self = this;
     self.canvas = options.canvas; // HTML canvas element (optional if video specified)
     self.renderMode = options.renderMode || (options.lossyRender ? 'lossy' : 'wasm-blend');
@@ -972,6 +995,9 @@ var SubtitlesOctopus = function (options) {
     self.lazyFileLoading = options.lazyFileLoading || false; // Load fonts in a lazy way. Requires Access-Control-Expose-Headers for Accept-Ranges, Content-Length, and Content-Encoding. If Content-Encoding is compressed, file will be fully fetched instead of just a HEAD request.
     self.onReadyEvent = options.onReady; // Function called when SubtitlesOctopus is ready (optional)
     self.workerUrl = options.workerUrl || 'subtitles-octopus-worker.js'; // Link to WebAssembly/JS worker
+    if(supportsWebAssemblyFixedWidthSIMD && options.modernWorkerUrl){
+        self.workerUrl = options.modernWorkerUrl; // Link to WebAssembly modern worker (SIMD, etc.)
+    }
     self.subUrl = options.subUrl; // Link to sub file (optional if subContent specified)
     self.subContent = options.subContent || null; // Sub content (optional if subUrl specified)
     self.onErrorEvent = options.onError; // Function called in case of critical error meaning sub wouldn't be shown and you should use alternative method (for instance it occurs if browser doesn't support web workers).

@@ -154,7 +154,8 @@ class Subtitles {
             options.canvas = this.canvas;
             options.dropAllAnimations = (!options.displaySettings.karaoke.animate && !options.displaySettings.fadeTransition);
             options.workerUrl = "/js/modules/subtitles/subtitles-octopus-worker.js?" + VERSION_HASH;
-            options.renderMode = "wasm-blend";
+            options.modernWorkerUrl = "/js/modules/subtitles/subtitles-octopus-worker-modern.js?" + VERSION_HASH;
+            options.renderMode = "lossy";
             options.availableFonts = Object.assign(Object.assign({}, options.availableFonts), displayInformation.embeddedFonts);
             options.subContent = data.content;
             options.pixelRatio = "devicePixelRatio" in window ? window.devicePixelRatio : 1;
