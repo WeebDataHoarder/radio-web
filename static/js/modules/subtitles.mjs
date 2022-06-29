@@ -309,7 +309,8 @@ class Subtitles {
         }
 
         await reader.cancel();
-        readableStream.cancel();
+        reader.releaseLock();
+        await readableStream.cancel();
         return await this._processASSSubtitlesContent(data);
     }
 
