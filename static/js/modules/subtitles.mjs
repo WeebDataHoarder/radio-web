@@ -156,7 +156,7 @@ class Subtitles {
                 options.sub = {
                     type: "url",
                     ordered: true,
-                    stream: data.url,
+                    url: data.url,
                 }
                 const displayInformation = await this._processASSSubtitlesStream((await fetch(data.url)).body);
                 this.canvas.setAttribute("aspect-ratio", displayInformation.resolution.aspectRatio);
