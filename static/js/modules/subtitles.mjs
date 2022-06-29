@@ -152,14 +152,13 @@ class Subtitles {
                 const displayInformation = await this._processASSSubtitlesContent(data.content);
                 this.canvas.setAttribute("aspect-ratio", displayInformation.resolution.aspectRatio);
                 this.canvas.style["background-color"] = "rgba("+displayInformation.background.red+", "+displayInformation.background.green+", "+displayInformation.background.blue+", "+displayInformation.background.alpha+")";
-            }else if(data.stream){
-                let streams = data.stream.tee();
+            }else if(data.url){
                 options.sub = {
-                    type: "stream",
+                    type: "url",
                     ordered: true,
-                    stream: streams[0],
+                    stream: data.url,
                 }
-                const displayInformation = await this._processASSSubtitlesStream(streams[1]);
+                const displayInformation = await this._processASSSubtitlesStream((await fetch(data.url)).body);
                 this.canvas.setAttribute("aspect-ratio", displayInformation.resolution.aspectRatio);
                 this.canvas.style["background-color"] = "rgba("+displayInformation.background.red+", "+displayInformation.background.green+", "+displayInformation.background.blue+", "+displayInformation.background.alpha+")";
             }else{
