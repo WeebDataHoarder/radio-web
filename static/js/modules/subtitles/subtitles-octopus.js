@@ -998,8 +998,25 @@ var SubtitlesOctopus = function (options) {
     if(supportsWebAssemblyFixedWidthSIMD && options.modernWorkerUrl){
         self.workerUrl = options.modernWorkerUrl; // Link to WebAssembly modern worker (SIMD, etc.)
     }
-    self.subUrl = options.subUrl; // Link to sub file (optional if subContent specified)
-    self.subContent = options.subContent || null; // Sub content (optional if subUrl specified)
+    self.sub = options.sub || {};
+
+    if(options.subUrl){
+        self.sub = {
+            type: "url",
+            url: options.subUrl,
+            ordered: false,
+        };
+        delete options.subUrl;
+    }
+    if(options.subContent){
+        self.sub = {
+            type: "data",
+            data: options.options.subContent,
+            ordered: false,
+        };
+        delete options.subContent;
+    }
+
     self.onErrorEvent = options.onError; // Function called in case of critical error meaning sub wouldn't be shown and you should use alternative method (for instance it occurs if browser doesn't support web workers).
     self.debug = options.debug || false; // When debug enabled, some performance info printed in console.
     self.lastRenderTime = 0; // (internal) Last time we got some frame from worker
@@ -1064,7 +1081,6 @@ var SubtitlesOctopus = function (options) {
         self.workerActive = false;
         self.createCanvas();
         self.setVideo(options.video);
-        self.setSubUrl(options.subUrl);
         self.worker.postMessage({
             target: 'worker-init',
             width: self.canvas.width,
@@ -1073,8 +1089,7 @@ var SubtitlesOctopus = function (options) {
             currentScript: self.workerUrl,
             preMain: true,
             renderMode: self.renderMode,
-            subUrl: self.subUrl,
-            subContent: self.subContent,
+            sub: self.sub,
             fonts: self.fonts,
             availableFonts: self.availableFonts,
             fallbackFont: self.fallbackFont,
@@ -1223,7 +1238,11 @@ var SubtitlesOctopus = function (options) {
     };
 
     self.setSubUrl = function (subUrl) {
-        self.subUrl = subUrl;
+        self.sub = {
+            type: "url",
+            url: subUrl,
+            ordered: false,
+        };
     };
 
     self.renderFrameData = null;
@@ -1491,17 +1510,42 @@ var SubtitlesOctopus = function (options) {
         });
     };
 
-    self.setTrackByUrl = function (url) {
+    self.setTrackByStream = function (readableStream, ordered) {
         self.worker.postMessage({
-            target: 'set-track-by-url',
-            url: url
+            target: 'set-track',
+            sub: {
+                type: "stream",
+                ordered: ordered,
+                stream: readableStream
+            }
         });
     };
 
-    self.setTrack = function (content) {
+    self.setTrackByUrl = function (url, ordered) {
+        if(typeof ordered == "undefined"){
+            ordered = false;
+        }
         self.worker.postMessage({
             target: 'set-track',
-            content: content
+            sub: {
+                type: "url",
+                ordered: false,
+                url: url
+            }
+        });
+    };
+
+    self.setTrack = function (content, ordered) {
+        if(typeof ordered == "undefined"){
+            ordered = false;
+        }
+        self.worker.postMessage({
+            target: 'set-track',
+            sub: {
+                type: "data",
+                ordered: false,
+                data: content
+            }
         });
     };
 

@@ -147,17 +147,31 @@ class Subtitles {
         this.stopSubtitles();
 
         if(data.type === "ass"){
-            const displayInformation = await this._processASSSubtitles(data.content);
-            this.canvas.setAttribute("aspect-ratio", displayInformation.resolution.aspectRatio);
-            this.canvas.style["background-color"] = "rgba("+displayInformation.background.red+", "+displayInformation.background.green+", "+displayInformation.background.blue+", "+displayInformation.background.alpha+")";
-
+            if(data.content){
+                options.subContent = data.content;
+                const displayInformation = await this._processASSSubtitlesContent(data.content);
+                this.canvas.setAttribute("aspect-ratio", displayInformation.resolution.aspectRatio);
+                this.canvas.style["background-color"] = "rgba("+displayInformation.background.red+", "+displayInformation.background.green+", "+displayInformation.background.blue+", "+displayInformation.background.alpha+")";
+            }else if(data.stream){
+                let streams = data.stream.tee();
+                options.sub = {
+                    type: "stream",
+                    ordered: true,
+                    stream: streams[0],
+                }
+                const displayInformation = await this._processASSSubtitlesStream(streams[1]);
+                this.canvas.setAttribute("aspect-ratio", displayInformation.resolution.aspectRatio);
+                this.canvas.style["background-color"] = "rgba("+displayInformation.background.red+", "+displayInformation.background.green+", "+displayInformation.background.blue+", "+displayInformation.background.alpha+")";
+            }else{
+                return;
+            }
             options.canvas = this.canvas;
             options.dropAllAnimations = (!options.displaySettings.karaoke.animate && !options.displaySettings.fadeTransition);
             options.workerUrl = "/js/modules/subtitles/subtitles-octopus-worker.js?" + VERSION_HASH;
             options.modernWorkerUrl = "/js/modules/subtitles/subtitles-octopus-worker-modern.js?" + VERSION_HASH;
             options.renderMode = "lossy";
-            options.availableFonts = Object.assign(Object.assign({}, options.availableFonts), displayInformation.embeddedFonts);
-            options.subContent = data.content;
+
+
             options.pixelRatio = "devicePixelRatio" in window ? window.devicePixelRatio : 1;
             //renderAhead: options.targetFps,
             options.onReady = () => {
@@ -238,7 +252,7 @@ class Subtitles {
         this.timer = requestAnimationFrame(this._animationFrameTimer.bind(this));
     }
 
-    async _processASSSubtitles(file){
+    async _processASSSubtitlesContent(file){
         const displayInformation = {
             resolution: {
                 aspectRatio: 10.6666667//1.777778
@@ -277,6 +291,26 @@ class Subtitles {
             displayInformation.resolution.aspectRatio = displayInformation.resolution.x / displayInformation.resolution.y;
         }
         return displayInformation;
+    }
+
+
+
+    async _processASSSubtitlesStream(readableStream){
+        let reader = readableStream.getReader();
+        const utf8Decoder = new TextDecoder("utf-8");
+
+        let data = "";
+        while (data.length < 4096){
+            let {value: chunk, done: readerDone} = await reader.read();
+            data += (chunk ? utf8Decoder.decode(chunk, {stream: !readerDone}) : "");
+            if(readerDone){
+                break;
+            }
+        }
+
+        await reader.cancel();
+        readableStream.cancel();
+        return await this._processASSSubtitlesContent(data);
     }
 
     async _convertLRCtoEntries(data){

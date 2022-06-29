@@ -233,7 +233,7 @@ function pushMediaSessionMetadata(song){
 
 
 
-async function apiRequest(url, method = "GET", abortSignal = null){
+async function apiRequest(url, method = "GET", abortSignal = null, raw = false){
     const options = {
         method: method
     };
@@ -250,6 +250,10 @@ async function apiRequest(url, method = "GET", abortSignal = null){
     const response = await fetch(baseApiUrl + url, options)
     if(!response.ok){
         throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    if(raw){
+        return response;
     }
 
     const contentType = response.headers.get("content-type");

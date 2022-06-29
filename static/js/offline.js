@@ -411,11 +411,11 @@ async function tryLoadLyrics(song){
                 subtitleEntry = preferredLyrics[index];
 
                 try{
-                    const data = await apiRequest("/api/lyrics/" + song.hash + "/" + subtitleEntry);
+                    const data = await apiRequest("/api/lyrics/" + song.hash + "/" + subtitleEntry, "GET", null, true);
                     if(subtitleEntry === "timed"){
                         await s.loadSubtitles(currentLyrics = {
                             type: "lrc",
-                            content: data
+                            content: await data.text()
                         }, {
                             displaySettings: {
                                 showOriginal: showOriginalLyrics,
@@ -429,7 +429,7 @@ async function tryLoadLyrics(song){
                     }else if(subtitleEntry === "ass"){
                         await s.loadSubtitles(currentLyrics = {
                             type: "ass",
-                            content: data
+                            stream: data.body
                         }, {
                             displaySettings: {
                                 showOriginal: showOriginalLyrics,
