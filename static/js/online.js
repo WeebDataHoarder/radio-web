@@ -81,9 +81,20 @@ function initWebsite() {
         }
     });
 
+    let loginTimer = null;
+
     document.querySelector("#api-key").addEventListener('keypress', function (e) {
+        if(loginTimer !== null){
+            clearTimeout(loginTimer);
+        }
+
+        let keyData = this.value;
         if (e.which === 13) {
-            apiKeyIdentify(this.value);
+            apiKeyIdentify(keyData);
+        }else{
+            setTimeout(() => {
+                apiKeyIdentify(keyData);
+            }, 5000);
         }
     });
 

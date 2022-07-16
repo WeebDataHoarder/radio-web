@@ -28,7 +28,7 @@ const audioStreams = [
     },
     {
         "id": "stream64.ogg",
-        "name": "Opus (64kbit/s mono)",
+        "name": "Opus (64kbit/s)",
         "url": "/stream/stream64.ogg",
         "bitrate": 64,
         "format": "audio/ogg;codecs=opus",
