@@ -123,7 +123,7 @@ class UPlayer {
             {
                 "extensions": ["opus", "ogg"],
                 "format": ["audio/ogg;codecs=opus", "audio/opus"],
-                "softCodec": ["/js/player/codecs/ogg.js", "/js/player/codecs/opus.js"],
+                /*"softCodec": ["/js/player/codecs/ogg.js", "/js/player/codecs/opus.js"],*/
                 "type": "lossy",
                 "supported": {
                     "probably": {"*": true},
@@ -134,7 +134,7 @@ class UPlayer {
             {
                 "extensions": ["ogg"],
                 "format": ["audio/ogg;codecs=vorbis", "audio/vorbis"],
-                "softCodec": ["/js/player/codecs/ogg.js", "/js/player/codecs/vorbis.js"],
+                /*"softCodec": ["/js/player/codecs/ogg.js", "/js/player/codecs/vorbis.js"],*/
                 "type": "lossy",
                 "supported": {
                     "probably": {"*": true},
@@ -145,7 +145,7 @@ class UPlayer {
             {
                 "extensions": ["ogg"],
                 "format": ["audio/ogg"],
-                "softCodec": ["/js/player/codecs/ogg.js", "/js/player/codecs/vorbis.js", "/js/player/codecs/flac.js"],
+                /*"softCodec": ["/js/player/codecs/ogg.js", "/js/player/codecs/vorbis.js", "/js/player/codecs/flac.js"],*/
                 "type": "lossy",
                 "supported": {
                     "probably": {"*": true},
